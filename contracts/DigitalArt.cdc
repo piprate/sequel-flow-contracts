@@ -7,7 +7,7 @@ pub contract DigitalArt: NonFungibleToken {
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
-    pub event Minted(id: UInt64)
+    pub event Minted(id: UInt64, asset: String, edition: UInt64)
 
     // Named Paths
     //
@@ -37,6 +37,15 @@ pub contract DigitalArt: NonFungibleToken {
             let val = self.nextEditionId
             self.nextEditionId = self.nextEditionId + UInt64(1)
             return val
+        }
+
+        pub fun availableEditions() : UInt64 {
+            let count = self.metadata.maxEdition - self.nextEditionId + UInt64(1)
+            if count < 0 {
+                return 0
+            } else {
+                return count
+            }
         }
     }
 
@@ -258,12 +267,26 @@ pub contract DigitalArt: NonFungibleToken {
             )
         }
 
+        pub fun availableEditions(masterId: String) : UInt64 {
+            pre {
+               DigitalArt.masters.containsKey(masterId) : "master not found"
+            }
+
+            let master = &DigitalArt.masters[masterId] as &Master
+
+            return master.availableEditions()
+        }
+
         pub fun mintNFT(masterId: String) : @DigitalArt.NFT {
             pre {
                DigitalArt.masters.containsKey(masterId) : "master not found"
             }
 
             let master = &DigitalArt.masters[masterId] as &Master
+
+            if master.availableEditions() == 0 {
+                panic("no more tokens to mint")
+            }
 
             let metadata = master.metadata
             let edition = master.newEditionID()
@@ -289,7 +312,7 @@ pub contract DigitalArt: NonFungibleToken {
                 )
             )
 
-            emit Minted(id: DigitalArt.totalSupply)
+            emit Minted(id: DigitalArt.totalSupply, asset: metadata.asset, edition: edition)
 
             DigitalArt.totalSupply = DigitalArt.totalSupply + UInt64(1)
 

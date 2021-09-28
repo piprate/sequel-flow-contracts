@@ -1,38 +1,44 @@
 package test
 
 import (
+	"os"
 	"testing"
+	"time"
 
 	"github.com/onflow/cadence"
-	jsoncdc "github.com/onflow/cadence/encoding/json"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/onflow/flow-go-sdk/test"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/templates"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/scripts"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestNFTDeployment(t *testing.T) {
-	b := newBlockchain()
-
-	_ = deployNFTContracts(t, b)
+func init() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Stamp})
 }
 
 func TestSealDigitalArt(t *testing.T) {
-	b := newBlockchain()
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
+	require.NoError(t, err)
 
-	contractsObj := deployNFTContracts(t, b)
+	client.InitializeContracts()
 
-	userAddress, userSigner := createAccount(t, b)
-	setupAccount(t, b, userAddress, userSigner, contractsObj)
+	se, err := scripts.NewEngine(client, false)
+	require.NoError(t, err)
+
+	sequelAcct, err := client.State.Accounts().ByName("emulator-account")
+	require.NoError(t, err)
+
+	userAcct, err := client.State.Accounts().ByName("emulator-user1")
+	require.NoError(t, err)
 
 	sampleMetadata := &iinft.Metadata{
 		MetadataLink:       "QmMetadata",
 		Name:               "Pure Art",
 		Artist:             "Arty",
-		ArtistAddress:      userAddress,
+		ArtistAddress:      userAcct.Address(),
 		Description:        "Digital art in its purest form",
 		Type:               "Image",
 		ContentLink:        "QmContent",
@@ -46,24 +52,10 @@ func TestSealDigitalArt(t *testing.T) {
 
 	t.Run("Should be able to seal new digital art master", func(t *testing.T) {
 
-		script, err := templates.GenerateSealDigitalArtScript(contractsObj.NFTAddress, contractsObj.DigitalArtAddress,
-			sampleMetadata)
-		require.NoError(t, err)
-
-		tx := createTxWithTemplateAndAuthorizer(b, script, contractsObj.DigitalArtAddress)
-
-		signAndSubmit(
-			t, b, tx,
-			[]flow.Address{
-				b.ServiceKey().Address,
-				contractsObj.DigitalArtAddress,
-			},
-			[]crypto.Signer{
-				b.ServiceKey().Signer(),
-				contractsObj.DigitalArtSigner,
-			},
-			false,
-		)
+		_ = scripts.CreateSealDigitalArtTx(se.GetStandardScript("master_seal"), client, sampleMetadata).
+			SignProposeAndPayAsAccount(sequelAcct).
+			Test(t).
+			AssertSuccess()
 	})
 
 	t.Run("Shouldn't be able to seal the same digital art master twice", func(t *testing.T) {
@@ -72,73 +64,49 @@ func TestSealDigitalArt(t *testing.T) {
 		sampleMetadata2.Asset = "did:sequel:asset-2"
 
 		// Seal the master
-		script, err := templates.GenerateSealDigitalArtScript(contractsObj.NFTAddress, contractsObj.DigitalArtAddress,
-			&sampleMetadata2)
-		require.NoError(t, err)
+		script := se.GetStandardScript("master_seal")
 
-		tx := createTxWithTemplateAndAuthorizer(b, script, contractsObj.DigitalArtAddress)
-
-		signAndSubmit(
-			t, b, tx,
-			[]flow.Address{
-				b.ServiceKey().Address,
-				contractsObj.DigitalArtAddress,
-			},
-			[]crypto.Signer{
-				b.ServiceKey().Signer(),
-				contractsObj.DigitalArtSigner,
-			},
-			false,
-		)
+		_ = scripts.CreateSealDigitalArtTx(script, client, &sampleMetadata2).
+			SignProposeAndPayAsAccount(sequelAcct).
+			Test(t).
+			AssertSuccess()
 
 		// try again
-		script, err = templates.GenerateSealDigitalArtScript(contractsObj.NFTAddress, contractsObj.DigitalArtAddress,
-			&sampleMetadata2)
-		require.NoError(t, err)
-
-		tx = createTxWithTemplateAndAuthorizer(b, script, contractsObj.DigitalArtAddress)
-
-		signAndSubmit(
-			t, b, tx,
-			[]flow.Address{
-				b.ServiceKey().Address,
-				contractsObj.DigitalArtAddress,
-			},
-			[]crypto.Signer{
-				b.ServiceKey().Signer(),
-				contractsObj.DigitalArtSigner,
-			},
-			true,
-		)
+		_ = scripts.CreateSealDigitalArtTx(script, client, &sampleMetadata2).
+			SignProposeAndPayAsAccount(sequelAcct).
+			Test(t).
+			AssertFailure("master already sealed")
 	})
 }
 
 func TestCreateDigitalArt(t *testing.T) {
-	b := newBlockchain()
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
+	require.NoError(t, err)
 
-	contractsObj := deployNFTContracts(t, b)
+	client.InitializeContracts().CreateAccounts("emulator-account")
 
-	userAddress, userSigner := createAccount(t, b)
-	setupAccount(t, b, userAddress, userSigner, contractsObj)
+	se, err := scripts.NewEngine(client, false)
+	require.NoError(t, err)
 
-	script := templates.GenerateInspectNFTSupplyScript(contractsObj.NFTAddress, contractsObj.DigitalArtAddress, "DigitalArt", 0)
-	executeScriptAndCheck(t, b, script, nil)
+	sequelAcct, err := client.State.Accounts().ByName("emulator-account")
+	require.NoError(t, err)
 
-	script = templates.GenerateInspectCollectionLenScript(
-		contractsObj.NFTAddress,
-		contractsObj.DigitalArtAddress,
-		userAddress,
-		"DigitalArt",
-		"DigitalArt.CollectionPublicPath",
-		0,
-	)
-	executeScriptAndCheck(t, b, script, nil)
+	userAcct, err := client.State.Accounts().ByName("emulator-user1")
+	require.NoError(t, err)
+
+	_ = se.NewTransaction("account_setup").
+		SignProposeAndPayAsAccount(userAcct).
+		Test(t).
+		AssertSuccess()
+
+	checkDigitalArtNFTSupply(t, se, 0)
+	checkDigitalArtCollectionLen(t, se, userAcct.Address().String(), 0)
 
 	metadata := &iinft.Metadata{
 		MetadataLink:       "QmMetadata",
 		Name:               "Pure Art",
 		Artist:             "Arty",
-		ArtistAddress:      userAddress,
+		ArtistAddress:      userAcct.Address(),
 		Description:        "Digital art in its purest form",
 		Type:               "Image",
 		ContentLink:        "QmContent",
@@ -150,119 +118,81 @@ func TestCreateDigitalArt(t *testing.T) {
 		AssetHead:          "asset-head-id",
 	}
 
-	script, err := templates.GenerateSealDigitalArtScript(contractsObj.NFTAddress, contractsObj.DigitalArtAddress,
-		metadata)
-	require.NoError(t, err)
-
-	tx := createTxWithTemplateAndAuthorizer(b, script, contractsObj.DigitalArtAddress)
-
-	signAndSubmit(
-		t, b, tx,
-		[]flow.Address{
-			b.ServiceKey().Address,
-			contractsObj.DigitalArtAddress,
-		},
-		[]crypto.Signer{
-			b.ServiceKey().Signer(),
-			contractsObj.DigitalArtSigner,
-		},
-		false,
-	)
+	_ = scripts.CreateSealDigitalArtTx(se.GetStandardScript("master_seal"), client, metadata).
+		SignProposeAndPayAsAccount(sequelAcct).
+		Test(t).
+		AssertSuccess()
 
 	t.Run("Should be able to mint a token", func(t *testing.T) {
 
-		script, err = templates.GenerateMintNFTScript(metadata.Asset, contractsObj.NFTAddress, contractsObj.DigitalArtAddress,
-			"DigitalArt", "DigitalArt.AdminStoragePath",
-			"DigitalArt.CollectionPublicPath", userAddress)
-		require.NoError(t, err)
-
-		tx = createTxWithTemplateAndAuthorizer(b, script, contractsObj.DigitalArtAddress)
-
-		signAndSubmit(
-			t, b, tx,
-			[]flow.Address{
-				b.ServiceKey().Address,
-				contractsObj.DigitalArtAddress,
-			},
-			[]crypto.Signer{
-				b.ServiceKey().Signer(),
-				contractsObj.DigitalArtSigner,
-			},
-			false,
-		)
+		_ = client.Transaction(se.GetStandardScript("digitalart_mint")).
+			SignProposeAndPayAsAccount(sequelAcct).
+			StringArgument(metadata.Asset).
+			UInt64Argument(1).
+			Argument(cadence.Address(userAcct.Address())).
+			Test(t).
+			AssertSuccess().
+			AssertEventCount(2).
+			AssertEmitEventName("A.f8d6e0586b0a20c7.DigitalArt.Minted", "A.f8d6e0586b0a20c7.DigitalArt.Deposit").
+			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Minted", map[string]interface{}{
+				"id":      "0",
+				"asset":   "did:sequel:asset-id",
+				"edition": "1",
+			})).
+			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Deposit", map[string]interface{}{
+				"id": "0",
+				"to": "0x1cf0e2f2f715450",
+			}))
 
 		// Assert that the account's collection is correct
-		script = templates.GenerateInspectCollectionScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			userAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionPublicPath",
-			0,
-		)
-		executeScriptAndCheck(t, b, script, nil)
+		checkTokenInDigitalArtCollection(t, se, userAcct.Address().String(), 0)
+		checkDigitalArtCollectionLen(t, se, userAcct.Address().String(), 1)
+		checkDigitalArtNFTSupply(t, se, 1)
 
-		script = templates.GenerateInspectCollectionLenScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			userAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionPublicPath",
-			1,
-		)
-		executeScriptAndCheck(t, b, script, nil)
-
-		script = templates.GenerateInspectNFTSupplyScript(contractsObj.NFTAddress, contractsObj.DigitalArtAddress, "DigitalArt", 1)
-		executeScriptAndCheck(t, b, script, nil)
-
-		script, err = templates.GenerateGetMetadataScript(contractsObj.NFTAddress, contractsObj.DigitalArtAddress, "DigitalArt")
+		val, err := se.NewScript("digitalart_get_metadata").
+			Argument(cadence.NewAddress(userAcct.Address())).
+			UInt64Argument(0).
+			RunReturns()
 		require.NoError(t, err)
-
-		arg1, err := jsoncdc.Encode(cadence.NewAddress(userAddress))
-		require.NoError(t, err)
-
-		arg2, err := jsoncdc.Encode(cadence.NewUInt64(0))
-		require.NoError(t, err)
-
-		val := executeScriptAndCheck(t, b, script, [][]byte{arg1, arg2})
 
 		meta, err := iinft.ReadMetadata(val)
 		require.NoError(t, err)
 
 		assert.Equal(t, uint64(1), meta.Edition)
+	})
 
-		script, err = templates.GenerateMintNFTScript(metadata.Asset, contractsObj.NFTAddress, contractsObj.DigitalArtAddress,
-			"DigitalArt", "DigitalArt.AdminStoragePath",
-			"DigitalArt.CollectionPublicPath", userAddress)
+	t.Run("Editions should have different metadata", func(t *testing.T) {
+		_ = client.Transaction(se.GetStandardScript("digitalart_mint")).
+			SignProposeAndPayAsAccount(sequelAcct).
+			StringArgument(metadata.Asset).
+			UInt64Argument(1).
+			Argument(cadence.Address(userAcct.Address())).
+			Test(t).
+			AssertSuccess().
+			AssertEventCount(2).
+			AssertEmitEventName("A.f8d6e0586b0a20c7.DigitalArt.Minted", "A.f8d6e0586b0a20c7.DigitalArt.Deposit").
+			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Minted", map[string]interface{}{
+				"id":      "1",
+				"asset":   "did:sequel:asset-id",
+				"edition": "2",
+			})).
+			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Deposit", map[string]interface{}{
+				"id": "1",
+				"to": "0x1cf0e2f2f715450",
+			}))
+
+		// Assert that the account's collection is correct
+		checkTokenInDigitalArtCollection(t, se, userAcct.Address().String(), 1)
+		checkDigitalArtCollectionLen(t, se, userAcct.Address().String(), 2)
+		checkDigitalArtNFTSupply(t, se, 2)
+
+		val, err := se.NewScript("digitalart_get_metadata").
+			Argument(cadence.NewAddress(userAcct.Address())).
+			UInt64Argument(1).
+			RunReturns()
 		require.NoError(t, err)
 
-		tx = createTxWithTemplateAndAuthorizer(b, script, contractsObj.DigitalArtAddress)
-
-		signAndSubmit(
-			t, b, tx,
-			[]flow.Address{
-				b.ServiceKey().Address,
-				contractsObj.DigitalArtAddress,
-			},
-			[]crypto.Signer{
-				b.ServiceKey().Signer(),
-				contractsObj.DigitalArtSigner,
-			},
-			false,
-		)
-
-		script, err = templates.GenerateGetMetadataScript(contractsObj.NFTAddress, contractsObj.DigitalArtAddress, "DigitalArt")
-		require.NoError(t, err)
-
-		arg1, err = jsoncdc.Encode(cadence.NewAddress(userAddress))
-		require.NoError(t, err)
-
-		arg2, err = jsoncdc.Encode(cadence.NewUInt64(1))
-		require.NoError(t, err)
-
-		val = executeScriptAndCheck(t, b, script, [][]byte{arg1, arg2})
-
-		meta, err = iinft.ReadMetadata(val)
+		meta, err := iinft.ReadMetadata(val)
 		require.NoError(t, err)
 
 		assert.Equal(t, uint64(2), meta.Edition)
@@ -270,37 +200,43 @@ func TestCreateDigitalArt(t *testing.T) {
 
 	t.Run("Shouldn't be able to borrow a reference to an NFT that doesn't exist", func(t *testing.T) {
 
-		// Assert that the account's collection is correct
-		script := templates.GenerateInspectCollectionScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			userAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionPublicPath",
-			5,
-		)
-		result, err := b.ExecuteScript(script, nil)
-		require.NoError(t, err)
-		assert.True(t, result.Reverted())
+		// test for non-existent token
+		_, err := se.NewInlineScript(
+			inspectCollectionScript(se.NFTAddress, se.DigitalArtAddress, userAcct.Address().String(),
+				"DigitalArt", "DigitalArt.CollectionPublicPath", 5),
+		).RunReturns()
+		require.Error(t, err)
 	})
-
 }
 
 func TestTransferDigitalArt(t *testing.T) {
-	b := newBlockchain()
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
+	require.NoError(t, err)
 
-	accountKeys := test.AccountKeyGenerator()
+	client.InitializeContracts().CreateAccounts("emulator-account")
 
-	contractsObj := deployNFTContracts(t, b)
+	se, err := scripts.NewEngine(client, false)
+	require.NoError(t, err)
 
-	senderAddress, senderSigner := createAccount(t, b)
-	setupAccount(t, b, senderAddress, senderSigner, contractsObj)
+	sequelAcct, err := client.State.Accounts().ByName("emulator-account")
+	require.NoError(t, err)
+
+	senderAcct, err := client.State.Accounts().ByName("emulator-user1")
+	require.NoError(t, err)
+
+	receiverAcct, err := client.State.Accounts().ByName("emulator-user2")
+	require.NoError(t, err)
+
+	_ = se.NewTransaction("account_setup").
+		SignProposeAndPayAsAccount(senderAcct).
+		Test(t).
+		AssertSuccess()
 
 	metadata := &iinft.Metadata{
 		MetadataLink:       "QmMetadata",
 		Name:               "Pure Art",
 		Artist:             "Arty",
-		ArtistAddress:      senderAddress,
+		ArtistAddress:      senderAcct.Address(),
 		Description:        "Digital art in its purest form",
 		Type:               "Image",
 		ContentLink:        "QmContent",
@@ -312,254 +248,87 @@ func TestTransferDigitalArt(t *testing.T) {
 		AssetHead:          "asset-head-id",
 	}
 
-	receiverAccountKey, receiverSigner := accountKeys.NewWithSigner()
-	receiverAddress, err := b.CreateAccount([]*flow.AccountKey{receiverAccountKey}, nil)
-	require.NoError(t, err)
+	_ = scripts.CreateSealDigitalArtTx(se.GetStandardScript("master_seal"), client, metadata).
+		SignProposeAndPayAsAccount(sequelAcct).
+		Test(t).
+		AssertSuccess()
 
-	script, err := templates.GenerateSealDigitalArtScript(contractsObj.NFTAddress, contractsObj.DigitalArtAddress,
-		metadata)
-	require.NoError(t, err)
+	_ = client.Transaction(se.GetStandardScript("digitalart_mint")).
+		SignProposeAndPayAsAccount(sequelAcct).
+		StringArgument(metadata.Asset).
+		UInt64Argument(1).
+		Argument(cadence.Address(senderAcct.Address())).
+		Test(t).
+		AssertSuccess()
 
-	tx := createTxWithTemplateAndAuthorizer(b, script, contractsObj.DigitalArtAddress)
-
-	signAndSubmit(
-		t, b, tx,
-		[]flow.Address{
-			b.ServiceKey().Address,
-			contractsObj.DigitalArtAddress,
-		},
-		[]crypto.Signer{
-			b.ServiceKey().Signer(),
-			contractsObj.DigitalArtSigner,
-		},
-		false,
-	)
-
-	script, err = templates.GenerateMintNFTScript(metadata.Asset, contractsObj.NFTAddress, contractsObj.DigitalArtAddress,
-		"DigitalArt", "DigitalArt.AdminStoragePath",
-		"DigitalArt.CollectionPublicPath", senderAddress)
-	require.NoError(t, err)
-
-	tx = createTxWithTemplateAndAuthorizer(b, script, contractsObj.DigitalArtAddress)
-
-	signAndSubmit(
-		t, b, tx,
-		[]flow.Address{
-			b.ServiceKey().Address,
-			contractsObj.DigitalArtAddress,
-		},
-		[]crypto.Signer{
-			b.ServiceKey().Signer(),
-			contractsObj.DigitalArtSigner,
-		},
-		false,
-	)
-
-	// create a new Collection
 	t.Run("Should be able to create a new empty NFT Collection", func(t *testing.T) {
 
-		script, err := templates.GenerateCreateCollectionScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionStoragePath",
-			"DigitalArt.CollectionPublicPath",
-		)
-		require.NoError(t, err)
+		_ = se.NewTransaction("account_setup").
+			SignProposeAndPayAsAccount(receiverAcct).
+			Test(t).
+			AssertSuccess()
 
-		tx := createTxWithTemplateAndAuthorizer(b, script, receiverAddress)
-
-		signAndSubmit(
-			t, b, tx,
-			[]flow.Address{
-				b.ServiceKey().Address,
-				receiverAddress,
-			},
-			[]crypto.Signer{
-				b.ServiceKey().Signer(),
-				receiverSigner,
-			},
-			false,
-		)
-
-		script = templates.GenerateInspectCollectionLenScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			receiverAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionPublicPath",
-			0,
-		)
-		executeScriptAndCheck(t, b, script, nil)
-
+		checkDigitalArtCollectionLen(t, se, receiverAcct.Address().String(), 0)
 	})
 
 	t.Run("Shouldn't be able to withdraw an NFT that doesn't exist in a collection", func(t *testing.T) {
 
-		script, err = templates.GenerateTransferScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionStoragePath",
-			"DigitalArt.CollectionPublicPath",
-			receiverAddress,
-			3,
-		)
-		require.NoError(t, err)
-		tx := createTxWithTemplateAndAuthorizer(b, script, senderAddress)
+		_ = se.NewTransaction("digitalart_transfer").
+			SignProposeAndPayAsAccount(senderAcct).
+			UInt64Argument(3).
+			Argument(cadence.Address(receiverAcct.Address())).
+			Test(t).
+			AssertFailure("missing NFT")
 
-		signAndSubmit(
-			t, b, tx,
-			[]flow.Address{
-				b.ServiceKey().Address,
-				senderAddress,
-			},
-			[]crypto.Signer{
-				b.ServiceKey().Signer(),
-				senderSigner,
-			},
-			true,
-		)
-
-		script = templates.GenerateInspectCollectionLenScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			receiverAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionPublicPath",
-			0,
-		)
-		executeScriptAndCheck(t, b, script, nil)
-
-		// Assert that the account's collection is correct
-		script = templates.GenerateInspectCollectionLenScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			senderAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionPublicPath",
-			1,
-		)
-
-		executeScriptAndCheck(t, b, script, nil)
-
+		checkDigitalArtCollectionLen(t, se, receiverAcct.Address().String(), 0)
+		checkDigitalArtCollectionLen(t, se, senderAcct.Address().String(), 1)
 	})
 
-	// transfer an NFT
 	t.Run("Should be able to withdraw an NFT and deposit to another accounts collection", func(t *testing.T) {
-		script, err = templates.GenerateTransferScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionStoragePath",
-			"DigitalArt.CollectionPublicPath",
-			receiverAddress,
-			0,
-		)
-		require.NoError(t, err)
-
-		tx := createTxWithTemplateAndAuthorizer(b, script, senderAddress)
-
-		signAndSubmit(
-			t, b, tx,
-			[]flow.Address{
-				b.ServiceKey().Address,
-				senderAddress,
-			},
-			[]crypto.Signer{
-				b.ServiceKey().Signer(),
-				senderSigner,
-			},
-			false,
-		)
+		_ = se.NewTransaction("digitalart_transfer").
+			SignProposeAndPayAsAccount(senderAcct).
+			UInt64Argument(0).
+			Argument(cadence.Address(receiverAcct.Address())).
+			Test(t).
+			AssertSuccess()
 
 		// Assert that the account's collection is correct
-		script = templates.GenerateInspectCollectionScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			receiverAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionPublicPath",
-			0,
-		)
-		executeScriptAndCheck(t, b, script, nil)
-
-		script = templates.GenerateInspectCollectionLenScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			receiverAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionPublicPath",
-			1,
-		)
-		executeScriptAndCheck(t, b, script, nil)
-
-		// Assert that the account's collection is correct
-		script = templates.GenerateInspectCollectionLenScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			senderAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionPublicPath",
-			0,
-		)
-		executeScriptAndCheck(t, b, script, nil)
-
+		checkTokenInDigitalArtCollection(t, se, receiverAcct.Address().String(), 0)
+		checkDigitalArtCollectionLen(t, se, receiverAcct.Address().String(), 1)
+		checkDigitalArtCollectionLen(t, se, senderAcct.Address().String(), 0)
 	})
 
-	// transfer an NFT
 	t.Run("Should be able to withdraw an NFT and destroy it, not reducing the supply", func(t *testing.T) {
 
-		script := templates.GenerateDestroyScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionStoragePath",
-			0,
-		)
-		tx := createTxWithTemplateAndAuthorizer(b, script, receiverAddress)
+		_ = se.NewTransaction("digitalart_destroy").
+			SignProposeAndPayAsAccount(receiverAcct).
+			UInt64Argument(0).
+			Test(t).
+			AssertSuccess()
 
-		signAndSubmit(
-			t, b, tx,
-			[]flow.Address{
-				b.ServiceKey().Address,
-				receiverAddress,
-			},
-			[]crypto.Signer{
-				b.ServiceKey().Signer(),
-				receiverSigner,
-			},
-			false,
-		)
-
-		script = templates.GenerateInspectCollectionLenScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			receiverAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionPublicPath",
-			0,
-		)
-		executeScriptAndCheck(t, b, script, nil)
-
-		// Assert that the account's collection is correct
-		script = templates.GenerateInspectCollectionLenScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			senderAddress,
-			"DigitalArt",
-			"DigitalArt.CollectionPublicPath",
-			0,
-		)
-		executeScriptAndCheck(t, b, script, nil)
-
-		script = templates.GenerateInspectNFTSupplyScript(
-			contractsObj.NFTAddress,
-			contractsObj.DigitalArtAddress,
-			"DigitalArt",
-			1,
-		)
-		executeScriptAndCheck(t, b, script, nil)
-
+		checkDigitalArtCollectionLen(t, se, receiverAcct.Address().String(), 0)
+		checkDigitalArtCollectionLen(t, se, senderAcct.Address().String(), 0)
+		checkDigitalArtNFTSupply(t, se, 1)
 	})
+}
+
+func checkDigitalArtNFTSupply(t *testing.T, se *scripts.Engine, expectedSupply int) {
+	_, err := se.NewInlineScript(
+		inspectNFTSupplyScript(se.NFTAddress, se.DigitalArtAddress, "DigitalArt", expectedSupply),
+	).RunReturns()
+	require.NoError(t, err)
+}
+
+func checkTokenInDigitalArtCollection(t *testing.T, se *scripts.Engine, userAddr string, nftID int) {
+	_, err := se.NewInlineScript(
+		inspectCollectionScript(se.NFTAddress, se.DigitalArtAddress, userAddr, "DigitalArt", "DigitalArt.CollectionPublicPath", nftID),
+	).RunReturns()
+	require.NoError(t, err)
+}
+
+func checkDigitalArtCollectionLen(t *testing.T, se *scripts.Engine, userAddr string, length int) {
+	_, err := se.NewInlineScript(
+		inspectCollectionLenScript(se.NFTAddress, se.DigitalArtAddress, userAddr, "DigitalArt", "DigitalArt.CollectionPublicPath", length),
+	).RunReturns()
+	require.NoError(t, err)
 }
