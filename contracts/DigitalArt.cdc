@@ -239,8 +239,8 @@ pub contract DigitalArt: NonFungibleToken {
     //
     pub resource Admin {
 
-        // mintNFT mints a new NFT with a new ID
-        // and deposit it in the recipients collection using their collection reference
+        // sealMaster saves and freezes the master copy that then can be used
+        // to mint NFT editions.
         pub fun sealMaster(metadata: Metadata) {
             pre {
                metadata.asset != "" : "Empty asset ID"
