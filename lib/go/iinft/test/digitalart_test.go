@@ -38,7 +38,6 @@ func TestSealDigitalArt(t *testing.T) {
 		MetadataLink:       "QmMetadata",
 		Name:               "Pure Art",
 		Artist:             "Arty",
-		ArtistAddress:      userAcct.Address(),
 		Description:        "Digital art in its purest form",
 		Type:               "Image",
 		ContentLink:        "QmContent",
@@ -48,6 +47,17 @@ func TestSealDigitalArt(t *testing.T) {
 		Asset:              "did:sequel:asset-id",
 		Record:             "record-id",
 		AssetHead:          "asset-head-id",
+		ParticipationProfile: &iinft.ParticipationProfile{
+			ID: 0,
+			Roles: map[string]*iinft.ParticipationRole{
+				iinft.ParticipationRoleArtist: {
+					Role:                      iinft.ParticipationRoleArtist,
+					InitialSaleCommission:     80.0,
+					SecondaryMarketCommission: 20.0,
+					Address:                   userAcct.Address(),
+				},
+			},
+		},
 	}
 
 	t.Run("Should be able to seal new digital art master", func(t *testing.T) {
@@ -106,7 +116,6 @@ func TestCreateDigitalArt(t *testing.T) {
 		MetadataLink:       "QmMetadata",
 		Name:               "Pure Art",
 		Artist:             "Arty",
-		ArtistAddress:      userAcct.Address(),
 		Description:        "Digital art in its purest form",
 		Type:               "Image",
 		ContentLink:        "QmContent",
@@ -116,6 +125,17 @@ func TestCreateDigitalArt(t *testing.T) {
 		Asset:              "did:sequel:asset-id",
 		Record:             "record-id",
 		AssetHead:          "asset-head-id",
+		ParticipationProfile: &iinft.ParticipationProfile{
+			ID: 0,
+			Roles: map[string]*iinft.ParticipationRole{
+				iinft.ParticipationRoleArtist: {
+					Role:                      iinft.ParticipationRoleArtist,
+					InitialSaleCommission:     80.0,
+					SecondaryMarketCommission: 20.0,
+					Address:                   userAcct.Address(),
+				},
+			},
+		},
 	}
 
 	_ = scripts.CreateSealDigitalArtTx(se.GetStandardScript("master_seal"), client, metadata).
@@ -155,7 +175,7 @@ func TestCreateDigitalArt(t *testing.T) {
 			RunReturns()
 		require.NoError(t, err)
 
-		meta, err := iinft.ReadMetadata(val)
+		meta, err := iinft.NewMetadataFromCadence(val)
 		require.NoError(t, err)
 
 		assert.Equal(t, uint64(1), meta.Edition)
@@ -192,7 +212,7 @@ func TestCreateDigitalArt(t *testing.T) {
 			RunReturns()
 		require.NoError(t, err)
 
-		meta, err := iinft.ReadMetadata(val)
+		meta, err := iinft.NewMetadataFromCadence(val)
 		require.NoError(t, err)
 
 		assert.Equal(t, uint64(2), meta.Edition)
@@ -236,7 +256,6 @@ func TestTransferDigitalArt(t *testing.T) {
 		MetadataLink:       "QmMetadata",
 		Name:               "Pure Art",
 		Artist:             "Arty",
-		ArtistAddress:      senderAcct.Address(),
 		Description:        "Digital art in its purest form",
 		Type:               "Image",
 		ContentLink:        "QmContent",
@@ -246,6 +265,17 @@ func TestTransferDigitalArt(t *testing.T) {
 		Asset:              "did:sequel:asset-id",
 		Record:             "record-id",
 		AssetHead:          "asset-head-id",
+		ParticipationProfile: &iinft.ParticipationProfile{
+			ID: 0,
+			Roles: map[string]*iinft.ParticipationRole{
+				iinft.ParticipationRoleArtist: {
+					Role:                      iinft.ParticipationRoleArtist,
+					InitialSaleCommission:     80.0,
+					SecondaryMarketCommission: 20.0,
+					Address:                   senderAcct.Address(),
+				},
+			},
+		},
 	}
 
 	_ = scripts.CreateSealDigitalArtTx(se.GetStandardScript("master_seal"), client, metadata).

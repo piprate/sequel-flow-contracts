@@ -56,8 +56,6 @@ pub contract DigitalArt: NonFungibleToken {
         pub let name: String
         // Artist name
         pub let artist: String
-        // Artist's address
-        pub let artistAddress: Address
         // Description
         pub let description: String
         // Media type: Audio, Video
@@ -73,11 +71,12 @@ pub contract DigitalArt: NonFungibleToken {
 		pub let record: String
 		pub let assetHead: String
 
+		pub let participationProfile: ParticipationProfile
+
         init(
             metadataLink: String,
             name: String,
             artist: String,
-            artistAddress: Address,
             description: String,
             type: String,
             contentLink: String,
@@ -87,12 +86,12 @@ pub contract DigitalArt: NonFungibleToken {
             maxEdition: UInt64,
             asset: String,
             record: String,
-            assetHead: String
+            assetHead: String,
+            participationProfile: ParticipationProfile
     )  {
             self.metadataLink = metadataLink
             self.name = name
             self.artist = artist
-            self.artistAddress = artistAddress
             self.description = description
             self.type = type
             self.contentLink = contentLink
@@ -103,6 +102,42 @@ pub contract DigitalArt: NonFungibleToken {
             self.asset = asset
             self.record = record
             self.assetHead = assetHead
+            self.participationProfile = participationProfile
+        }
+    }
+
+    pub struct ParticipationRole {
+        pub let id: String
+        pub let initialSaleCommission: UFix64
+        pub let secondaryMarketCommission: UFix64
+        pub let address: Address
+
+        init(
+            id: String,
+            initialSaleCommission: UFix64,
+            secondaryMarketCommission: UFix64,
+            address: Address
+        ) {
+            self.id = id
+            self.initialSaleCommission = initialSaleCommission
+            self.secondaryMarketCommission = secondaryMarketCommission
+            self.address = address
+        }
+    }
+
+    pub struct ParticipationProfile {
+        pub let id: UInt32
+        pub let roles: { String: ParticipationRole }
+        pub let description: String
+
+        init(
+            id: UInt32,
+            roles: { String: ParticipationRole }
+            description: String
+        ) {
+            self.id = id
+            self.roles = roles
+            self.description = description
         }
     }
 
@@ -252,7 +287,6 @@ pub contract DigitalArt: NonFungibleToken {
                     metadataLink: metadata.metadataLink,
                     name: metadata.name,
                     artist: metadata.artist,
-                    artistAddress: metadata.artistAddress,
                     description: metadata.description,
                     type: metadata.type,
                     contentLink: metadata.contentLink,
@@ -262,7 +296,8 @@ pub contract DigitalArt: NonFungibleToken {
                     maxEdition: metadata.maxEdition,
                     asset: metadata.asset,
                     record: metadata.record,
-                    assetHead: metadata.assetHead
+                    assetHead: metadata.assetHead,
+                    participationProfile: metadata.participationProfile
                 )
             )
         }
@@ -298,7 +333,6 @@ pub contract DigitalArt: NonFungibleToken {
                   metadataLink: metadata.metadataLink,
                   name: metadata.name,
                   artist: metadata.artist,
-                  artistAddress: metadata.artistAddress,
                   description: metadata.description,
                   type: metadata.type,
                   contentLink: metadata.contentLink,
@@ -308,7 +342,8 @@ pub contract DigitalArt: NonFungibleToken {
                   maxEdition: metadata.maxEdition,
                   asset: metadata.asset,
                   record: metadata.record,
-                  assetHead: metadata.assetHead
+                  assetHead: metadata.assetHead,
+                  participationProfile: metadata.participationProfile
                 )
             )
 

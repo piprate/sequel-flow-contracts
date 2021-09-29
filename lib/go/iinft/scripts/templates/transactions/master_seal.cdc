@@ -5,7 +5,6 @@ import DigitalArt from 0x{{.TokenAddress}}
 transaction(metadataLink: String,
             name: String,
             artist: String,
-            artistAddress: Address,
             description: String,
             type: String,
             contentLink: String,
@@ -14,7 +13,14 @@ transaction(metadataLink: String,
             maxEdition: UInt64,
             asset: String,
             record: String,
-            assetHead: String) {
+            assetHead: String,
+            participationProfileID: UInt32,
+            artistAddress: Address?,
+            artistInitial: UFix64,
+            artistSecondary: UFix64,
+            platformAddress: Address?,
+            platformInitial: UFix64,
+            platformSecondary: UFix64) {
     let admin: &DigitalArt.Admin
 
     prepare(signer: AuthAccount) {
@@ -23,11 +29,28 @@ transaction(metadataLink: String,
     }
 
     execute {
+        let roles: { String: DigitalArt.ParticipationRole } = {}
+        if artistAddress != nil {
+            roles["Artist"] = DigitalArt.ParticipationRole(
+                id: "Artist",
+                initialSaleCommission: artistInitial,
+                secondaryMarketCommission: artistSecondary,
+                address: artistAddress!
+            )
+        }
+        if platformAddress != nil {
+            roles["Platform"] = DigitalArt.ParticipationRole(
+                id: "Platform",
+                initialSaleCommission: platformInitial,
+                secondaryMarketCommission: platformSecondary,
+                address: platformAddress!
+            )
+        }
+
         self.admin.sealMaster(metadata: DigitalArt.Metadata(
             metadataLink: metadataLink,
             name: name,
             artist: artist,
-            artistAddress: artistAddress,
             description: description,
             type: type,
             contentLink: contentLink,
@@ -38,6 +61,11 @@ transaction(metadataLink: String,
             asset: asset,
             record: record,
             assetHead: assetHead,
+            participationProfile: DigitalArt.ParticipationProfile(
+                id: participationProfileID,
+                roles: roles,
+                description: ""
+            )
         ))
     }
 }
