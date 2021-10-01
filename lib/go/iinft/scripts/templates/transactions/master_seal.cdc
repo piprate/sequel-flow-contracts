@@ -1,6 +1,6 @@
 {{ define "master_seal" }}
-import NonFungibleToken from 0x{{.NFTAddress}}
-import DigitalArt from 0x{{.TokenAddress}}
+import NonFungibleToken from 0x{{.NonFungibleToken}}
+import DigitalArt from 0x{{.DigitalArt}}
 
 transaction(metadataLink: String,
             name: String,

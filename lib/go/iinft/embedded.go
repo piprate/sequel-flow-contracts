@@ -1,15 +1,15 @@
-package test
+package iinft
 
 import (
 	"errors"
 	"os"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/test/internal/assets"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/internal/assets"
 	"github.com/rs/zerolog/log"
 )
 
-//go:generate go run github.com/kevinburke/go-bindata/go-bindata -prefix ../../../.. -o internal/assets/assets.go -pkg assets -nometadata -nomemcopy ../../../../contracts/... ../../../../flow.json
+//go:generate go run github.com/kevinburke/go-bindata/go-bindata -prefix ../../.. -o internal/assets/assets.go -pkg assets -nometadata -nomemcopy ../../../contracts/... ../../../flow.json
 
 type (
 	embeddedFileLoader struct {

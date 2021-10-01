@@ -222,7 +222,7 @@ func TestCreateDigitalArt(t *testing.T) {
 
 		// test for non-existent token
 		_, err := se.NewInlineScript(
-			inspectCollectionScript(se.NFTAddress, se.DigitalArtAddress, userAcct.Address().String(),
+			inspectCollectionScript(se.WellKnownAddresses(), userAcct.Address().String(),
 				"DigitalArt", "DigitalArt.CollectionPublicPath", 5),
 		).RunReturns()
 		require.Error(t, err)
@@ -344,21 +344,21 @@ func TestTransferDigitalArt(t *testing.T) {
 
 func checkDigitalArtNFTSupply(t *testing.T, se *scripts.Engine, expectedSupply int) {
 	_, err := se.NewInlineScript(
-		inspectNFTSupplyScript(se.NFTAddress, se.DigitalArtAddress, "DigitalArt", expectedSupply),
+		inspectNFTSupplyScript(se.WellKnownAddresses(), "DigitalArt", expectedSupply),
 	).RunReturns()
 	require.NoError(t, err)
 }
 
 func checkTokenInDigitalArtCollection(t *testing.T, se *scripts.Engine, userAddr string, nftID int) {
 	_, err := se.NewInlineScript(
-		inspectCollectionScript(se.NFTAddress, se.DigitalArtAddress, userAddr, "DigitalArt", "DigitalArt.CollectionPublicPath", nftID),
+		inspectCollectionScript(se.WellKnownAddresses(), userAddr, "DigitalArt", "DigitalArt.CollectionPublicPath", nftID),
 	).RunReturns()
 	require.NoError(t, err)
 }
 
 func checkDigitalArtCollectionLen(t *testing.T, se *scripts.Engine, userAddr string, length int) {
 	_, err := se.NewInlineScript(
-		inspectCollectionLenScript(se.NFTAddress, se.DigitalArtAddress, userAddr, "DigitalArt", "DigitalArt.CollectionPublicPath", length),
+		inspectCollectionLenScript(se.WellKnownAddresses(), userAddr, "DigitalArt", "DigitalArt.CollectionPublicPath", length),
 	).RunReturns()
 	require.NoError(t, err)
 }

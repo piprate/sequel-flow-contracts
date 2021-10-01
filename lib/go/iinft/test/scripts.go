@@ -7,7 +7,7 @@ import (
 // inspectNFTSupplyScript creates a script that reads
 // the total supply of tokens in existence
 // and makes assertions about the number
-func inspectNFTSupplyScript(nftAddr, tokenAddr, tokenContractName string, expectedSupply int) string {
+func inspectNFTSupplyScript(addrMap map[string]string, tokenContractName string, expectedSupply int) string {
 	template := `
 		import NonFungibleToken from 0x%s
 		import %s from 0x%s
@@ -20,13 +20,13 @@ func inspectNFTSupplyScript(nftAddr, tokenAddr, tokenContractName string, expect
 		}
 	`
 
-	return fmt.Sprintf(template, nftAddr, tokenContractName, tokenAddr, tokenContractName, expectedSupply)
+	return fmt.Sprintf(template, addrMap["NonFungibleToken"], tokenContractName, addrMap[tokenContractName], tokenContractName, expectedSupply)
 }
 
 // inspectCollectionLenScript creates a script that retrieves an NFT collection
 // from storage and tries to borrow a reference for an NFT that it owns.
 // If it owns it, it will not fail.
-func inspectCollectionLenScript(nftAddr, tokenAddr, userAddr, tokenContractName, publicLocation string, length int) string {
+func inspectCollectionLenScript(addrMap map[string]string, userAddr, tokenContractName, publicLocation string, length int) string {
 	template := `
 		import NonFungibleToken from 0x%s
 		import %s from 0x%s
@@ -42,13 +42,13 @@ func inspectCollectionLenScript(nftAddr, tokenAddr, userAddr, tokenContractName,
 		}
 	`
 
-	return fmt.Sprintf(template, nftAddr, tokenContractName, tokenAddr, userAddr, publicLocation, length)
+	return fmt.Sprintf(template, addrMap["NonFungibleToken"], tokenContractName, addrMap[tokenContractName], userAddr, publicLocation, length)
 }
 
 // inspectCollectionScript creates a script that retrieves an NFT collection
 // from storage and tries to borrow a reference for an NFT that it owns.
 // If it owns it, it will not fail.
-func inspectCollectionScript(nftAddr, tokenAddr, userAddr, tokenContractName, publicLocation string, nftID int) string {
+func inspectCollectionScript(addrMap map[string]string, userAddr, tokenContractName, publicLocation string, nftID int) string {
 	template := `
 		import NonFungibleToken from 0x%s
 		import %s from 0x%s
@@ -62,5 +62,5 @@ func inspectCollectionScript(nftAddr, tokenAddr, userAddr, tokenContractName, pu
 		}
 	`
 
-	return fmt.Sprintf(template, nftAddr, tokenContractName, tokenAddr, userAddr, publicLocation, nftID)
+	return fmt.Sprintf(template, addrMap["NonFungibleToken"], tokenContractName, addrMap[tokenContractName], userAddr, publicLocation, nftID)
 }

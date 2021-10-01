@@ -1,6 +1,6 @@
 {{ define "account_setup" }}
-import NonFungibleToken from 0x{{.NFTAddress}}
-import DigitalArt from 0x{{.TokenAddress}}
+import NonFungibleToken from 0x{{.NonFungibleToken}}
+import DigitalArt from 0x{{.DigitalArt}}
 
 // This transaction is what an account would run
 // to set itself up to receive NFTs
