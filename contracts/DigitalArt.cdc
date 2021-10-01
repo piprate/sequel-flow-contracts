@@ -40,11 +40,10 @@ pub contract DigitalArt: NonFungibleToken {
         }
 
         pub fun availableEditions() : UInt64 {
-            let count = self.metadata.maxEdition - self.nextEditionId + UInt64(1)
-            if count < 0 {
-                return 0
+            if self.metadata.maxEdition >= self.nextEditionId {
+                return self.metadata.maxEdition - self.nextEditionId + UInt64(1)
             } else {
-                return count
+                return 0
             }
         }
     }
