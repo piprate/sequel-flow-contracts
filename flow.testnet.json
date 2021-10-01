@@ -1,0 +1,54 @@
+{
+  "contracts": {
+    "FungibleToken": {
+      "source": "./contracts/standard/FungibleToken.cdc",
+      "aliases": {
+        "testnet": "0x9a0766d93b6608b7",
+        "mainnet" :"0xf233dcee88fe0abe"
+      }
+    },
+    "FlowToken": {
+      "source": "./contracts/standard/FlowToken.cdc",
+      "aliases": {
+        "testnet": "0x7e60df042a9c0868",
+        "mainnet" : "0x1654653399040a61"
+      }
+    },
+    "NonFungibleToken": {
+      "source": "./contracts/standard/NonFungibleToken.cdc",
+      "aliases": {
+        "testnet": "0x631e88ae7f1d7c20",
+        "mainnet": "0x1d7e57aa55817448"
+      }
+    },
+    "FUSD": {
+      "source": "./contracts/standard/FUSD.cdc",
+      "aliases": {
+        "testnet": "0xe223d8a629e49c68",
+        "mainnet": "0x3c5959b568896393"
+      }
+    },
+    "DigitalArt": "./contracts/DigitalArt.cdc"
+  },
+  "networks": {
+    "mainnet": "access.mainnet.nodes.onflow.org:9000",
+    "testnet": "access.devnet.nodes.onflow.org:9000"
+  },
+  "accounts": {
+    "testnet-account": {
+      "address": "8eacbc4234067b7d",
+      "key": "${TESTNET_ACCOUNT}"
+    },
+    "testnet-sequel" : {
+      "address": "28e872069e9ca2b4",
+      "key": "${TESTNET_SEQUEL}"
+    }
+  },
+  "deployments": {
+    "testnet": {
+      "testnet-account": [
+        "DigitalArt"
+      ]
+    }
+  }
+}
