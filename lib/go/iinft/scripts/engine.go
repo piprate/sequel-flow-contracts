@@ -17,7 +17,7 @@ var goTemplates *template.Template
 
 func init() {
 	var err error
-	goTemplates, err = template.New("").ParseFS(templateFS, "templates/transactions/*.cdc", "templates/scripts/*.cdc")
+	goTemplates, err = template.New("").ParseFS(templateFS, "templates/transactions/*.cdc", "templates/scripts/**/*.cdc")
 	if err != nil {
 		panic(err)
 	}
@@ -32,7 +32,7 @@ type (
 )
 
 var (
-	requiredWellKnownAddresses = []string{"FungibleToken", "FlowToken", "NonFungibleToken", "FUSD", "DigitalArt"}
+	requiredWellKnownAddresses = []string{"FungibleToken", "FlowToken", "NonFungibleToken", "FUSD", "Collectible", "DigitalArt"}
 )
 
 func NewEngine(client *gwtf.GoWithTheFlow, preload bool) (*Engine, error) {

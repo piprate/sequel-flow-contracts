@@ -36,6 +36,13 @@
         "mainnet": "0x3c5959b568896393"
       }
     },
+    "Collectible": {
+      "source": "./contracts/thirdparty/Collectible.cdc",
+      "aliases": {
+        "testnet": "0xefb501878aa34730",
+        "mainnet": "0xf5b0eb433389ac3f"
+      }
+    },
     "DigitalArt": {
       "source": "./contracts/DigitalArt.cdc",
       "aliases": {
