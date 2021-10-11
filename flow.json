@@ -46,7 +46,8 @@
     "DigitalArt": {
       "source": "./contracts/DigitalArt.cdc",
       "aliases": {
-        "testnet": "8eacbc4234067b7d"
+        "testnet": "0x8eacbc4234067b7d",
+        "mainnet": "0xdummy"
       }
     }
   },
