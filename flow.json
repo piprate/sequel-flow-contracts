@@ -37,7 +37,14 @@
       }
     },
     "Collectible": {
-      "source": "./contracts/thirdparty/Collectible.cdc",
+      "source": "./contracts/thirdparty/xtingles/Collectible.cdc",
+      "aliases": {
+        "testnet": "0xefb501878aa34730",
+        "mainnet": "0xf5b0eb433389ac3f"
+      }
+    },
+    "Edition": {
+      "source": "./contracts/thirdparty/xtingles/Edition.cdc",
       "aliases": {
         "testnet": "0xefb501878aa34730",
         "mainnet": "0xf5b0eb433389ac3f"
@@ -47,7 +54,7 @@
       "source": "./contracts/DigitalArt.cdc",
       "aliases": {
         "testnet": "0x8eacbc4234067b7d",
-        "mainnet": "0xdummy"
+        "mainnet": "0xf5b0eb433389ac3f"
       }
     }
   },
@@ -79,6 +86,9 @@
       "emulator-account": [
         "NonFungibleToken",
         "FUSD",
+        "FungibleToken",
+        "Edition",
+        "Collectible",
         "DigitalArt"
       ],
       "emulator-user1": [],

@@ -1,4 +1,4 @@
-import NonFungibleToken from "./NonFungibleToken.cdc"
+import NonFungibleToken from "../../standard/NonFungibleToken.cdc"
 import Edition from "./Edition.cdc"
 
 pub contract Collectible: NonFungibleToken {

@@ -17,7 +17,7 @@ var goTemplates *template.Template
 
 func init() {
 	var err error
-	goTemplates, err = template.New("").ParseFS(templateFS, "templates/transactions/*.cdc", "templates/scripts/**/*.cdc")
+	goTemplates, err = template.New("").ParseFS(templateFS, "templates/transactions/*.cdc", "templates/scripts/*.cdc", "templates/scripts/**/*.cdc")
 	if err != nil {
 		panic(err)
 	}
