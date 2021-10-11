@@ -1,6 +1,6 @@
 {{ define "digitalart_destroy" }}
-import NonFungibleToken from 0x{{.NonFungibleToken}}
-import DigitalArt from 0x{{.DigitalArt}}
+import NonFungibleToken from {{.NonFungibleToken}}
+import DigitalArt from {{.DigitalArt}}
 
 transaction(tokenId: UInt64) {
   prepare(acct: AuthAccount) {

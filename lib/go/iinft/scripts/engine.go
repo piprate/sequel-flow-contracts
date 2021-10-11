@@ -61,7 +61,7 @@ func (e *Engine) loadContractAddresses() error {
 		}
 	}
 	for _, contract := range deployedContracts {
-		e.wellKnownAddresses[strings.Split(path.Base(contract.Source), ".")[0]] = contract.Target.String()
+		e.wellKnownAddresses[strings.Split(path.Base(contract.Source), ".")[0]] = "0x" + contract.Target.String()
 	}
 
 	for _, requiredAddress := range requiredWellKnownAddresses {

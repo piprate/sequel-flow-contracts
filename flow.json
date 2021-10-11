@@ -65,19 +65,19 @@
   },
   "accounts": {
     "emulator-account": {
-      "address": "f8d6e0586b0a20c7",
+      "address": "0xf8d6e0586b0a20c7",
       "key": "7cc3a167907702780552edebe976d4ad85213d7fd214e7fbc89b587043ec117b"
     },
     "emulator-user1": {
-      "address": "01cf0e2f2f715450",
+      "address": "0x01cf0e2f2f715450",
       "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
     },
     "emulator-user2": {
-      "address": "179b6b1cb6755e31",
+      "address": "0x179b6b1cb6755e31",
       "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
     },
     "emulator-user3": {
-      "address": "f3fcd2c1a78f5eee",
+      "address": "0xf3fcd2c1a78f5eee",
       "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
     }
   },

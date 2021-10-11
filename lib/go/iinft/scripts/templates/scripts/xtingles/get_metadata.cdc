@@ -1,6 +1,6 @@
 {{ define "xtingles_get_metadata" }}
-import NonFungibleToken from 0x{{.NonFungibleToken}}
-import Collectible from 0x{{.Collectible}}
+import NonFungibleToken from {{.NonFungibleToken}}
+import Collectible from {{.Collectible}}
 
 pub fun main(address: Address, id: UInt64): XTinglesResource {
     let account = getAccount(address)

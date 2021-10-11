@@ -9,8 +9,8 @@ import (
 // and makes assertions about the number
 func inspectNFTSupplyScript(addrMap map[string]string, tokenContractName string, expectedSupply int) string {
 	template := `
-		import NonFungibleToken from 0x%s
-		import %s from 0x%s
+		import NonFungibleToken from %s
+		import %s from %s
 
 		pub fun main() {
 			assert(
@@ -28,8 +28,8 @@ func inspectNFTSupplyScript(addrMap map[string]string, tokenContractName string,
 // If it owns it, it will not fail.
 func inspectCollectionLenScript(addrMap map[string]string, userAddr, tokenContractName, publicLocation string, length int) string {
 	template := `
-		import NonFungibleToken from 0x%s
-		import %s from 0x%s
+		import NonFungibleToken from %s
+		import %s from %s
 
 		pub fun main() {
 			let acct = getAccount(0x%s)
@@ -50,8 +50,8 @@ func inspectCollectionLenScript(addrMap map[string]string, userAddr, tokenContra
 // If it owns it, it will not fail.
 func inspectCollectionScript(addrMap map[string]string, userAddr, tokenContractName, publicLocation string, nftID int) string {
 	template := `
-		import NonFungibleToken from 0x%s
-		import %s from 0x%s
+		import NonFungibleToken from %s
+		import %s from %s
 
 		pub fun main() {
 			let acct = getAccount(0x%s)
