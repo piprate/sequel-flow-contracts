@@ -38,7 +38,34 @@ func TestNewEngine_mainnet(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false)
 	require.NoError(t, err)
 
-	// this call should fail because we don't have DigitalArt deployed on mainnet yet
 	_, err = scripts.NewEngine(client, false)
-	require.Error(t, err)
+	require.NoError(t, err)
+}
+
+func TestEngine_GetStandardScript(t *testing.T) {
+	client, err := iinft.NewGoWithTheFlowEmbedded("testnet", false)
+	require.NoError(t, err)
+
+	client.InitializeContracts()
+
+	e, err := scripts.NewEngine(client, false)
+	require.NoError(t, err)
+
+	res := e.GetStandardScript("xtingles_get_collection")
+
+	println(res)
+}
+
+func TestEngine_GetStandardScript_Versus(t *testing.T) {
+	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false)
+	require.NoError(t, err)
+
+	client.InitializeContracts()
+
+	e, err := scripts.NewEngine(client, false)
+	require.NoError(t, err)
+
+	res := e.GetStandardScript("versus_get_art")
+
+	println(res)
 }

@@ -50,6 +50,20 @@
         "mainnet": "0xf5b0eb433389ac3f"
       }
     },
+    "Art": {
+      "source": "./contracts/thirdparty/versus/Art.cdc",
+      "aliases": {
+        "testnet": "0xefb501878aa34730",
+        "mainnet": "0xd796ff17107bbff6"
+      }
+    },
+    "Content": {
+      "source": "./contracts/thirdparty/versus/Content.cdc",
+      "aliases": {
+        "testnet": "0xefb501878aa34730",
+        "mainnet": "0xd796ff17107bbff6"
+      }
+    },
     "DigitalArt": {
       "source": "./contracts/DigitalArt.cdc",
       "aliases": {
@@ -89,6 +103,8 @@
         "FungibleToken",
         "Edition",
         "Collectible",
+        "Art",
+        "Content",
         "DigitalArt"
       ],
       "emulator-user1": [],
