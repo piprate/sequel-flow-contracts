@@ -32,7 +32,7 @@ type (
 )
 
 var (
-	requiredWellKnownAddresses = []string{"FungibleToken", "FlowToken", "NonFungibleToken", "FUSD", "Collectible", "DigitalArt"}
+	requiredWellKnownAddresses = []string{"FungibleToken", "FlowToken", "NonFungibleToken", "FUSD", "Collectible", "Edition", "Art", "Content", "DigitalArt"}
 )
 
 func NewEngine(client *gwtf.GoWithTheFlow, preload bool) (*Engine, error) {
