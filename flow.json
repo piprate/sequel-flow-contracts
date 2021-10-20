@@ -11,7 +11,7 @@
       "aliases": {
         "emulator": "0xee82856bf20e2aa6",
         "testnet": "0x9a0766d93b6608b7",
-        "mainnet" :"0xf233dcee88fe0abe"
+        "mainnet": "0xf233dcee88fe0abe"
       }
     },
     "FlowToken": {
@@ -19,7 +19,7 @@
       "aliases": {
         "emulator": "0x0ae53cb6e3f42a79",
         "testnet": "0x7e60df042a9c0868",
-        "mainnet" : "0x1654653399040a61"
+        "mainnet": "0x1654653399040a61"
       }
     },
     "NonFungibleToken": {
@@ -36,7 +36,41 @@
         "mainnet": "0x3c5959b568896393"
       }
     },
-    "DigitalArt": "./contracts/DigitalArt.cdc"
+    "Collectible": {
+      "source": "./contracts/thirdparty/xtingles/Collectible.cdc",
+      "aliases": {
+        "testnet": "0xefb501878aa34730",
+        "mainnet": "0xf5b0eb433389ac3f"
+      }
+    },
+    "Edition": {
+      "source": "./contracts/thirdparty/xtingles/Edition.cdc",
+      "aliases": {
+        "testnet": "0xefb501878aa34730",
+        "mainnet": "0xf5b0eb433389ac3f"
+      }
+    },
+    "Art": {
+      "source": "./contracts/thirdparty/versus/Art.cdc",
+      "aliases": {
+        "testnet": "0xefb501878aa34730",
+        "mainnet": "0xd796ff17107bbff6"
+      }
+    },
+    "Content": {
+      "source": "./contracts/thirdparty/versus/Content.cdc",
+      "aliases": {
+        "testnet": "0xefb501878aa34730",
+        "mainnet": "0xd796ff17107bbff6"
+      }
+    },
+    "DigitalArt": {
+      "source": "./contracts/DigitalArt.cdc",
+      "aliases": {
+        "testnet": "0x8eacbc4234067b7d",
+        "mainnet": "0xf5b0eb433389ac3f"
+      }
+    }
   },
   "networks": {
     "emulator": "127.0.0.1:3569",
@@ -45,19 +79,19 @@
   },
   "accounts": {
     "emulator-account": {
-      "address": "f8d6e0586b0a20c7",
+      "address": "0xf8d6e0586b0a20c7",
       "key": "7cc3a167907702780552edebe976d4ad85213d7fd214e7fbc89b587043ec117b"
     },
     "emulator-user1": {
-      "address": "01cf0e2f2f715450",
+      "address": "0x01cf0e2f2f715450",
       "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
     },
     "emulator-user2": {
-      "address": "179b6b1cb6755e31",
+      "address": "0x179b6b1cb6755e31",
       "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
     },
     "emulator-user3": {
-      "address": "f3fcd2c1a78f5eee",
+      "address": "0xf3fcd2c1a78f5eee",
       "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
     }
   },
@@ -66,6 +100,11 @@
       "emulator-account": [
         "NonFungibleToken",
         "FUSD",
+        "FungibleToken",
+        "Edition",
+        "Collectible",
+        "Art",
+        "Content",
         "DigitalArt"
       ],
       "emulator-user1": [],

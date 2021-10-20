@@ -3,8 +3,9 @@ package scripts
 import (
 	"bytes"
 	"embed"
-	"errors"
+	"fmt"
 	"path"
+	"strings"
 	"text/template"
 
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
@@ -16,7 +17,7 @@ var goTemplates *template.Template
 
 func init() {
 	var err error
-	goTemplates, err = template.New("").ParseFS(templateFS, "templates/transactions/*.cdc", "templates/scripts/*.cdc")
+	goTemplates, err = template.New("").ParseFS(templateFS, "templates/transactions/*.cdc", "templates/scripts/*.cdc", "templates/scripts/**/*.cdc")
 	if err != nil {
 		panic(err)
 	}
@@ -24,20 +25,21 @@ func init() {
 
 type (
 	Engine struct {
-		NFTAddress        string
-		FUSDAddress       string
-		DigitalArtAddress string
-
-		client *gwtf.GoWithTheFlow
-
+		client             *gwtf.GoWithTheFlow
 		preloadedTemplates map[string]string
+		wellKnownAddresses map[string]string
 	}
+)
+
+var (
+	requiredWellKnownAddresses = []string{"FungibleToken", "FlowToken", "NonFungibleToken", "FUSD", "Collectible", "Edition", "Art", "Content", "DigitalArt"}
 )
 
 func NewEngine(client *gwtf.GoWithTheFlow, preload bool) (*Engine, error) {
 	eng := &Engine{
 		client:             client,
 		preloadedTemplates: make(map[string]string),
+		wellKnownAddresses: make(map[string]string),
 	}
 
 	if err := eng.loadContractAddresses(); err != nil {
@@ -48,40 +50,39 @@ func NewEngine(client *gwtf.GoWithTheFlow, preload bool) (*Engine, error) {
 }
 
 func (e *Engine) loadContractAddresses() error {
-	contracts, err := e.client.State.DeploymentContractsByNetwork(e.client.Network)
+	contracts := e.client.State.Contracts().ByNetwork(e.client.Network)
+	deployedContracts, err := e.client.State.DeploymentContractsByNetwork(e.client.Network)
 	if err != nil {
 		return err
 	}
-	sourceTarget := make(map[string]string)
 	for _, contract := range contracts {
-		sourceTarget[path.Base(contract.Source)] = contract.Target.String()
+		if contract.Alias != "" {
+			e.wellKnownAddresses[strings.Split(path.Base(contract.Source), ".")[0]] = contract.Alias
+		}
+	}
+	for _, contract := range deployedContracts {
+		e.wellKnownAddresses[strings.Split(path.Base(contract.Source), ".")[0]] = "0x" + contract.Target.String()
 	}
 
-	var ok bool
-	e.NFTAddress, ok = sourceTarget["NonFungibleToken.cdc"]
-	if !ok {
-		return errors.New("address not found for contract NonFungibleToken")
+	for _, requiredAddress := range requiredWellKnownAddresses {
+		if _, found := e.wellKnownAddresses[requiredAddress]; !found {
+			return fmt.Errorf("address not found for contract %s", requiredAddress)
+		}
 	}
-	e.FUSDAddress, ok = sourceTarget["FUSD.cdc"]
-	if !ok {
-		return errors.New("address not found for contract FUSD")
-	}
-	e.DigitalArtAddress, ok = sourceTarget["DigitalArt.cdc"]
-	if !ok {
-		return errors.New("address not found for contract NonFungibleToken")
-	}
+	fmt.Printf("%v\n", e.wellKnownAddresses)
 
 	return nil
+}
+
+func (e *Engine) WellKnownAddresses() map[string]string {
+	return e.wellKnownAddresses
 }
 
 func (e *Engine) GetStandardScript(scriptID string) string {
 	s, found := e.preloadedTemplates[scriptID]
 	if !found {
 		buf := &bytes.Buffer{}
-		if err := goTemplates.ExecuteTemplate(buf, scriptID, map[string]interface{}{
-			"NFTAddress":   e.NFTAddress,
-			"TokenAddress": e.DigitalArtAddress,
-		}); err != nil {
+		if err := goTemplates.ExecuteTemplate(buf, scriptID, e.wellKnownAddresses); err != nil {
 			panic(err)
 		}
 

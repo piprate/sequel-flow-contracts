@@ -1,6 +1,6 @@
 {{ define "digitalart_transfer" }}
-import NonFungibleToken from 0x{{.NFTAddress}}
-import DigitalArt from 0x{{.TokenAddress}}
+import NonFungibleToken from {{.NonFungibleToken}}
+import DigitalArt from {{.DigitalArt}}
 
 transaction(tokenId: UInt64, recipientAddr: Address) {
   prepare(acct: AuthAccount) {

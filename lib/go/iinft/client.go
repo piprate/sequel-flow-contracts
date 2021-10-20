@@ -40,6 +40,11 @@ func NewGoWithTheFlowFS(flowBasePath string, network string, inMemory bool) (*gw
 	}, network, inMemory)
 }
 
+// NewGoWithTheFlowEmbedded creates a new test go with the flow client based on embedded setup
+func NewGoWithTheFlowEmbedded(network string, inMemory bool) (*gwtf.GoWithTheFlow, error) {
+	return NewGoWithTheFlowError(&embeddedFileLoader{}, network, inMemory)
+}
+
 func NewGoWithTheFlowError(baseLoader flowkit.ReaderWriter, network string, inMemory bool) (*gwtf.GoWithTheFlow, error) {
 
 	state, err := flowkit.Load([]string{"flow.json"}, baseLoader)

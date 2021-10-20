@@ -1,6 +1,6 @@
 {{ define "digitalart_mint" }}
-import NonFungibleToken from 0x{{.NFTAddress}}
-import DigitalArt from 0x{{.TokenAddress}}
+import NonFungibleToken from {{.NonFungibleToken}}
+import DigitalArt from {{.DigitalArt}}
 
 transaction(masterId: String, amount: UInt64, recipientAddr: Address) {
     let admin: &DigitalArt.Admin
