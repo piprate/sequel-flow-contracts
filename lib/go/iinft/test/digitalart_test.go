@@ -23,7 +23,7 @@ func init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Stamp})
 }
 
-func TestSealDigitalArt(t *testing.T) {
+func TestSealDigitalArtMaster(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
 	require.NoError(t, err)
 
@@ -90,7 +90,7 @@ func TestSealDigitalArt(t *testing.T) {
 	})
 }
 
-func TestCreateDigitalArt(t *testing.T) {
+func TestMintDigitalArtEditions(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
 	require.NoError(t, err)
 
@@ -143,7 +143,7 @@ func TestCreateDigitalArt(t *testing.T) {
 
 	t.Run("Should be able to mint a token", func(t *testing.T) {
 
-		_ = client.Transaction(se.GetStandardScript("digitalart_mint")).
+		_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
 			SignProposeAndPayAs(sequelAccount).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
@@ -180,7 +180,7 @@ func TestCreateDigitalArt(t *testing.T) {
 	})
 
 	t.Run("Editions should have different metadata", func(t *testing.T) {
-		_ = client.Transaction(se.GetStandardScript("digitalart_mint")).
+		_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
 			SignProposeAndPayAs(sequelAccount).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
@@ -214,6 +214,97 @@ func TestCreateDigitalArt(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, uint64(2), meta.Edition)
+	})
+
+	t.Run("Shouldn't be able to borrow a reference to an NFT that doesn't exist", func(t *testing.T) {
+
+		// test for non-existent token
+		_, err := se.NewInlineScript(
+			inspectCollectionScript(se.WellKnownAddresses(), userAcct.Address().String(),
+				"DigitalArt", "DigitalArt.CollectionPublicPath", 5),
+		).RunReturns()
+		require.Error(t, err)
+	})
+}
+
+func TestMintDigitalArtSingles(t *testing.T) {
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
+	require.NoError(t, err)
+
+	client.InitializeContracts().CreateAccounts("emulator-account")
+
+	se, err := scripts.NewEngine(client, false)
+	require.NoError(t, err)
+
+	userAcct, err := client.State.Accounts().ByName("emulator-user1")
+	require.NoError(t, err)
+
+	_ = se.NewTransaction("account_setup").
+		SignProposeAndPayAs("user1").
+		Test(t).
+		AssertSuccess()
+
+	checkDigitalArtNFTSupply(t, se, 0)
+	checkDigitalArtCollectionLen(t, se, userAcct.Address().String(), 0)
+
+	metadata := &iinft.Metadata{
+		MetadataLink:       "QmMetadata",
+		Name:               "Pure Art",
+		Artist:             "Arty",
+		Description:        "Digital art in its purest form",
+		Type:               "Image",
+		ContentLink:        "QmContent",
+		ContentPreviewLink: "QmPreview",
+		Mimetype:           "image/jpeg",
+		Asset:              "did:sequel:asset-id",
+		Record:             "record-id",
+		AssetHead:          "asset-head-id",
+		ParticipationProfile: &iinft.ParticipationProfile{
+			ID: 0,
+			Roles: map[string]*iinft.ParticipationRole{
+				iinft.ParticipationRoleArtist: {
+					Role:                      iinft.ParticipationRoleArtist,
+					InitialSaleCommission:     80.0,
+					SecondaryMarketCommission: 20.0,
+					Address:                   userAcct.Address(),
+				},
+			},
+		},
+	}
+
+	t.Run("Should be able to mint a token", func(t *testing.T) {
+
+		_ = scripts.CreateMintSingleDigitalArtTx(se.GetStandardScript("digitalart_mint_single"), client, metadata, userAcct.Address()).
+			SignProposeAndPayAs(sequelAccount).
+			Test(t).
+			AssertSuccess().
+			AssertEventCount(2).
+			AssertEmitEventName("A.f8d6e0586b0a20c7.DigitalArt.Minted", "A.f8d6e0586b0a20c7.DigitalArt.Deposit").
+			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Minted", map[string]interface{}{
+				"id":      "0",
+				"asset":   "did:sequel:asset-id",
+				"edition": "1",
+			})).
+			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Deposit", map[string]interface{}{
+				"id": "0",
+				"to": "0x1cf0e2f2f715450",
+			}))
+
+		// Assert that the account's collection is correct
+		checkTokenInDigitalArtCollection(t, se, userAcct.Address().String(), 0)
+		checkDigitalArtCollectionLen(t, se, userAcct.Address().String(), 1)
+		checkDigitalArtNFTSupply(t, se, 1)
+
+		val, err := se.NewScript("digitalart_get_metadata").
+			Argument(cadence.NewAddress(userAcct.Address())).
+			UInt64Argument(0).
+			RunReturns()
+		require.NoError(t, err)
+
+		meta, err := iinft.NewMetadataFromCadence(val)
+		require.NoError(t, err)
+
+		assert.Equal(t, uint64(1), meta.Edition)
 	})
 
 	t.Run("Shouldn't be able to borrow a reference to an NFT that doesn't exist", func(t *testing.T) {
@@ -280,7 +371,7 @@ func TestTransferDigitalArt(t *testing.T) {
 		Test(t).
 		AssertSuccess()
 
-	_ = client.Transaction(se.GetStandardScript("digitalart_mint")).
+	_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
 		SignProposeAndPayAs(sequelAccount).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).

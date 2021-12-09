@@ -311,7 +311,7 @@ pub contract DigitalArt: NonFungibleToken {
             return master.availableEditions()
         }
 
-        pub fun mintNFT(masterId: String) : @DigitalArt.NFT {
+        pub fun mintEditionNFT(masterId: String) : @DigitalArt.NFT {
             pre {
                DigitalArt.masters.containsKey(masterId) : "master not found"
             }
@@ -347,6 +347,35 @@ pub contract DigitalArt: NonFungibleToken {
             )
 
             emit Minted(id: DigitalArt.totalSupply, asset: metadata.asset, edition: edition)
+
+            DigitalArt.totalSupply = DigitalArt.totalSupply + UInt64(1)
+
+            return <- newNFT
+        }
+
+        pub fun mintSingleNFT(metadata: Metadata) : @DigitalArt.NFT {
+            // create a new NFT
+            var newNFT <- create NFT(
+                initID: DigitalArt.totalSupply,
+                metadata: Metadata(
+                    metadataLink: metadata.metadataLink,
+                    name: metadata.name,
+                    artist: metadata.artist,
+                    description: metadata.description,
+                    type: metadata.type,
+                    contentLink: metadata.contentLink,
+                    contentPreviewLink: metadata.contentPreviewLink,
+                    mimetype: metadata.mimetype,
+                    edition: 1,
+                    maxEdition: 1,
+                    asset: metadata.asset,
+                    record: metadata.record,
+                    assetHead: metadata.assetHead,
+                    participationProfile: metadata.participationProfile
+                )
+            )
+
+            emit Minted(id: DigitalArt.totalSupply, asset: metadata.asset, edition: 1)
 
             DigitalArt.totalSupply = DigitalArt.totalSupply + UInt64(1)
 
