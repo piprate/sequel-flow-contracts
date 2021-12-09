@@ -26,16 +26,27 @@ func TestTransactionArguments(t *testing.T) {
 		ufix, _ := cadence.NewUFix64("1.0")
 		dateFix, _ := cadence.NewUFix64("1627560000.00000000")
 
+		fooStr, _ := cadence.NewString("foo")
+		barStr, _ := cadence.NewString("bar")
+
+		stringValues := []cadence.Value{
+			fooStr,
+			barStr,
+		}
+
 		builder := g.Transaction("").BooleanArgument(true).
 			BytesArgument([]byte{1}).
 			Fix64Argument("-1.0").
 			UFix64Argument("1.0").
-			DateStringAsUnixTimestamp("July 29, 2021 08:00:00 AM", "America/New_York")
+			DateStringAsUnixTimestamp("July 29, 2021 08:00:00 AM", "America/New_York").
+			StringArrayArgument("foo", "bar")
+
 		assert.Contains(t, builder.Arguments, cadence.NewBool(true))
 		assert.Contains(t, builder.Arguments, cadence.NewBytes([]byte{1}))
 		assert.Contains(t, builder.Arguments, fix)
 		assert.Contains(t, builder.Arguments, ufix)
 		assert.Contains(t, builder.Arguments, dateFix)
+		assert.Contains(t, builder.Arguments, cadence.NewArray(stringValues))
 	})
 
 	t.Run("Word argument test", func(t *testing.T) {

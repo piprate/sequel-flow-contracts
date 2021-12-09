@@ -15,6 +15,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	sequelAccount = "account"
+)
+
 func init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Stamp})
 }
@@ -26,9 +30,6 @@ func TestSealDigitalArt(t *testing.T) {
 	client.InitializeContracts()
 
 	se, err := scripts.NewEngine(client, false)
-	require.NoError(t, err)
-
-	sequelAcct, err := client.State.Accounts().ByName("emulator-account")
 	require.NoError(t, err)
 
 	userAcct, err := client.State.Accounts().ByName("emulator-user1")
@@ -63,7 +64,7 @@ func TestSealDigitalArt(t *testing.T) {
 	t.Run("Should be able to seal new digital art master", func(t *testing.T) {
 
 		_ = scripts.CreateSealDigitalArtTx(se.GetStandardScript("master_seal"), client, sampleMetadata).
-			SignProposeAndPayAsAccount(sequelAcct).
+			SignProposeAndPayAs(sequelAccount).
 			Test(t).
 			AssertSuccess()
 	})
@@ -77,13 +78,13 @@ func TestSealDigitalArt(t *testing.T) {
 		script := se.GetStandardScript("master_seal")
 
 		_ = scripts.CreateSealDigitalArtTx(script, client, &sampleMetadata2).
-			SignProposeAndPayAsAccount(sequelAcct).
+			SignProposeAndPayAs(sequelAccount).
 			Test(t).
 			AssertSuccess()
 
 		// try again
 		_ = scripts.CreateSealDigitalArtTx(script, client, &sampleMetadata2).
-			SignProposeAndPayAsAccount(sequelAcct).
+			SignProposeAndPayAs(sequelAccount).
 			Test(t).
 			AssertFailure("master already sealed")
 	})
@@ -98,14 +99,11 @@ func TestCreateDigitalArt(t *testing.T) {
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	sequelAcct, err := client.State.Accounts().ByName("emulator-account")
-	require.NoError(t, err)
-
 	userAcct, err := client.State.Accounts().ByName("emulator-user1")
 	require.NoError(t, err)
 
 	_ = se.NewTransaction("account_setup").
-		SignProposeAndPayAsAccount(userAcct).
+		SignProposeAndPayAs("user1").
 		Test(t).
 		AssertSuccess()
 
@@ -139,14 +137,14 @@ func TestCreateDigitalArt(t *testing.T) {
 	}
 
 	_ = scripts.CreateSealDigitalArtTx(se.GetStandardScript("master_seal"), client, metadata).
-		SignProposeAndPayAsAccount(sequelAcct).
+		SignProposeAndPayAs(sequelAccount).
 		Test(t).
 		AssertSuccess()
 
 	t.Run("Should be able to mint a token", func(t *testing.T) {
 
 		_ = client.Transaction(se.GetStandardScript("digitalart_mint")).
-			SignProposeAndPayAsAccount(sequelAcct).
+			SignProposeAndPayAs(sequelAccount).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			Argument(cadence.Address(userAcct.Address())).
@@ -183,7 +181,7 @@ func TestCreateDigitalArt(t *testing.T) {
 
 	t.Run("Editions should have different metadata", func(t *testing.T) {
 		_ = client.Transaction(se.GetStandardScript("digitalart_mint")).
-			SignProposeAndPayAsAccount(sequelAcct).
+			SignProposeAndPayAs(sequelAccount).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			Argument(cadence.Address(userAcct.Address())).
@@ -238,17 +236,16 @@ func TestTransferDigitalArt(t *testing.T) {
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	sequelAcct, err := client.State.Accounts().ByName("emulator-account")
+	senderAccount := "user1"
+	senderAcct, err := client.State.Accounts().ByName("emulator-" + senderAccount)
 	require.NoError(t, err)
 
-	senderAcct, err := client.State.Accounts().ByName("emulator-user1")
-	require.NoError(t, err)
-
-	receiverAcct, err := client.State.Accounts().ByName("emulator-user2")
+	receiverAccount := "user2"
+	receiverAcct, err := client.State.Accounts().ByName("emulator-" + receiverAccount)
 	require.NoError(t, err)
 
 	_ = se.NewTransaction("account_setup").
-		SignProposeAndPayAsAccount(senderAcct).
+		SignProposeAndPayAs(senderAccount).
 		Test(t).
 		AssertSuccess()
 
@@ -279,12 +276,12 @@ func TestTransferDigitalArt(t *testing.T) {
 	}
 
 	_ = scripts.CreateSealDigitalArtTx(se.GetStandardScript("master_seal"), client, metadata).
-		SignProposeAndPayAsAccount(sequelAcct).
+		SignProposeAndPayAs(sequelAccount).
 		Test(t).
 		AssertSuccess()
 
 	_ = client.Transaction(se.GetStandardScript("digitalart_mint")).
-		SignProposeAndPayAsAccount(sequelAcct).
+		SignProposeAndPayAs(sequelAccount).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
 		Argument(cadence.Address(senderAcct.Address())).
@@ -294,7 +291,7 @@ func TestTransferDigitalArt(t *testing.T) {
 	t.Run("Should be able to create a new empty NFT Collection", func(t *testing.T) {
 
 		_ = se.NewTransaction("account_setup").
-			SignProposeAndPayAsAccount(receiverAcct).
+			SignProposeAndPayAs(receiverAccount).
 			Test(t).
 			AssertSuccess()
 
@@ -304,7 +301,7 @@ func TestTransferDigitalArt(t *testing.T) {
 	t.Run("Shouldn't be able to withdraw an NFT that doesn't exist in a collection", func(t *testing.T) {
 
 		_ = se.NewTransaction("digitalart_transfer").
-			SignProposeAndPayAsAccount(senderAcct).
+			SignProposeAndPayAs(senderAccount).
 			UInt64Argument(3).
 			Argument(cadence.Address(receiverAcct.Address())).
 			Test(t).
@@ -316,7 +313,7 @@ func TestTransferDigitalArt(t *testing.T) {
 
 	t.Run("Should be able to withdraw an NFT and deposit to another accounts collection", func(t *testing.T) {
 		_ = se.NewTransaction("digitalart_transfer").
-			SignProposeAndPayAsAccount(senderAcct).
+			SignProposeAndPayAs(senderAccount).
 			UInt64Argument(0).
 			Argument(cadence.Address(receiverAcct.Address())).
 			Test(t).
@@ -331,7 +328,7 @@ func TestTransferDigitalArt(t *testing.T) {
 	t.Run("Should be able to withdraw an NFT and destroy it, not reducing the supply", func(t *testing.T) {
 
 		_ = se.NewTransaction("digitalart_destroy").
-			SignProposeAndPayAsAccount(receiverAcct).
+			SignProposeAndPayAs(receiverAccount).
 			UInt64Argument(0).
 			Test(t).
 			AssertSuccess()

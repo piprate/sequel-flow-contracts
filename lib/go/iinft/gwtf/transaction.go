@@ -50,12 +50,6 @@ func (t FlowTransactionBuilder) SignProposeAndPayAs(signer string) FlowTransacti
 	return t
 }
 
-// SignProposeAndPayAsAccount set the payer, proposer and envelope signer as flowkit account
-func (t FlowTransactionBuilder) SignProposeAndPayAsAccount(signer *flowkit.Account) FlowTransactionBuilder {
-	t.MainSigner = signer
-	return t
-}
-
 // SignProposeAndPayAsService set the payer, proposer and envelope signer
 func (t FlowTransactionBuilder) SignProposeAndPayAsService() FlowTransactionBuilder {
 	key := fmt.Sprintf("%s-account", t.GoWithTheFlow.Network)
@@ -231,15 +225,20 @@ func (t FlowTransactionBuilder) Argument(value cadence.Value) FlowTransactionBui
 	return t
 }
 
-// PayloadSigner set a signer for the payload
-func (t FlowTransactionBuilder) PayloadSigner(value string) FlowTransactionBuilder {
-	signer := t.GoWithTheFlow.Account(value)
-	t.PayloadSigners = append(t.PayloadSigners, signer)
+// Argument add an argument to the transaction
+func (t FlowTransactionBuilder) StringArrayArgument(value ...string) FlowTransactionBuilder {
+	array := []cadence.Value{}
+	for _, val := range value {
+		cadenceStr, _ := cadence.NewString(val)
+		array = append(array, cadenceStr)
+	}
+	t.Arguments = append(t.Arguments, cadence.NewArray(array))
 	return t
 }
 
-// PayloadSignerAccount set a signer for the payload
-func (t FlowTransactionBuilder) PayloadSignerAccount(signer *flowkit.Account) FlowTransactionBuilder {
+// PayloadSigner set a signer for the payload
+func (t FlowTransactionBuilder) PayloadSigner(value string) FlowTransactionBuilder {
+	signer := t.GoWithTheFlow.Account(value)
 	t.PayloadSigners = append(t.PayloadSigners, signer)
 	return t
 }
