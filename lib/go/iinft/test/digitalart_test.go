@@ -437,7 +437,7 @@ func checkDigitalArtNFTSupply(t *testing.T, se *scripts.Engine, expectedSupply i
 	require.NoError(t, err)
 }
 
-func checkTokenInDigitalArtCollection(t *testing.T, se *scripts.Engine, userAddr string, nftID int) {
+func checkTokenInDigitalArtCollection(t *testing.T, se *scripts.Engine, userAddr string, nftID uint64) {
 	_, err := se.NewInlineScript(
 		inspectCollectionScript(se.WellKnownAddresses(), userAddr, "DigitalArt", "DigitalArt.CollectionPublicPath", nftID),
 	).RunReturns()

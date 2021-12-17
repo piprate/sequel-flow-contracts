@@ -2,6 +2,12 @@ package test
 
 import (
 	"fmt"
+	"testing"
+
+	"github.com/onflow/cadence"
+	fttemplates "github.com/onflow/flow-ft/lib/go/templates"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/scripts"
 )
 
 // inspectNFTSupplyScript creates a script that reads
@@ -48,7 +54,7 @@ func inspectCollectionLenScript(addrMap map[string]string, userAddr, tokenContra
 // inspectCollectionScript creates a script that retrieves an NFT collection
 // from storage and tries to borrow a reference for an NFT that it owns.
 // If it owns it, it will not fail.
-func inspectCollectionScript(addrMap map[string]string, userAddr, tokenContractName, publicLocation string, nftID int) string {
+func inspectCollectionScript(addrMap map[string]string, userAddr, tokenContractName, publicLocation string, nftID uint64) string {
 	template := `
 		import NonFungibleToken from %s
 		import %s from %s
@@ -63,4 +69,19 @@ func inspectCollectionScript(addrMap map[string]string, userAddr, tokenContractN
 	`
 
 	return fmt.Sprintf(template, addrMap["NonFungibleToken"], tokenContractName, addrMap[tokenContractName], userAddr, publicLocation, nftID)
+}
+
+func fundAccount(t *testing.T, se *scripts.Engine, receiverAddress flow.Address, amount string) {
+	script := string(fttemplates.GenerateMintTokensScript(
+		flow.HexToAddress(se.WellKnownAddresses()["FungibleToken"]),
+		flow.HexToAddress(se.WellKnownAddresses()["FlowToken"]),
+		"FlowToken",
+	))
+
+	_ = se.NewInlineTransaction(script).
+		Argument(cadence.NewAddress(receiverAddress)).
+		UFix64Argument(amount).
+		SignProposeAndPayAsService().
+		Test(t).
+		AssertSuccess()
 }

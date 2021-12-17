@@ -1,5 +1,6 @@
 {{ define "digitalart_mint_single" }}
 import NonFungibleToken from {{.NonFungibleToken}}
+import Participation from {{.Participation}}
 import DigitalArt from {{.DigitalArt}}
 
 transaction(metadataLink: String,
@@ -36,9 +37,9 @@ transaction(metadataLink: String,
             .borrow<&{DigitalArt.CollectionPublic}>()
             ?? panic("Could not get receiver reference to the NFT Collection")
 
-        let roles: { String: DigitalArt.ParticipationRole } = {}
+        let roles: { String: Participation.Role } = {}
         if artistAddress != nil {
-            roles["Artist"] = DigitalArt.ParticipationRole(
+            roles["Artist"] = Participation.Role(
                 id: "Artist",
                 initialSaleCommission: artistInitial,
                 secondaryMarketCommission: artistSecondary,
@@ -46,7 +47,7 @@ transaction(metadataLink: String,
             )
         }
         if platformAddress != nil {
-            roles["Platform"] = DigitalArt.ParticipationRole(
+            roles["Platform"] = Participation.Role(
                 id: "Platform",
                 initialSaleCommission: platformInitial,
                 secondaryMarketCommission: platformSecondary,
@@ -68,7 +69,7 @@ transaction(metadataLink: String,
             asset: asset,
             record: record,
             assetHead: assetHead,
-            participationProfile: DigitalArt.ParticipationProfile(
+            participationProfile: Participation.Profile(
                 id: participationProfileID,
                 roles: roles,
                 description: ""

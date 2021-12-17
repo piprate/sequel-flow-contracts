@@ -36,6 +36,13 @@
         "mainnet": "0x3c5959b568896393"
       }
     },
+    "NFTStorefront": {
+      "source": "./contracts/standard/NFTStorefront.cdc",
+      "aliases": {
+        "testnet": "0x94b06cfca1d8a476",
+        "mainnet": "0x4eb8a10cb9f87357"
+      }
+    },
     "Collectible": {
       "source": "./contracts/thirdparty/xtingles/Collectible.cdc",
       "aliases": {
@@ -64,8 +71,22 @@
         "mainnet": "0xd796ff17107bbff6"
       }
     },
+    "Participation": {
+      "source": "./contracts/Participation.cdc",
+      "aliases": {
+        "testnet": "0x8eacbc4234067b7d",
+        "mainnet": "0xf5b0eb433389ac3f"
+      }
+    },
     "DigitalArt": {
       "source": "./contracts/DigitalArt.cdc",
+      "aliases": {
+        "testnet": "0x8eacbc4234067b7d",
+        "mainnet": "0xf5b0eb433389ac3f"
+      }
+    },
+    "SequelMarketplace": {
+      "source": "./contracts/SequelMarketplace.cdc",
       "aliases": {
         "testnet": "0x8eacbc4234067b7d",
         "mainnet": "0xf5b0eb433389ac3f"
@@ -100,12 +121,14 @@
       "emulator-account": [
         "NonFungibleToken",
         "FUSD",
-        "FungibleToken",
+        "NFTStorefront",
         "Edition",
         "Collectible",
         "Art",
         "Content",
-        "DigitalArt"
+        "Participation",
+        "DigitalArt",
+        "SequelMarketplace"
       ],
       "emulator-user1": [],
       "emulator-user2": [],

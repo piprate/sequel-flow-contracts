@@ -21,7 +21,7 @@ transaction {
         acct.save(<-collection, to: DigitalArt.CollectionStoragePath)
 
         // create a public capability for the collection
-        acct.link<&{NonFungibleToken.CollectionPublic, DigitalArt.CollectionPublic}>(
+        acct.link<&{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, DigitalArt.CollectionPublic}>(
             DigitalArt.CollectionPublicPath,
             target: DigitalArt.CollectionStoragePath
         )

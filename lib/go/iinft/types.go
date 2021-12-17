@@ -54,8 +54,8 @@ func NewParticipationRoleFromCadence(val cadence.Value) (*ParticipationRole, err
 	}
 
 	valStruct, ok := val.(cadence.Struct)
-	if !ok || valStruct.StructType.QualifiedIdentifier != "DigitalArt.ParticipationRole" || len(valStruct.Fields) != 4 {
-		return nil, errors.New("bad ParticipationRole value")
+	if !ok || valStruct.StructType.QualifiedIdentifier != "Participation.Role" || len(valStruct.Fields) != 4 {
+		return nil, errors.New("bad Participation Role value")
 	}
 
 	res := ParticipationRole{
@@ -77,8 +77,8 @@ func NewParticipationProfileFromCadence(val cadence.Value) (*ParticipationProfil
 	}
 
 	valStruct, ok := val.(cadence.Struct)
-	if !ok || valStruct.StructType.QualifiedIdentifier != "DigitalArt.ParticipationProfile" || len(valStruct.Fields) != 3 {
-		return nil, errors.New("bad ParticipationProfile value")
+	if !ok || valStruct.StructType.QualifiedIdentifier != "Participation.Profile" || len(valStruct.Fields) != 3 {
+		return nil, errors.New("bad Participation Profile value")
 	}
 
 	res := ParticipationProfile{

@@ -1,4 +1,5 @@
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
+import Participation from "./Participation.cdc"
 
 pub contract DigitalArt: NonFungibleToken {
 
@@ -21,7 +22,7 @@ pub contract DigitalArt: NonFungibleToken {
     //
     pub var totalSupply: UInt64
 
-    // Variable size dictionary of Series resources
+    // Variable size dictionary of Master resources
     access(self) var masters: {String: Master}
 
     pub struct Master {
@@ -70,7 +71,7 @@ pub contract DigitalArt: NonFungibleToken {
 		pub let record: String
 		pub let assetHead: String
 
-		pub let participationProfile: ParticipationProfile
+		pub let participationProfile: Participation.Profile
 
         init(
             metadataLink: String,
@@ -86,7 +87,7 @@ pub contract DigitalArt: NonFungibleToken {
             asset: String,
             record: String,
             assetHead: String,
-            participationProfile: ParticipationProfile
+            participationProfile: Participation.Profile
     )  {
             self.metadataLink = metadataLink
             self.name = name
@@ -105,45 +106,10 @@ pub contract DigitalArt: NonFungibleToken {
         }
     }
 
-    pub struct ParticipationRole {
-        pub let id: String
-        pub let initialSaleCommission: UFix64
-        pub let secondaryMarketCommission: UFix64
-        pub let address: Address
-
-        init(
-            id: String,
-            initialSaleCommission: UFix64,
-            secondaryMarketCommission: UFix64,
-            address: Address
-        ) {
-            self.id = id
-            self.initialSaleCommission = initialSaleCommission
-            self.secondaryMarketCommission = secondaryMarketCommission
-            self.address = address
-        }
-    }
-
-    pub struct ParticipationProfile {
-        pub let id: UInt32
-        pub let roles: { String: ParticipationRole }
-        pub let description: String
-
-        init(
-            id: UInt32,
-            roles: { String: ParticipationRole }
-            description: String
-        ) {
-            self.id = id
-            self.roles = roles
-            self.description = description
-        }
-    }
-
     // NFT
     // DigitalArt as an NFT
     //
-    pub resource NFT: NonFungibleToken.INFT {
+    pub resource NFT: NonFungibleToken.INFT, Participation.GreenNFT {
         // The token's ID
         pub let id: UInt64
 
@@ -154,6 +120,10 @@ pub contract DigitalArt: NonFungibleToken {
         init(initID: UInt64, metadata: Metadata) {
             self.id = initID
             self.metadata = metadata
+        }
+
+        pub fun getParticipationProfile(): Participation.Profile {
+            return self.metadata.participationProfile
         }
     }
 
@@ -375,7 +345,7 @@ pub contract DigitalArt: NonFungibleToken {
                 )
             )
 
-            emit Minted(id: DigitalArt.totalSupply, asset: metadata.asset, edition: 1)
+            emit Minted(id: DigitalArt.totalSupply, asset: metadata.asset, edition: UInt64(1))
 
             DigitalArt.totalSupply = DigitalArt.totalSupply + UInt64(1)
 

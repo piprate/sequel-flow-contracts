@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
+	"github.com/rs/zerolog/log"
 )
 
 //go:embed templates
@@ -32,7 +33,11 @@ type (
 )
 
 var (
-	requiredWellKnownAddresses = []string{"FungibleToken", "FlowToken", "NonFungibleToken", "FUSD", "Collectible", "Edition", "Art", "Content", "DigitalArt"}
+	requiredWellKnownAddresses = []string{
+		"FungibleToken", "FlowToken", "NonFungibleToken", "NFTStorefront", "FUSD",
+		"Collectible", "Edition", "Art", "Content", "Participation",
+		"DigitalArt", "SequelMarketplace",
+	}
 )
 
 func NewEngine(client *gwtf.GoWithTheFlow, preload bool) (*Engine, error) {
@@ -69,7 +74,7 @@ func (e *Engine) loadContractAddresses() error {
 			return fmt.Errorf("address not found for contract %s", requiredAddress)
 		}
 	}
-	fmt.Printf("%v\n", e.wellKnownAddresses)
+	log.Debug().Str("addresses", fmt.Sprintf("%v", e.wellKnownAddresses)).Msg("Loaded contract addresses")
 
 	return nil
 }
@@ -96,6 +101,10 @@ func (e *Engine) GetStandardScript(scriptID string) string {
 
 func (e *Engine) NewTransaction(scriptID string) gwtf.FlowTransactionBuilder {
 	return e.client.Transaction(e.GetStandardScript(scriptID))
+}
+
+func (e *Engine) NewInlineTransaction(script string) gwtf.FlowTransactionBuilder {
+	return e.client.Transaction(script)
 }
 
 func (e *Engine) NewScript(scriptID string) gwtf.FlowScriptBuilder {
