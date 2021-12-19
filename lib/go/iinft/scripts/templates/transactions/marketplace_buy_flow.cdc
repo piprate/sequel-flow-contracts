@@ -1,4 +1,4 @@
-{{ define "marketplace_buy" }}
+{{ define "marketplace_buy_flow" }}
 import NonFungibleToken from {{.NonFungibleToken}}
 import FungibleToken from {{.FungibleToken}}
 import NFTStorefront from {{.NFTStorefront}}

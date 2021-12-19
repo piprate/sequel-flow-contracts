@@ -8,7 +8,6 @@ require (
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/onflow/cadence v0.20.1
 	github.com/onflow/flow-cli v0.29.0
-	github.com/onflow/flow-ft/lib/go/templates v0.2.0
 	github.com/onflow/flow-go-sdk v0.24.0
 	github.com/rs/zerolog v1.19.0
 	github.com/spf13/afero v1.6.0

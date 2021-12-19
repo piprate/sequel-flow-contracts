@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	sequelAccount = "account"
+	sequelAccount = "emulator-account"
 )
 
 func init() {
@@ -27,13 +27,12 @@ func TestSealDigitalArtMaster(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
 	require.NoError(t, err)
 
-	client.InitializeContracts()
+	client.InitializeContracts().DoNotPrependNetworkToAccountNames()
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	userAcct, err := client.State.Accounts().ByName("emulator-user1")
-	require.NoError(t, err)
+	userAcct := client.Account("emulator-user1")
 
 	sampleMetadata := &iinft.Metadata{
 		MetadataLink:       "QmMetadata",
@@ -94,16 +93,15 @@ func TestMintDigitalArtEditions(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
 	require.NoError(t, err)
 
-	client.InitializeContracts().CreateAccounts("emulator-account")
+	client.InitializeContracts().DoNotPrependNetworkToAccountNames().CreateAccounts("emulator-account")
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	userAcct, err := client.State.Accounts().ByName("emulator-user1")
-	require.NoError(t, err)
+	userAcct := client.Account("emulator-user1")
 
 	_ = se.NewTransaction("account_setup").
-		SignProposeAndPayAs("user1").
+		SignProposeAndPayAs("emulator-user1").
 		Test(t).
 		AssertSuccess()
 
@@ -231,16 +229,15 @@ func TestMintDigitalArtSingles(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
 	require.NoError(t, err)
 
-	client.InitializeContracts().CreateAccounts("emulator-account")
+	client.InitializeContracts().DoNotPrependNetworkToAccountNames().CreateAccounts("emulator-account")
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	userAcct, err := client.State.Accounts().ByName("emulator-user1")
-	require.NoError(t, err)
+	userAcct := client.Account("emulator-user1")
 
 	_ = se.NewTransaction("account_setup").
-		SignProposeAndPayAs("user1").
+		SignProposeAndPayAs("emulator-user1").
 		Test(t).
 		AssertSuccess()
 
@@ -322,21 +319,19 @@ func TestTransferDigitalArt(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
 	require.NoError(t, err)
 
-	client.InitializeContracts().CreateAccounts("emulator-account")
+	client.InitializeContracts().DoNotPrependNetworkToAccountNames().CreateAccounts("emulator-account")
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	senderAccount := "user1"
-	senderAcct, err := client.State.Accounts().ByName("emulator-" + senderAccount)
-	require.NoError(t, err)
+	senderAcctName := "emulator-user1"
+	senderAcct := client.Account(senderAcctName)
 
-	receiverAccount := "user2"
-	receiverAcct, err := client.State.Accounts().ByName("emulator-" + receiverAccount)
-	require.NoError(t, err)
+	receiverAcctName := "emulator-user2"
+	receiverAcct := client.Account(receiverAcctName)
 
 	_ = se.NewTransaction("account_setup").
-		SignProposeAndPayAs(senderAccount).
+		SignProposeAndPayAs(senderAcctName).
 		Test(t).
 		AssertSuccess()
 
@@ -382,7 +377,7 @@ func TestTransferDigitalArt(t *testing.T) {
 	t.Run("Should be able to create a new empty NFT Collection", func(t *testing.T) {
 
 		_ = se.NewTransaction("account_setup").
-			SignProposeAndPayAs(receiverAccount).
+			SignProposeAndPayAs(receiverAcctName).
 			Test(t).
 			AssertSuccess()
 
@@ -392,7 +387,7 @@ func TestTransferDigitalArt(t *testing.T) {
 	t.Run("Shouldn't be able to withdraw an NFT that doesn't exist in a collection", func(t *testing.T) {
 
 		_ = se.NewTransaction("digitalart_transfer").
-			SignProposeAndPayAs(senderAccount).
+			SignProposeAndPayAs(senderAcctName).
 			UInt64Argument(3).
 			Argument(cadence.Address(receiverAcct.Address())).
 			Test(t).
@@ -404,7 +399,7 @@ func TestTransferDigitalArt(t *testing.T) {
 
 	t.Run("Should be able to withdraw an NFT and deposit to another accounts collection", func(t *testing.T) {
 		_ = se.NewTransaction("digitalart_transfer").
-			SignProposeAndPayAs(senderAccount).
+			SignProposeAndPayAs(senderAcctName).
 			UInt64Argument(0).
 			Argument(cadence.Address(receiverAcct.Address())).
 			Test(t).
@@ -419,7 +414,7 @@ func TestTransferDigitalArt(t *testing.T) {
 	t.Run("Should be able to withdraw an NFT and destroy it, not reducing the supply", func(t *testing.T) {
 
 		_ = se.NewTransaction("digitalart_destroy").
-			SignProposeAndPayAs(receiverAccount).
+			SignProposeAndPayAs(receiverAcctName).
 			UInt64Argument(0).
 			Test(t).
 			AssertSuccess()
