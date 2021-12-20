@@ -1,5 +1,5 @@
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
-import Participation from "./Participation.cdc"
+import Evergreen from "./Evergreen.cdc"
 
 pub contract DigitalArt: NonFungibleToken {
 
@@ -71,7 +71,7 @@ pub contract DigitalArt: NonFungibleToken {
 		pub let record: String
 		pub let assetHead: String
 
-		pub let participationProfile: Participation.Profile
+		pub let evergreenProfile: Evergreen.Profile
 
         init(
             metadataLink: String,
@@ -87,7 +87,7 @@ pub contract DigitalArt: NonFungibleToken {
             asset: String,
             record: String,
             assetHead: String,
-            participationProfile: Participation.Profile
+            evergreenProfile: Evergreen.Profile
     )  {
             self.metadataLink = metadataLink
             self.name = name
@@ -102,14 +102,14 @@ pub contract DigitalArt: NonFungibleToken {
             self.asset = asset
             self.record = record
             self.assetHead = assetHead
-            self.participationProfile = participationProfile
+            self.evergreenProfile = evergreenProfile
         }
     }
 
     // NFT
     // DigitalArt as an NFT
     //
-    pub resource NFT: NonFungibleToken.INFT, Participation.GreenNFT {
+    pub resource NFT: NonFungibleToken.INFT, Evergreen.Asset {
         // The token's ID
         pub let id: UInt64
 
@@ -122,8 +122,8 @@ pub contract DigitalArt: NonFungibleToken {
             self.metadata = metadata
         }
 
-        pub fun getParticipationProfile(): Participation.Profile {
-            return self.metadata.participationProfile
+        pub fun getEvergreenProfile(): Evergreen.Profile {
+            return self.metadata.evergreenProfile
         }
     }
 
@@ -266,7 +266,7 @@ pub contract DigitalArt: NonFungibleToken {
                     asset: metadata.asset,
                     record: metadata.record,
                     assetHead: metadata.assetHead,
-                    participationProfile: metadata.participationProfile
+                    evergreenProfile: metadata.evergreenProfile
                 )
             )
         }
@@ -312,7 +312,7 @@ pub contract DigitalArt: NonFungibleToken {
                   asset: metadata.asset,
                   record: metadata.record,
                   assetHead: metadata.assetHead,
-                  participationProfile: metadata.participationProfile
+                  evergreenProfile: metadata.evergreenProfile
                 )
             )
 
@@ -341,7 +341,7 @@ pub contract DigitalArt: NonFungibleToken {
                     asset: metadata.asset,
                     record: metadata.record,
                     assetHead: metadata.assetHead,
-                    participationProfile: metadata.participationProfile
+                    evergreenProfile: metadata.evergreenProfile
                 )
             )
 

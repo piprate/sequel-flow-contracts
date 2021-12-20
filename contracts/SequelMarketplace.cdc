@@ -1,7 +1,7 @@
 import FungibleToken from "./standard/FungibleToken.cdc"
 import NFTStorefront from "./standard/NFTStorefront.cdc"
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
-import Participation from "./Participation.cdc"
+import Evergreen from "./Evergreen.cdc"
 import DigitalArt from "./DigitalArt.cdc"
 
 // SequelMarketplace provides convenience functions to create listings for Sequel NFTs in NFTStorefront.
@@ -17,7 +17,7 @@ pub contract SequelMarketplace {
         salePaymentVaultType: Type,
         price: UFix64,
         initialSale: Bool,
-        extraRoles: [Participation.Role]
+        extraRoles: [Evergreen.Role]
     ): UInt64 {
         let token = nftProviderCapability.borrow()!.borrowDigitalArt(id: nftID)!
         let seller = storefront.owner!.address
@@ -42,12 +42,12 @@ pub contract SequelMarketplace {
     }
 
     pub fun buildSaleCuts(
-        token: &AnyResource{Participation.GreenNFT},
+        token: &AnyResource{Evergreen.Asset},
         seller: Address,
         salePaymentVaultPath: PublicPath,
         price: UFix64,
         initialSale: Bool,
-        extraRoles: [Participation.Role]
+        extraRoles: [Evergreen.Role]
     ): [NFTStorefront.SaleCut] {
 
         let saleCuts: [NFTStorefront.SaleCut] = []
@@ -65,7 +65,7 @@ pub contract SequelMarketplace {
             assert(residualRate >= 0.0 && residualRate <= 1.0, message: "Residual rate must be in range [0..1)")
         }
 
-        for role in token.getParticipationProfile().roles.values {
+        for role in token.getEvergreenProfile().roles.values {
             addSaleCut(role.id, role.address, role.commissionRate(initialSale: initialSale))
         }
 

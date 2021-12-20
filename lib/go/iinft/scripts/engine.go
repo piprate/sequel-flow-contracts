@@ -35,7 +35,7 @@ type (
 var (
 	requiredWellKnownAddresses = []string{
 		"FungibleToken", "FlowToken", "NonFungibleToken", "NFTStorefront", "FUSD",
-		"Collectible", "Edition", "Art", "Content", "Participation",
+		"Collectible", "Edition", "Art", "Content", "Evergreen",
 		"DigitalArt", "SequelMarketplace",
 	}
 )

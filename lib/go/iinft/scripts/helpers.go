@@ -24,9 +24,9 @@ func CreateSealDigitalArtTx(script string, client *gwtf.GoWithTheFlow, metadata 
 		StringArgument(metadata.Asset).
 		StringArgument(metadata.Record).
 		StringArgument(metadata.AssetHead).
-		UInt32Argument(metadata.ParticipationProfile.ID)
+		UInt32Argument(metadata.EvergreenProfile.ID)
 
-	artistRole, ok := metadata.ParticipationProfile.Roles[iinft.ParticipationRoleArtist]
+	artistRole, ok := metadata.EvergreenProfile.Roles[iinft.EvergreenRoleArtist]
 	if ok {
 		tx = tx.Argument(cadence.NewOptional(cadence.Address(artistRole.Address))).
 			UFix64Argument(fmt.Sprintf("%.4f", artistRole.InitialSaleCommission)).
@@ -37,7 +37,7 @@ func CreateSealDigitalArtTx(script string, client *gwtf.GoWithTheFlow, metadata 
 			UFix64Argument("0.0")
 	}
 
-	platformRole, ok := metadata.ParticipationProfile.Roles[iinft.ParticipationRolePlatform]
+	platformRole, ok := metadata.EvergreenProfile.Roles[iinft.EvergreenRolePlatform]
 	if ok {
 		tx = tx.Argument(cadence.NewOptional(cadence.Address(platformRole.Address))).
 			UFix64Argument(fmt.Sprintf("%.4f", platformRole.InitialSaleCommission)).
@@ -64,9 +64,9 @@ func CreateMintSingleDigitalArtTx(script string, client *gwtf.GoWithTheFlow, met
 		StringArgument(metadata.Asset).
 		StringArgument(metadata.Record).
 		StringArgument(metadata.AssetHead).
-		UInt32Argument(metadata.ParticipationProfile.ID)
+		UInt32Argument(metadata.EvergreenProfile.ID)
 
-	artistRole, ok := metadata.ParticipationProfile.Roles[iinft.ParticipationRoleArtist]
+	artistRole, ok := metadata.EvergreenProfile.Roles[iinft.EvergreenRoleArtist]
 	if ok {
 		tx = tx.Argument(cadence.NewOptional(cadence.Address(artistRole.Address))).
 			UFix64Argument(fmt.Sprintf("%.4f", artistRole.InitialSaleCommission)).
@@ -77,7 +77,7 @@ func CreateMintSingleDigitalArtTx(script string, client *gwtf.GoWithTheFlow, met
 			UFix64Argument("0.0")
 	}
 
-	platformRole, ok := metadata.ParticipationProfile.Roles[iinft.ParticipationRolePlatform]
+	platformRole, ok := metadata.EvergreenProfile.Roles[iinft.EvergreenRolePlatform]
 	if ok {
 		tx = tx.Argument(cadence.NewOptional(cadence.Address(platformRole.Address))).
 			UFix64Argument(fmt.Sprintf("%.4f", platformRole.InitialSaleCommission)).

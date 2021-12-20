@@ -71,8 +71,8 @@
         "mainnet": "0xd796ff17107bbff6"
       }
     },
-    "Participation": {
-      "source": "./contracts/Participation.cdc",
+    "Evergreen": {
+      "source": "./contracts/Evergreen.cdc",
       "aliases": {
         "testnet": "0x8eacbc4234067b7d",
         "mainnet": "0xf5b0eb433389ac3f"
@@ -126,7 +126,7 @@
         "Collectible",
         "Art",
         "Content",
-        "Participation",
+        "Evergreen",
         "DigitalArt",
         "SequelMarketplace"
       ],

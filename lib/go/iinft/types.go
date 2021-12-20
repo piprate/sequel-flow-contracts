@@ -9,43 +9,43 @@ import (
 )
 
 const (
-	ParticipationRoleArtist    = "Artist"
-	ParticipationRolePlatform  = "Platform"
-	ParticipationRoleCollector = "Collector"
+	EvergreenRoleArtist    = "Artist"
+	EvergreenRolePlatform  = "Platform"
+	EvergreenRoleCollector = "Collector"
 )
 
 type (
 	Metadata struct {
-		MetadataLink         string
-		Name                 string
-		Artist               string
-		Description          string
-		Type                 string
-		ContentLink          string
-		ContentPreviewLink   string
-		Mimetype             string
-		Edition              uint64
-		MaxEdition           uint64
-		Asset                string
-		Record               string
-		AssetHead            string
-		ParticipationProfile *ParticipationProfile
+		MetadataLink       string
+		Name               string
+		Artist             string
+		Description        string
+		Type               string
+		ContentLink        string
+		ContentPreviewLink string
+		Mimetype           string
+		Edition            uint64
+		MaxEdition         uint64
+		Asset              string
+		Record             string
+		AssetHead          string
+		EvergreenProfile   *EvergreenProfile
 	}
 
-	ParticipationRole struct {
+	EvergreenRole struct {
 		Role                      string       `json:"role"`
 		InitialSaleCommission     float64      `json:"initialSaleCommission,omitempty"`
 		SecondaryMarketCommission float64      `json:"secondaryMarketCommission,omitempty"`
 		Address                   flow.Address `json:"addr,omitempty"`
 	}
 
-	ParticipationProfile struct {
-		ID    uint32                        `json:"id"`
-		Roles map[string]*ParticipationRole `json:"roles"`
+	EvergreenProfile struct {
+		ID    uint32                    `json:"id"`
+		Roles map[string]*EvergreenRole `json:"roles"`
 	}
 )
 
-func NewParticipationRoleFromCadence(val cadence.Value) (*ParticipationRole, error) {
+func NewEvergreenRoleFromCadence(val cadence.Value) (*EvergreenRole, error) {
 	if opt, ok := val.(cadence.Optional); ok {
 		if opt.Value == nil {
 			return nil, nil
@@ -54,11 +54,11 @@ func NewParticipationRoleFromCadence(val cadence.Value) (*ParticipationRole, err
 	}
 
 	valStruct, ok := val.(cadence.Struct)
-	if !ok || valStruct.StructType.QualifiedIdentifier != "Participation.Role" || len(valStruct.Fields) != 4 {
-		return nil, errors.New("bad Participation Role value")
+	if !ok || valStruct.StructType.QualifiedIdentifier != "Evergreen.Role" || len(valStruct.Fields) != 4 {
+		return nil, errors.New("bad Evergreen Role value")
 	}
 
-	res := ParticipationRole{
+	res := EvergreenRole{
 		Role:                      valStruct.Fields[0].ToGoValue().(string),
 		InitialSaleCommission:     ToFloat64(valStruct.Fields[1]),
 		SecondaryMarketCommission: ToFloat64(valStruct.Fields[2]),
@@ -68,7 +68,7 @@ func NewParticipationRoleFromCadence(val cadence.Value) (*ParticipationRole, err
 	return &res, nil
 }
 
-func NewParticipationProfileFromCadence(val cadence.Value) (*ParticipationProfile, error) {
+func NewEvergreenProfileFromCadence(val cadence.Value) (*EvergreenProfile, error) {
 	if opt, ok := val.(cadence.Optional); ok {
 		if opt.Value == nil {
 			return nil, nil
@@ -77,19 +77,19 @@ func NewParticipationProfileFromCadence(val cadence.Value) (*ParticipationProfil
 	}
 
 	valStruct, ok := val.(cadence.Struct)
-	if !ok || valStruct.StructType.QualifiedIdentifier != "Participation.Profile" || len(valStruct.Fields) != 3 {
-		return nil, errors.New("bad Participation Profile value")
+	if !ok || valStruct.StructType.QualifiedIdentifier != "Evergreen.Profile" || len(valStruct.Fields) != 3 {
+		return nil, errors.New("bad Evergreen Profile value")
 	}
 
-	res := ParticipationProfile{
+	res := EvergreenProfile{
 		ID:    uint32(valStruct.Fields[0].(cadence.UInt32)),
-		Roles: map[string]*ParticipationRole{},
+		Roles: map[string]*EvergreenRole{},
 	}
 
 	rolesDict := valStruct.Fields[1].(cadence.Dictionary)
 	var err error
 	for _, pair := range rolesDict.Pairs {
-		res.Roles[pair.Key.ToGoValue().(string)], err = NewParticipationRoleFromCadence(pair.Value)
+		res.Roles[pair.Key.ToGoValue().(string)], err = NewEvergreenRoleFromCadence(pair.Value)
 		if err != nil {
 			return nil, err
 		}
@@ -111,26 +111,26 @@ func NewMetadataFromCadence(val cadence.Value) (*Metadata, error) {
 		return nil, errors.New("bad Metadata value")
 	}
 
-	profile, err := NewParticipationProfileFromCadence(valStruct.Fields[13])
+	profile, err := NewEvergreenProfileFromCadence(valStruct.Fields[13])
 	if err != nil {
 		return nil, err
 	}
 
 	res := Metadata{
-		MetadataLink:         valStruct.Fields[0].ToGoValue().(string),
-		Name:                 valStruct.Fields[1].ToGoValue().(string),
-		Artist:               valStruct.Fields[2].ToGoValue().(string),
-		Description:          valStruct.Fields[3].ToGoValue().(string),
-		Type:                 valStruct.Fields[4].ToGoValue().(string),
-		ContentLink:          valStruct.Fields[5].ToGoValue().(string),
-		ContentPreviewLink:   valStruct.Fields[6].ToGoValue().(string),
-		Mimetype:             valStruct.Fields[7].ToGoValue().(string),
-		Edition:              uint64(valStruct.Fields[8].(cadence.UInt64)),
-		MaxEdition:           uint64(valStruct.Fields[9].(cadence.UInt64)),
-		Asset:                valStruct.Fields[10].ToGoValue().(string),
-		Record:               valStruct.Fields[11].ToGoValue().(string),
-		AssetHead:            valStruct.Fields[12].ToGoValue().(string),
-		ParticipationProfile: profile,
+		MetadataLink:       valStruct.Fields[0].ToGoValue().(string),
+		Name:               valStruct.Fields[1].ToGoValue().(string),
+		Artist:             valStruct.Fields[2].ToGoValue().(string),
+		Description:        valStruct.Fields[3].ToGoValue().(string),
+		Type:               valStruct.Fields[4].ToGoValue().(string),
+		ContentLink:        valStruct.Fields[5].ToGoValue().(string),
+		ContentPreviewLink: valStruct.Fields[6].ToGoValue().(string),
+		Mimetype:           valStruct.Fields[7].ToGoValue().(string),
+		Edition:            uint64(valStruct.Fields[8].(cadence.UInt64)),
+		MaxEdition:         uint64(valStruct.Fields[9].(cadence.UInt64)),
+		Asset:              valStruct.Fields[10].ToGoValue().(string),
+		Record:             valStruct.Fields[11].ToGoValue().(string),
+		AssetHead:          valStruct.Fields[12].ToGoValue().(string),
+		EvergreenProfile:   profile,
 	}
 
 	return &res, nil

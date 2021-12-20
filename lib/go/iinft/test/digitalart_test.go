@@ -47,11 +47,11 @@ func TestSealDigitalArtMaster(t *testing.T) {
 		Asset:              "did:sequel:asset-id",
 		Record:             "record-id",
 		AssetHead:          "asset-head-id",
-		ParticipationProfile: &iinft.ParticipationProfile{
+		EvergreenProfile: &iinft.EvergreenProfile{
 			ID: 0,
-			Roles: map[string]*iinft.ParticipationRole{
-				iinft.ParticipationRoleArtist: {
-					Role:                      iinft.ParticipationRoleArtist,
+			Roles: map[string]*iinft.EvergreenRole{
+				iinft.EvergreenRoleArtist: {
+					Role:                      iinft.EvergreenRoleArtist,
 					InitialSaleCommission:     80.0,
 					SecondaryMarketCommission: 20.0,
 					Address:                   userAcct.Address(),
@@ -121,11 +121,11 @@ func TestMintDigitalArtEditions(t *testing.T) {
 		Asset:              "did:sequel:asset-id",
 		Record:             "record-id",
 		AssetHead:          "asset-head-id",
-		ParticipationProfile: &iinft.ParticipationProfile{
+		EvergreenProfile: &iinft.EvergreenProfile{
 			ID: 0,
-			Roles: map[string]*iinft.ParticipationRole{
-				iinft.ParticipationRoleArtist: {
-					Role:                      iinft.ParticipationRoleArtist,
+			Roles: map[string]*iinft.EvergreenRole{
+				iinft.EvergreenRoleArtist: {
+					Role:                      iinft.EvergreenRoleArtist,
 					InitialSaleCommission:     80.0,
 					SecondaryMarketCommission: 20.0,
 					Address:                   userAcct.Address(),
@@ -256,11 +256,11 @@ func TestMintDigitalArtSingles(t *testing.T) {
 		Asset:              "did:sequel:asset-id",
 		Record:             "record-id",
 		AssetHead:          "asset-head-id",
-		ParticipationProfile: &iinft.ParticipationProfile{
+		EvergreenProfile: &iinft.EvergreenProfile{
 			ID: 0,
-			Roles: map[string]*iinft.ParticipationRole{
-				iinft.ParticipationRoleArtist: {
-					Role:                      iinft.ParticipationRoleArtist,
+			Roles: map[string]*iinft.EvergreenRole{
+				iinft.EvergreenRoleArtist: {
+					Role:                      iinft.EvergreenRoleArtist,
 					InitialSaleCommission:     80.0,
 					SecondaryMarketCommission: 20.0,
 					Address:                   userAcct.Address(),
@@ -348,11 +348,11 @@ func TestTransferDigitalArt(t *testing.T) {
 		Asset:              "did:sequel:asset-id",
 		Record:             "record-id",
 		AssetHead:          "asset-head-id",
-		ParticipationProfile: &iinft.ParticipationProfile{
+		EvergreenProfile: &iinft.EvergreenProfile{
 			ID: 0,
-			Roles: map[string]*iinft.ParticipationRole{
-				iinft.ParticipationRoleArtist: {
-					Role:                      iinft.ParticipationRoleArtist,
+			Roles: map[string]*iinft.EvergreenRole{
+				iinft.EvergreenRoleArtist: {
+					Role:                      iinft.EvergreenRoleArtist,
 					InitialSaleCommission:     80.0,
 					SecondaryMarketCommission: 20.0,
 					Address:                   senderAcct.Address(),

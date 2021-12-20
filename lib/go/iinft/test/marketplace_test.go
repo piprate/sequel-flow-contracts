@@ -25,11 +25,11 @@ func buildTestMetadata(artist flow.Address, maxEdition uint64) *iinft.Metadata {
 		Asset:              "did:sequel:asset-id",
 		Record:             "record-id",
 		AssetHead:          "asset-head-id",
-		ParticipationProfile: &iinft.ParticipationProfile{
+		EvergreenProfile: &iinft.EvergreenProfile{
 			ID: 1,
-			Roles: map[string]*iinft.ParticipationRole{
-				iinft.ParticipationRoleArtist: {
-					Role:                      iinft.ParticipationRoleArtist,
+			Roles: map[string]*iinft.EvergreenRole{
+				iinft.EvergreenRoleArtist: {
+					Role:                      iinft.EvergreenRoleArtist,
 					InitialSaleCommission:     80.0,
 					SecondaryMarketCommission: 5.0,
 					Address:                   artist,

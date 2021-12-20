@@ -2,7 +2,7 @@ import FungibleToken from "./standard/FungibleToken.cdc"
 import NFTStorefront from "./standard/NFTStorefront.cdc"
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 
-pub contract Participation {
+pub contract Evergreen {
     pub struct Role {
         pub let id: String
         pub let initialSaleCommission: UFix64
@@ -42,7 +42,7 @@ pub contract Participation {
         }
     }
 
-    pub resource interface GreenNFT {
-        pub fun getParticipationProfile(): Profile
+    pub resource interface Asset {
+        pub fun getEvergreenProfile(): Profile
     }
 }

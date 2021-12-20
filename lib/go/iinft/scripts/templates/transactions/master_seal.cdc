@@ -1,6 +1,6 @@
 {{ define "master_seal" }}
 import NonFungibleToken from {{.NonFungibleToken}}
-import Participation from {{.Participation}}
+import Evergreen from {{.Evergreen}}
 import DigitalArt from {{.DigitalArt}}
 
 transaction(metadataLink: String,
@@ -15,7 +15,7 @@ transaction(metadataLink: String,
             asset: String,
             record: String,
             assetHead: String,
-            participationProfileID: UInt32,
+            evergreenProfileID: UInt32,
             artistAddress: Address?,
             artistInitial: UFix64,
             artistSecondary: UFix64,
@@ -30,9 +30,9 @@ transaction(metadataLink: String,
     }
 
     execute {
-        let roles: { String: Participation.Role } = {}
+        let roles: { String: Evergreen.Role } = {}
         if artistAddress != nil {
-            roles["Artist"] = Participation.Role(
+            roles["Artist"] = Evergreen.Role(
                 id: "Artist",
                 initialSaleCommission: artistInitial,
                 secondaryMarketCommission: artistSecondary,
@@ -40,7 +40,7 @@ transaction(metadataLink: String,
             )
         }
         if platformAddress != nil {
-            roles["Platform"] = Participation.Role(
+            roles["Platform"] = Evergreen.Role(
                 id: "Platform",
                 initialSaleCommission: platformInitial,
                 secondaryMarketCommission: platformSecondary,
@@ -62,8 +62,8 @@ transaction(metadataLink: String,
             asset: asset,
             record: record,
             assetHead: assetHead,
-            participationProfile: Participation.Profile(
-                id: participationProfileID,
+            evergreenProfile: Evergreen.Profile(
+                id: evergreenProfileID,
                 roles: roles,
                 description: ""
             )
