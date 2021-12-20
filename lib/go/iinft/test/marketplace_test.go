@@ -85,13 +85,37 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 	checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 0)
 
 	t.Run("Should be able to list an NFT in seller's Storefront", func(t *testing.T) {
-		_ = se.NewTransaction("marketplace_add_flow").
+		_ = se.NewTransaction("marketplace_list_flow").
 			SignProposeAndPayAs(sellerAcctName).
 			UInt64Argument(nftID).
 			UFix64Argument("200.0").
 			BooleanArgument(true).
 			Test(t).
 			AssertSuccess().
+			AssertEmitEvent(gwtf.NewTestEvent(
+				"A.f8d6e0586b0a20c7.SequelMarketplace.TokenListed",
+				map[string]interface{}{
+					"listingID":        "44",
+					"nftID":            "0",
+					"nftType":          "A.f8d6e0586b0a20c7.DigitalArt.NFT",
+					"paymentVaultType": "A.0ae53cb6e3f42a79.FlowToken.Vault",
+					"payments": []interface{}{
+						map[string]interface{}{
+							"amount":   "160.00000000",
+							"rate":     "0.80000000",
+							"receiver": "0x1cf0e2f2f715450",
+							"role":     "Artist",
+						},
+						map[string]interface{}{
+							"amount":   "40.00000000",
+							"rate":     "0.20000000",
+							"receiver": "0x1cf0e2f2f715450",
+							"role":     "Owner",
+						},
+					},
+					"price":             "200.00000000",
+					"storefrontAddress": "0x1cf0e2f2f715450",
+				})).
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
@@ -110,7 +134,18 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 			UInt64Argument(44).
 			Argument(cadence.NewAddress(sellerAcct.Address())).
 			Test(t).
-			AssertSuccess()
+			AssertSuccess().
+			AssertEmitEvent(gwtf.NewTestEvent(
+				"A.f8d6e0586b0a20c7.SequelMarketplace.TokenSold",
+				map[string]interface{}{
+					"listingID":         "44",
+					"nftID":             "0",
+					"nftType":           "A.f8d6e0586b0a20c7.DigitalArt.NFT",
+					"paymentVaultType":  "A.0ae53cb6e3f42a79.FlowToken.Vault",
+					"price":             "200.00000000",
+					"storefrontAddress": "0x1cf0e2f2f715450",
+					"buyerAddress":      "0x179b6b1cb6755e31",
+				}))
 
 		// Assert that the account's collection is correct
 		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address().String(), 0)
@@ -168,7 +203,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 	checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 0)
 
 	t.Run("Should be able to list an NFT in seller's Storefront", func(t *testing.T) {
-		_ = se.NewTransaction("marketplace_add_fusd").
+		_ = se.NewTransaction("marketplace_list_fusd").
 			SignProposeAndPayAs(sellerAcctName).
 			UInt64Argument(nftID).
 			UFix64Argument("200.0").
@@ -179,6 +214,30 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 				"A.f8d6e0586b0a20c7.NFTStorefront.StorefrontInitialized",
 				map[string]interface{}{
 					"storefrontResourceID": "46",
+				})).
+			AssertEmitEvent(gwtf.NewTestEvent(
+				"A.f8d6e0586b0a20c7.SequelMarketplace.TokenListed",
+				map[string]interface{}{
+					"listingID":        "47",
+					"nftID":            "0",
+					"nftType":          "A.f8d6e0586b0a20c7.DigitalArt.NFT",
+					"paymentVaultType": "A.f8d6e0586b0a20c7.FUSD.Vault",
+					"payments": []interface{}{
+						map[string]interface{}{
+							"amount":   "160.00000000",
+							"rate":     "0.80000000",
+							"receiver": "0x1cf0e2f2f715450",
+							"role":     "Artist",
+						},
+						map[string]interface{}{
+							"amount":   "40.00000000",
+							"rate":     "0.20000000",
+							"receiver": "0x1cf0e2f2f715450",
+							"role":     "Owner",
+						},
+					},
+					"price":             "200.00000000",
+					"storefrontAddress": "0x1cf0e2f2f715450",
 				})).
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
@@ -198,7 +257,18 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 			UInt64Argument(47).
 			Argument(cadence.NewAddress(sellerAcct.Address())).
 			Test(t).
-			AssertSuccess()
+			AssertSuccess().
+			AssertEmitEvent(gwtf.NewTestEvent(
+				"A.f8d6e0586b0a20c7.SequelMarketplace.TokenSold",
+				map[string]interface{}{
+					"listingID":         "47",
+					"nftID":             "0",
+					"nftType":           "A.f8d6e0586b0a20c7.DigitalArt.NFT",
+					"paymentVaultType":  "A.f8d6e0586b0a20c7.FUSD.Vault",
+					"price":             "200.00000000",
+					"storefrontAddress": "0x1cf0e2f2f715450",
+					"buyerAddress":      "0x179b6b1cb6755e31",
+				}))
 
 		// Assert that the account's collection is correct
 		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address().String(), 0)

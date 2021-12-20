@@ -41,8 +41,14 @@ transaction(listingID: UInt64, storefrontAddress: Address) {
     }
 
     execute {
-        let item <- self.listing.purchase(payment: <-self.paymentVault)
-        self.storefront.cleanup(listingResourceID: listingID)
+        let item <- SequelMarketplace.buyToken(
+            storefrontAddress: storefrontAddress,
+            storefront: self.storefront,
+            listingID: listingID,
+            listing: self.listing,
+            paymentVault: <- self.paymentVault,
+            buyerAddress: self.buyerAddress
+        )
         self.tokenReceiver.deposit(token: <-item)
     }
 }

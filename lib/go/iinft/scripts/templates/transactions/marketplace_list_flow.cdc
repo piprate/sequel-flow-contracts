@@ -1,4 +1,4 @@
-{{ define "marketplace_add_flow" }}
+{{ define "marketplace_list_flow" }}
 import NonFungibleToken from {{.NonFungibleToken}}
 import NFTStorefront from {{.NFTStorefront}}
 import FlowToken from {{.FlowToken}}
@@ -28,13 +28,13 @@ transaction(tokenID: UInt64, price: UFix64, initialSale: Bool) {
   }
 
   execute {
-    SequelMarketplace.addListing(
+    SequelMarketplace.listToken(
         storefront: self.storefront,
         nftProviderCapability: self.nftProviderCapability,
         nftType: Type<@DigitalArt.NFT>(),
         nftID: tokenID,
-        salePaymentVaultPath: /public/flowTokenReceiver,
-        salePaymentVaultType: Type<@FlowToken.Vault>(),
+        paymentVaultPath: /public/flowTokenReceiver,
+        paymentVaultType: Type<@FlowToken.Vault>(),
         price: price,
         initialSale: initialSale,
         extraRoles: []

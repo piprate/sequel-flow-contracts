@@ -1,4 +1,4 @@
-{{ define "marketplace_add_fusd" }}
+{{ define "marketplace_list_fusd" }}
 import NonFungibleToken from {{.NonFungibleToken}}
 import NFTStorefront from {{.NFTStorefront}}
 import FUSD from {{.FUSD}}
@@ -28,13 +28,13 @@ transaction(tokenID: UInt64, price: UFix64, initialSale: Bool) {
   }
 
   execute {
-    SequelMarketplace.addListing(
+    SequelMarketplace.listToken(
         storefront: self.storefront,
         nftProviderCapability: self.nftProviderCapability,
         nftType: Type<@DigitalArt.NFT>(),
         nftID: tokenID,
-        salePaymentVaultPath: /public/fusdReceiver,
-        salePaymentVaultType: Type<@FUSD.Vault>(),
+        paymentVaultPath: /public/fusdReceiver,
+        paymentVaultType: Type<@FUSD.Vault>(),
         price: price,
         initialSale: initialSale,
         extraRoles: []
