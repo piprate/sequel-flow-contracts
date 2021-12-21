@@ -22,7 +22,7 @@ pub contract Evergreen {
         }
 
         pub fun commissionRate(initialSale: Bool): UFix64 {
-            return (initialSale ? self.initialSaleCommission : self.secondaryMarketCommission) / 100.0
+            return (initialSale ? self.initialSaleCommission : self.secondaryMarketCommission)
         }
     }
 

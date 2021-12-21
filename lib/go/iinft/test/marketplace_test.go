@@ -30,8 +30,8 @@ func buildTestMetadata(artist flow.Address, maxEdition uint64) *iinft.Metadata {
 			Roles: map[string]*iinft.EvergreenRole{
 				iinft.EvergreenRoleArtist: {
 					Role:                      iinft.EvergreenRoleArtist,
-					InitialSaleCommission:     80.0,
-					SecondaryMarketCommission: 5.0,
+					InitialSaleCommission:     0.8,
+					SecondaryMarketCommission: 0.05,
 					Address:                   artist,
 				},
 			},

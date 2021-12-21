@@ -52,8 +52,8 @@ func TestSealDigitalArtMaster(t *testing.T) {
 			Roles: map[string]*iinft.EvergreenRole{
 				iinft.EvergreenRoleArtist: {
 					Role:                      iinft.EvergreenRoleArtist,
-					InitialSaleCommission:     80.0,
-					SecondaryMarketCommission: 20.0,
+					InitialSaleCommission:     0.8,
+					SecondaryMarketCommission: 0.2,
 					Address:                   userAcct.Address(),
 				},
 			},
@@ -126,8 +126,8 @@ func TestMintDigitalArtEditions(t *testing.T) {
 			Roles: map[string]*iinft.EvergreenRole{
 				iinft.EvergreenRoleArtist: {
 					Role:                      iinft.EvergreenRoleArtist,
-					InitialSaleCommission:     80.0,
-					SecondaryMarketCommission: 20.0,
+					InitialSaleCommission:     0.8,
+					SecondaryMarketCommission: 0.2,
 					Address:                   userAcct.Address(),
 				},
 			},
@@ -261,8 +261,8 @@ func TestMintDigitalArtSingles(t *testing.T) {
 			Roles: map[string]*iinft.EvergreenRole{
 				iinft.EvergreenRoleArtist: {
 					Role:                      iinft.EvergreenRoleArtist,
-					InitialSaleCommission:     80.0,
-					SecondaryMarketCommission: 20.0,
+					InitialSaleCommission:     0.8,
+					SecondaryMarketCommission: 0.2,
 					Address:                   userAcct.Address(),
 				},
 			},
@@ -353,8 +353,8 @@ func TestTransferDigitalArt(t *testing.T) {
 			Roles: map[string]*iinft.EvergreenRole{
 				iinft.EvergreenRoleArtist: {
 					Role:                      iinft.EvergreenRoleArtist,
-					InitialSaleCommission:     80.0,
-					SecondaryMarketCommission: 20.0,
+					InitialSaleCommission:     0.8,
+					SecondaryMarketCommission: 0.2,
 					Address:                   senderAcct.Address(),
 				},
 			},
