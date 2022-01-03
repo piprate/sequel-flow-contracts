@@ -5,7 +5,7 @@ import FUSD from {{.FUSD}}
 import DigitalArt from {{.DigitalArt}}
 import SequelMarketplace from {{.SequelMarketplace}}
 
-transaction(tokenID: UInt64, price: UFix64, initialSale: Bool) {
+transaction(tokenID: UInt64, price: UFix64, initialSale: Bool, metadataLink: String?) {
   let nftProviderCapability: Capability<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,DigitalArt.CollectionPublic}>
   let storefront: &NFTStorefront.Storefront
 
@@ -37,7 +37,8 @@ transaction(tokenID: UInt64, price: UFix64, initialSale: Bool) {
         paymentVaultType: Type<@FUSD.Vault>(),
         price: price,
         initialSale: initialSale,
-        extraRoles: []
+        extraRoles: [],
+        metadataLink: metadataLink
     )
   }
 }

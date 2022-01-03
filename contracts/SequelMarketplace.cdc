@@ -33,7 +33,8 @@ pub contract SequelMarketplace {
         nftID: UInt64,
         paymentVaultType: String,
         price: UFix64,
-        payments: [Payment]
+        payments: [Payment],
+        metadataLink: String?,
     )
 
     pub event TokenSold(
@@ -65,7 +66,8 @@ pub contract SequelMarketplace {
         paymentVaultType: Type,
         price: UFix64,
         initialSale: Bool,
-        extraRoles: [Evergreen.Role]
+        extraRoles: [Evergreen.Role],
+        metadataLink: String?,
     ): UInt64 {
         let token = nftProviderCapability.borrow()!.borrowDigitalArt(id: nftID)!
         let seller = storefront.owner!.address
@@ -100,7 +102,8 @@ pub contract SequelMarketplace {
             nftID: nftID,
             paymentVaultType: paymentVaultType.identifier,
             price: price,
-            payments: payments
+            payments: payments,
+            metadataLink: metadataLink,
         )
 
         return listingID

@@ -90,12 +90,14 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 			UInt64Argument(nftID).
 			UFix64Argument("200.0").
 			BooleanArgument(true).
+			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.SequelMarketplace.TokenListed",
 				map[string]interface{}{
 					"listingID":        "44",
+					"metadataLink":     "link",
 					"nftID":            "0",
 					"nftType":          "A.f8d6e0586b0a20c7.DigitalArt.NFT",
 					"paymentVaultType": "A.0ae53cb6e3f42a79.FlowToken.Vault",
@@ -208,6 +210,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 			UInt64Argument(nftID).
 			UFix64Argument("200.0").
 			BooleanArgument(true).
+			Argument(cadence.NewOptional(nil)).
 			Test(t).
 			AssertSuccess().
 			AssertEmitEvent(gwtf.NewTestEvent(
@@ -219,6 +222,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 				"A.f8d6e0586b0a20c7.SequelMarketplace.TokenListed",
 				map[string]interface{}{
 					"listingID":        "47",
+					"metadataLink":     "",
 					"nftID":            "0",
 					"nftType":          "A.f8d6e0586b0a20c7.DigitalArt.NFT",
 					"paymentVaultType": "A.f8d6e0586b0a20c7.FUSD.Vault",
