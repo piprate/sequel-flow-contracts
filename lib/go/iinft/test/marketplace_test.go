@@ -135,6 +135,7 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 			SignProposeAndPayAs(buyerAcctName).
 			UInt64Argument(44).
 			Argument(cadence.NewAddress(sellerAcct.Address())).
+			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
 			AssertEmitEvent(gwtf.NewTestEvent(
@@ -147,6 +148,7 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 					"price":             "200.00000000",
 					"storefrontAddress": "0x1cf0e2f2f715450",
 					"buyerAddress":      "0x179b6b1cb6755e31",
+					"metadataLink":      "link",
 				}))
 
 		// Assert that the account's collection is correct
@@ -260,6 +262,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 			SignProposeAndPayAs(buyerAcctName).
 			UInt64Argument(47).
 			Argument(cadence.NewAddress(sellerAcct.Address())).
+			Argument(cadence.NewOptional(nil)).
 			Test(t).
 			AssertSuccess().
 			AssertEmitEvent(gwtf.NewTestEvent(
@@ -272,6 +275,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 					"price":             "200.00000000",
 					"storefrontAddress": "0x1cf0e2f2f715450",
 					"buyerAddress":      "0x179b6b1cb6755e31",
+					"metadataLink":      "",
 				}))
 
 		// Assert that the account's collection is correct

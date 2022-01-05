@@ -44,7 +44,8 @@ pub contract SequelMarketplace {
         nftID: UInt64,
         paymentVaultType: String,
         price: UFix64,
-        buyerAddress: Address
+        buyerAddress: Address,
+        metadataLink: String?,
     )
 
     pub event TokenWithdrawn(
@@ -115,7 +116,8 @@ pub contract SequelMarketplace {
         listingID: UInt64,
         listing: &NFTStorefront.Listing{NFTStorefront.ListingPublic},
         paymentVault: @FungibleToken.Vault,
-        buyerAddress: Address
+        buyerAddress: Address,
+        metadataLink: String?,
     ): @NonFungibleToken.NFT {
         let details = listing.getDetails()
 
@@ -126,7 +128,8 @@ pub contract SequelMarketplace {
             nftID: details.nftID,
             paymentVaultType: details.salePaymentVaultType.identifier,
             price: details.salePrice,
-            buyerAddress: buyerAddress
+            buyerAddress: buyerAddress,
+            metadataLink: metadataLink
         )
 
         let item <- listing.purchase(payment: <-paymentVault)

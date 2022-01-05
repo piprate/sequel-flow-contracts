@@ -6,7 +6,7 @@ import FlowToken from {{.FlowToken}}
 import DigitalArt from {{.DigitalArt}}
 import SequelMarketplace from {{.SequelMarketplace}}
 
-transaction(listingID: UInt64, storefrontAddress: Address) {
+transaction(listingID: UInt64, storefrontAddress: Address, metadataLink: String?) {
     let listing: &NFTStorefront.Listing{NFTStorefront.ListingPublic}
     let paymentVault: @FungibleToken.Vault
     let storefront: &NFTStorefront.Storefront{NFTStorefront.StorefrontPublic}
@@ -47,7 +47,8 @@ transaction(listingID: UInt64, storefrontAddress: Address) {
             listingID: listingID,
             listing: self.listing,
             paymentVault: <- self.paymentVault,
-            buyerAddress: self.buyerAddress
+            buyerAddress: self.buyerAddress,
+            metadataLink: metadataLink
         )
         self.tokenReceiver.deposit(token: <-item)
     }
