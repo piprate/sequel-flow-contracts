@@ -189,7 +189,9 @@ pub contract SequelMarketplace {
             addPayment(role.id, role.address, role.commissionRate(initialSale: initialSale))
         }
 
-        addPayment("Owner", seller, residualRate)
+        if residualRate > 0.0 {
+            addPayment("Owner", seller, residualRate)
+        }
 
         return payments
     }
