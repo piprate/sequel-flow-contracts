@@ -2,7 +2,6 @@ import FungibleToken from "./standard/FungibleToken.cdc"
 import NFTStorefront from "./standard/NFTStorefront.cdc"
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 import Evergreen from "./Evergreen.cdc"
-import DigitalArt from "./DigitalArt.cdc"
 
 // SequelMarketplace provides convenience functions to create listings for Sequel NFTs in NFTStorefront.
 //
@@ -34,6 +33,7 @@ pub contract SequelMarketplace {
         paymentVaultType: String,
         price: UFix64,
         payments: [Payment],
+        asset: String,
         metadataLink: String?,
     )
 
@@ -60,7 +60,7 @@ pub contract SequelMarketplace {
     // listToken
     pub fun listToken(
         storefront: &NFTStorefront.Storefront,
-        nftProviderCapability: Capability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic, DigitalArt.CollectionPublic}>,
+        nftProviderCapability: Capability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic, Evergreen.CollectionPublic}>,
         nftType: Type,
         nftID: UInt64,
         paymentVaultPath: PublicPath,
@@ -70,7 +70,7 @@ pub contract SequelMarketplace {
         extraRoles: [Evergreen.Role],
         metadataLink: String?,
     ): UInt64 {
-        let token = nftProviderCapability.borrow()!.borrowDigitalArt(id: nftID)!
+        let token = nftProviderCapability.borrow()!.borrowEvergreenToken(id: nftID)!
         let seller = storefront.owner!.address
 
         let payments = self.buildPayments(
@@ -104,6 +104,7 @@ pub contract SequelMarketplace {
             paymentVaultType: paymentVaultType.identifier,
             price: price,
             payments: payments,
+            asset: token.getAssetID(),
             metadataLink: metadataLink,
         )
 
@@ -161,7 +162,7 @@ pub contract SequelMarketplace {
     }
 
     pub fun buildPayments(
-        token: &AnyResource{Evergreen.Asset},
+        token: &AnyResource{Evergreen.Token},
         seller: Address,
         price: UFix64,
         initialSale: Bool,

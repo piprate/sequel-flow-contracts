@@ -98,6 +98,7 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 				map[string]interface{}{
 					"listingID":        "44",
 					"metadataLink":     "link",
+					"asset":            "did:sequel:asset-id",
 					"nftID":            "0",
 					"nftType":          "A.f8d6e0586b0a20c7.DigitalArt.NFT",
 					"paymentVaultType": "A.0ae53cb6e3f42a79.FlowToken.Vault",
@@ -224,6 +225,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 				"A.f8d6e0586b0a20c7.SequelMarketplace.TokenListed",
 				map[string]interface{}{
 					"listingID":        "47",
+					"asset":            "did:sequel:asset-id",
 					"metadataLink":     "",
 					"nftID":            "0",
 					"nftType":          "A.f8d6e0586b0a20c7.DigitalArt.NFT",

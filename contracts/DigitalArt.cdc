@@ -109,7 +109,7 @@ pub contract DigitalArt: NonFungibleToken {
     // NFT
     // DigitalArt as an NFT
     //
-    pub resource NFT: NonFungibleToken.INFT, Evergreen.Asset {
+    pub resource NFT: NonFungibleToken.INFT, Evergreen.Token {
         // The token's ID
         pub let id: UInt64
 
@@ -120,6 +120,10 @@ pub contract DigitalArt: NonFungibleToken {
         init(initID: UInt64, metadata: Metadata) {
             self.id = initID
             self.metadata = metadata
+        }
+
+        pub fun getAssetID(): String {
+            return self.metadata.asset
         }
 
         pub fun getEvergreenProfile(): Evergreen.Profile {
@@ -147,7 +151,7 @@ pub contract DigitalArt: NonFungibleToken {
     // Collection
     // A collection of DigitalArt NFTs owned by an account
     //
-    pub resource Collection: CollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
+    pub resource Collection: CollectionPublic, Evergreen.CollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
         // dictionary of NFT conforming tokens
         // NFT is a resource type with an `UInt64` ID field
         //
@@ -208,6 +212,10 @@ pub contract DigitalArt: NonFungibleToken {
             } else {
                 return nil
             }
+        }
+
+        pub fun borrowEvergreenToken(id: UInt64): &AnyResource{Evergreen.Token}? {
+            return self.borrowDigitalArt(id: id)
         }
 
         // destructor

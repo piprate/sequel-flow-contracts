@@ -2,20 +2,21 @@
 import NonFungibleToken from {{.NonFungibleToken}}
 import NFTStorefront from {{.NFTStorefront}}
 import FlowToken from {{.FlowToken}}
+import Evergreen from {{.Evergreen}}
 import DigitalArt from {{.DigitalArt}}
 import SequelMarketplace from {{.SequelMarketplace}}
 
 transaction(tokenID: UInt64, price: UFix64, initialSale: Bool, metadataLink: String?) {
-  let nftProviderCapability: Capability<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,DigitalArt.CollectionPublic}>
+  let nftProviderCapability: Capability<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,Evergreen.CollectionPublic}>
   let storefront: &NFTStorefront.Storefront
 
   prepare(acct: AuthAccount) {
     let nftProviderPath = /private/SequelNFTProviderForNFTStorefront
-    if !acct.getCapability<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,DigitalArt.CollectionPublic}>(nftProviderPath)!.check() {
-        acct.link<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,DigitalArt.CollectionPublic}>(nftProviderPath, target: DigitalArt.CollectionStoragePath)
+    if !acct.getCapability<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,Evergreen.CollectionPublic}>(nftProviderPath)!.check() {
+        acct.link<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,Evergreen.CollectionPublic}>(nftProviderPath, target: DigitalArt.CollectionStoragePath)
     }
 
-    self.nftProviderCapability = acct.getCapability<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,DigitalArt.CollectionPublic}>(nftProviderPath)!
+    self.nftProviderCapability = acct.getCapability<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,Evergreen.CollectionPublic}>(nftProviderPath)!
     assert(self.nftProviderCapability.borrow() != nil, message: "Missing or mis-typed nft collection provider")
 
     if acct.borrow<&NFTStorefront.Storefront>(from: NFTStorefront.StorefrontStoragePath) == nil {

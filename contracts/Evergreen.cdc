@@ -42,7 +42,13 @@ pub contract Evergreen {
         }
     }
 
-    pub resource interface Asset {
+    pub resource interface Token {
+        pub fun getAssetID(): String
         pub fun getEvergreenProfile(): Profile
+    }
+
+    // An interface for reading the details of an evengreen token in the Collection.
+    pub resource interface CollectionPublic {
+        pub fun borrowEvergreenToken(id: UInt64): &AnyResource{Token}?
     }
 }
