@@ -6,7 +6,7 @@ import Evergreen from {{.Evergreen}}
 import DigitalArt from {{.DigitalArt}}
 import SequelMarketplace from {{.SequelMarketplace}}
 
-transaction(tokenID: UInt64, price: UFix64, initialSale: Bool, metadataLink: String?) {
+transaction(tokenID: UInt64, price: UFix64, metadataLink: String?) {
   let nftProviderCapability: Capability<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,Evergreen.CollectionPublic}>
   let storefront: &NFTStorefront.Storefront
 
@@ -37,7 +37,6 @@ transaction(tokenID: UInt64, price: UFix64, initialSale: Bool, metadataLink: Str
         paymentVaultPath: /public/flowTokenReceiver,
         paymentVaultType: Type<@FlowToken.Vault>(),
         price: price,
-        initialSale: initialSale,
         extraRoles: [],
         metadataLink: metadataLink
     )

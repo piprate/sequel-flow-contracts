@@ -5,6 +5,8 @@ import (
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
+	"github.com/stretchr/testify/require"
 )
 
 func FundAccountWithFlow(t *testing.T, se *Engine, receiverAddress flow.Address, amount string) {
@@ -36,4 +38,13 @@ func FundAccountWithFUSD(t *testing.T, se *Engine, receiverAddress flow.Address,
 		SignProposeAndPayAsService().
 		Test(t).
 		AssertSuccess()
+}
+
+func GetFUSDBalance(t *testing.T, se *Engine, address flow.Address) float64 {
+	v, err := se.NewScript("account_balance_fusd").
+		Argument(cadence.NewAddress(address)).
+		RunReturns()
+	require.NoError(t, err)
+
+	return iinft.ToFloat64(v)
 }

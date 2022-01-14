@@ -1,94 +1,35 @@
 package scripts
 
 import (
-	"fmt"
-
 	_ "github.com/kevinburke/go-bindata"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
 )
 
-func CreateSealDigitalArtTx(script string, client *gwtf.GoWithTheFlow, metadata *iinft.Metadata) gwtf.FlowTransactionBuilder {
-	tx := client.Transaction(script).
-		StringArgument(metadata.MetadataLink).
-		StringArgument(metadata.Name).
-		StringArgument(metadata.Artist).
-		StringArgument(metadata.Description).
-		StringArgument(metadata.Type).
-		StringArgument(metadata.ContentLink).
-		StringArgument(metadata.ContentPreviewLink).
-		StringArgument(metadata.Mimetype).
-		UInt64Argument(metadata.MaxEdition).
-		StringArgument(metadata.Asset).
-		StringArgument(metadata.Record).
-		StringArgument(metadata.AssetHead).
-		UInt32Argument(metadata.EvergreenProfile.ID)
+func CreateSealDigitalArtTx(se *Engine, client *gwtf.GoWithTheFlow, metadata *iinft.Metadata,
+	profile *evergreen.Profile) gwtf.FlowTransactionBuilder {
 
-	artistRole, ok := metadata.EvergreenProfile.Roles[iinft.EvergreenRoleArtist]
-	if ok {
-		tx = tx.Argument(cadence.NewOptional(cadence.Address(artistRole.Address))).
-			UFix64Argument(fmt.Sprintf("%.4f", artistRole.InitialSaleCommission)).
-			UFix64Argument(fmt.Sprintf("%.4f", artistRole.SecondaryMarketCommission))
-	} else {
-		tx = tx.Argument(cadence.NewOptional(nil)).
-			UFix64Argument("0.0").
-			UFix64Argument("0.0")
-	}
-
-	platformRole, ok := metadata.EvergreenProfile.Roles[iinft.EvergreenRolePlatform]
-	if ok {
-		tx = tx.Argument(cadence.NewOptional(cadence.Address(platformRole.Address))).
-			UFix64Argument(fmt.Sprintf("%.4f", platformRole.InitialSaleCommission)).
-			UFix64Argument(fmt.Sprintf("%.4f", platformRole.SecondaryMarketCommission))
-	} else {
-		tx = tx.Argument(cadence.NewOptional(nil)).
-			UFix64Argument("0.0").
-			UFix64Argument("0.0")
-	}
+	tx := client.Transaction(se.GetStandardScript("master_seal")).
+		Argument(iinft.MetadataToCadence(metadata, flow.HexToAddress(se.WellKnownAddresses()["DigitalArt"]))).
+		Argument(evergreen.ProfileToCadence(profile, flow.HexToAddress(se.WellKnownAddresses()["Evergreen"])))
 
 	return tx
 }
 
-func CreateMintSingleDigitalArtTx(script string, client *gwtf.GoWithTheFlow, metadata *iinft.Metadata, recipient flow.Address) gwtf.FlowTransactionBuilder {
-	tx := client.Transaction(script).
-		StringArgument(metadata.MetadataLink).
-		StringArgument(metadata.Name).
-		StringArgument(metadata.Artist).
-		StringArgument(metadata.Description).
-		StringArgument(metadata.Type).
-		StringArgument(metadata.ContentLink).
-		StringArgument(metadata.ContentPreviewLink).
-		StringArgument(metadata.Mimetype).
-		StringArgument(metadata.Asset).
-		StringArgument(metadata.Record).
-		StringArgument(metadata.AssetHead).
-		UInt32Argument(metadata.EvergreenProfile.ID)
+func CreateMintSingleDigitalArtTx(se *Engine, client *gwtf.GoWithTheFlow, metadata *iinft.Metadata,
+	profile *evergreen.Profile, recipient flow.Address) gwtf.FlowTransactionBuilder {
 
-	artistRole, ok := metadata.EvergreenProfile.Roles[iinft.EvergreenRoleArtist]
-	if ok {
-		tx = tx.Argument(cadence.NewOptional(cadence.Address(artistRole.Address))).
-			UFix64Argument(fmt.Sprintf("%.4f", artistRole.InitialSaleCommission)).
-			UFix64Argument(fmt.Sprintf("%.4f", artistRole.SecondaryMarketCommission))
-	} else {
-		tx = tx.Argument(cadence.NewOptional(nil)).
-			UFix64Argument("0.0").
-			UFix64Argument("0.0")
-	}
+	metadataCpy := *metadata
+	metadataCpy.Edition = 1
+	metadataCpy.MaxEdition = 1
 
-	platformRole, ok := metadata.EvergreenProfile.Roles[iinft.EvergreenRolePlatform]
-	if ok {
-		tx = tx.Argument(cadence.NewOptional(cadence.Address(platformRole.Address))).
-			UFix64Argument(fmt.Sprintf("%.4f", platformRole.InitialSaleCommission)).
-			UFix64Argument(fmt.Sprintf("%.4f", platformRole.SecondaryMarketCommission))
-	} else {
-		tx = tx.Argument(cadence.NewOptional(nil)).
-			UFix64Argument("0.0").
-			UFix64Argument("0.0")
-	}
-
-	tx = tx.Argument(cadence.Address(recipient))
+	tx := client.Transaction(se.GetStandardScript("digitalart_mint_single")).
+		Argument(iinft.MetadataToCadence(&metadataCpy, flow.HexToAddress(se.WellKnownAddresses()["DigitalArt"]))).
+		Argument(evergreen.ProfileToCadence(profile, flow.HexToAddress(se.WellKnownAddresses()["Evergreen"]))).
+		Argument(cadence.Address(recipient))
 
 	return tx
 }

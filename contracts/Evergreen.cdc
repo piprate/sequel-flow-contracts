@@ -29,16 +29,13 @@ pub contract Evergreen {
     pub struct Profile {
         pub let id: UInt32
         pub let roles: { String: Role }
-        pub let description: String
 
         init(
             id: UInt32,
             roles: { String: Role }
-            description: String
         ) {
             self.id = id
             self.roles = roles
-            self.description = description
         }
     }
 

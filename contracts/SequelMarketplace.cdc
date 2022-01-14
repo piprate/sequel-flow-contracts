@@ -66,7 +66,6 @@ pub contract SequelMarketplace {
         paymentVaultPath: PublicPath,
         paymentVaultType: Type,
         price: UFix64,
-        initialSale: Bool,
         extraRoles: [Evergreen.Role],
         metadataLink: String?,
     ): UInt64 {
@@ -74,10 +73,11 @@ pub contract SequelMarketplace {
         let seller = storefront.owner!.address
 
         let payments = self.buildPayments(
-            token: token,
+            profile: token.getEvergreenProfile(),
             seller: seller,
+            sellerRole: "Owner",
             price: price,
-            initialSale: initialSale,
+            initialSale: false,
             extraRoles: extraRoles)
 
         let saleCuts: [NFTStorefront.SaleCut] = []
@@ -138,6 +138,50 @@ pub contract SequelMarketplace {
         return <- item
     }
 
+    pub fun payForMintedTokens(
+        unitPrice: UFix64,
+        numEditions: UInt64,
+        paymentVaultPath: PublicPath,
+        paymentVault: @FungibleToken.Vault,
+        evergreenProfile: Evergreen.Profile,
+    ) {
+        let artistAddress = evergreenProfile.roles["Artist"]!.address
+
+        let payments = self.buildPayments(
+            profile: evergreenProfile,
+            seller: artistAddress,
+            sellerRole: "Artist",
+            price: unitPrice * UFix64(numEditions),
+            initialSale: true,
+            extraRoles: [])
+
+        // Rather than aborting the transaction if any receiver is absent when we try to pay it,
+        // we send the cut to the first valid receiver.
+        // The first receiver should therefore either be the seller, or an agreed recipient for
+        // any unpaid cuts.
+        var residualReceiver: &{FungibleToken.Receiver}? = nil
+
+        for payment in payments {
+            let receiverCap = getAccount(payment.receiver).getCapability<&{FungibleToken.Receiver}>(paymentVaultPath)
+            let receiver = receiverCap.borrow() ?? panic("Missing or mis-typed fungible token receiver")
+
+            let paymentCut <- paymentVault.withdraw(amount: payment.amount)
+            receiver.deposit(from: <-paymentCut)
+            if (residualReceiver == nil) {
+                residualReceiver = receiver
+            }
+        }
+
+        // At this point, if all recievers were active and availabile, then the payment Vault will have
+        // zero tokens left.
+        if paymentVault.balance > 0.0 {
+            assert(residualReceiver != nil, message: "No valid residual payment receivers")
+            residualReceiver!.deposit(from: <-paymentVault)
+        } else {
+            destroy paymentVault
+        }
+    }
+
     // withdrawToken
     // Cancel sale
     //
@@ -162,8 +206,9 @@ pub contract SequelMarketplace {
     }
 
     pub fun buildPayments(
-        token: &AnyResource{Evergreen.Token},
+        profile: Evergreen.Profile,
         seller: Address,
+        sellerRole: String,
         price: UFix64,
         initialSale: Bool,
         extraRoles: [Evergreen.Role]
@@ -182,7 +227,7 @@ pub contract SequelMarketplace {
             assert(residualRate >= 0.0 && residualRate <= 1.0, message: "Residual rate must be in range [0..1)")
         }
 
-        for role in token.getEvergreenProfile().roles.values {
+        for role in profile.roles.values {
             addPayment(role.id, role.address, role.commissionRate(initialSale: initialSale))
         }
 
@@ -191,7 +236,7 @@ pub contract SequelMarketplace {
         }
 
         if residualRate > 0.0 {
-            addPayment("Owner", seller, residualRate)
+            addPayment(sellerRole, seller, residualRate)
         }
 
         return payments

@@ -217,7 +217,7 @@ func (t FlowScriptBuilder) RunReturns() (cadence.Value, error) {
 		return nil, err
 	}
 
-	f.Logger.Info(fmt.Sprintf("Script run from path %s\n", scriptFilePath))
+	f.Logger.Debug(fmt.Sprintf("Script run from path %s\n", scriptFilePath))
 	return result, nil
 }
 func (t FlowScriptBuilder) RunFailOnError() cadence.Value {

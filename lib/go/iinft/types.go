@@ -2,16 +2,12 @@ package iinft
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flow-go-sdk"
-)
-
-const (
-	EvergreenRoleArtist    = "Artist"
-	EvergreenRolePlatform  = "Platform"
-	EvergreenRoleCollector = "Collector"
 )
 
 type (
@@ -29,23 +25,10 @@ type (
 		Asset              string
 		Record             string
 		AssetHead          string
-		EvergreenProfile   *EvergreenProfile
-	}
-
-	EvergreenRole struct {
-		Role                      string       `json:"role"`
-		InitialSaleCommission     float64      `json:"initialSaleCommission,omitempty"`
-		SecondaryMarketCommission float64      `json:"secondaryMarketCommission,omitempty"`
-		Address                   flow.Address `json:"addr,omitempty"`
-	}
-
-	EvergreenProfile struct {
-		ID    uint32                    `json:"id"`
-		Roles map[string]*EvergreenRole `json:"roles"`
 	}
 )
 
-func NewEvergreenRoleFromCadence(val cadence.Value) (*EvergreenRole, error) {
+func MetadataFromCadence(val cadence.Value) (*Metadata, error) {
 	if opt, ok := val.(cadence.Optional); ok {
 		if opt.Value == nil {
 			return nil, nil
@@ -54,66 +37,8 @@ func NewEvergreenRoleFromCadence(val cadence.Value) (*EvergreenRole, error) {
 	}
 
 	valStruct, ok := val.(cadence.Struct)
-	if !ok || valStruct.StructType.QualifiedIdentifier != "Evergreen.Role" || len(valStruct.Fields) != 4 {
-		return nil, errors.New("bad Evergreen Role value")
-	}
-
-	res := EvergreenRole{
-		Role:                      valStruct.Fields[0].ToGoValue().(string),
-		InitialSaleCommission:     ToFloat64(valStruct.Fields[1]),
-		SecondaryMarketCommission: ToFloat64(valStruct.Fields[2]),
-		Address:                   flow.BytesToAddress(valStruct.Fields[3].(cadence.Address).Bytes()),
-	}
-
-	return &res, nil
-}
-
-func NewEvergreenProfileFromCadence(val cadence.Value) (*EvergreenProfile, error) {
-	if opt, ok := val.(cadence.Optional); ok {
-		if opt.Value == nil {
-			return nil, nil
-		}
-		val = opt.Value
-	}
-
-	valStruct, ok := val.(cadence.Struct)
-	if !ok || valStruct.StructType.QualifiedIdentifier != "Evergreen.Profile" || len(valStruct.Fields) != 3 {
-		return nil, errors.New("bad Evergreen Profile value")
-	}
-
-	res := EvergreenProfile{
-		ID:    uint32(valStruct.Fields[0].(cadence.UInt32)),
-		Roles: map[string]*EvergreenRole{},
-	}
-
-	rolesDict := valStruct.Fields[1].(cadence.Dictionary)
-	var err error
-	for _, pair := range rolesDict.Pairs {
-		res.Roles[pair.Key.ToGoValue().(string)], err = NewEvergreenRoleFromCadence(pair.Value)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &res, nil
-}
-
-func NewMetadataFromCadence(val cadence.Value) (*Metadata, error) {
-	if opt, ok := val.(cadence.Optional); ok {
-		if opt.Value == nil {
-			return nil, nil
-		}
-		val = opt.Value
-	}
-
-	valStruct, ok := val.(cadence.Struct)
-	if !ok || valStruct.StructType.QualifiedIdentifier != "DigitalArt.Metadata" || len(valStruct.Fields) != 14 {
+	if !ok || valStruct.StructType.QualifiedIdentifier != "DigitalArt.Metadata" || len(valStruct.Fields) != 13 {
 		return nil, errors.New("bad Metadata value")
-	}
-
-	profile, err := NewEvergreenProfileFromCadence(valStruct.Fields[13])
-	if err != nil {
-		return nil, err
 	}
 
 	res := Metadata{
@@ -130,13 +55,100 @@ func NewMetadataFromCadence(val cadence.Value) (*Metadata, error) {
 		Asset:              valStruct.Fields[10].ToGoValue().(string),
 		Record:             valStruct.Fields[11].ToGoValue().(string),
 		AssetHead:          valStruct.Fields[12].ToGoValue().(string),
-		EvergreenProfile:   profile,
 	}
 
 	return &res, nil
 }
 
+func MetadataToCadence(metadata *Metadata, digitalArtAddr flow.Address) cadence.Value {
+	return cadence.NewStruct([]cadence.Value{
+		cadence.String(metadata.MetadataLink),
+		cadence.String(metadata.Name),
+		cadence.String(metadata.Artist),
+		cadence.String(metadata.Description),
+		cadence.String(metadata.Type),
+		cadence.String(metadata.ContentLink),
+		cadence.String(metadata.ContentPreviewLink),
+		cadence.String(metadata.Mimetype),
+		cadence.UInt64(metadata.Edition),
+		cadence.UInt64(metadata.MaxEdition),
+		cadence.String(metadata.Asset),
+		cadence.String(metadata.Record),
+		cadence.String(metadata.AssetHead),
+	}).WithType(&cadence.StructType{
+		Location: common.AddressLocation{
+			Address: common.Address(digitalArtAddr),
+			Name:    common.AddressLocationPrefix,
+		},
+		QualifiedIdentifier: "DigitalArt.Metadata",
+		Fields:              metadataCadenceFields,
+	})
+}
+
 func ToFloat64(value cadence.Value) float64 {
 	val, _ := strconv.ParseFloat(value.(cadence.UFix64).String(), 64)
 	return val
+}
+
+func UFix64FromFloat64(v float64) cadence.Value {
+	cv, err := cadence.NewUFix64(fmt.Sprintf("%.4f", v))
+	if err != nil {
+		panic(err)
+	}
+	return cv
+}
+
+var metadataCadenceFields = []cadence.Field{
+	{
+		Identifier: "metadataLink",
+		Type:       cadence.StringType{},
+	},
+	{
+		Identifier: "name",
+		Type:       cadence.StringType{},
+	},
+	{
+		Identifier: "artist",
+		Type:       cadence.StringType{},
+	},
+	{
+		Identifier: "description",
+		Type:       cadence.StringType{},
+	},
+	{
+		Identifier: "type",
+		Type:       cadence.StringType{},
+	},
+	{
+		Identifier: "contentLink",
+		Type:       cadence.StringType{},
+	},
+	{
+		Identifier: "contentPreviewLink",
+		Type:       cadence.StringType{},
+	},
+	{
+		Identifier: "mimetype",
+		Type:       cadence.StringType{},
+	},
+	{
+		Identifier: "edition",
+		Type:       cadence.UInt64Type{},
+	},
+	{
+		Identifier: "maxEdition",
+		Type:       cadence.UInt64Type{},
+	},
+	{
+		Identifier: "asset",
+		Type:       cadence.StringType{},
+	},
+	{
+		Identifier: "record",
+		Type:       cadence.StringType{},
+	},
+	{
+		Identifier: "assetHead",
+		Type:       cadence.StringType{},
+	},
 }

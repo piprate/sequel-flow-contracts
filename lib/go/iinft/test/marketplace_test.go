@@ -6,12 +6,27 @@ import (
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/scripts"
 	"github.com/stretchr/testify/require"
 )
 
-func buildTestMetadata(artist flow.Address, maxEdition uint64) *iinft.Metadata {
+func buildTestProfile(artist flow.Address) *evergreen.Profile {
+	return &evergreen.Profile{
+		ID: 1,
+		Roles: map[string]*evergreen.Role{
+			evergreen.RoleArtist: {
+				Role:                      evergreen.RoleArtist,
+				InitialSaleCommission:     0.8,
+				SecondaryMarketCommission: 0.05,
+				Address:                   artist,
+			},
+		},
+	}
+}
+
+func buildTestMetadata(maxEdition uint64) *iinft.Metadata {
 	return &iinft.Metadata{
 		MetadataLink:       "QmMetadata",
 		Name:               "Pure Art",
@@ -25,17 +40,6 @@ func buildTestMetadata(artist flow.Address, maxEdition uint64) *iinft.Metadata {
 		Asset:              "did:sequel:asset-id",
 		Record:             "record-id",
 		AssetHead:          "asset-head-id",
-		EvergreenProfile: &iinft.EvergreenProfile{
-			ID: 1,
-			Roles: map[string]*iinft.EvergreenRole{
-				iinft.EvergreenRoleArtist: {
-					Role:                      iinft.EvergreenRoleArtist,
-					InitialSaleCommission:     0.8,
-					SecondaryMarketCommission: 0.05,
-					Address:                   artist,
-				},
-			},
-		},
 	}
 }
 
@@ -65,9 +69,10 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 	_ = se.NewTransaction("account_setup_flow_token").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 	scripts.FundAccountWithFlow(t, se, buyerAcct.Address(), "1000.0")
 
-	metadata := buildTestMetadata(sellerAcct.Address(), 0)
+	profile := buildTestProfile(sellerAcct.Address())
+	metadata := buildTestMetadata(0)
 
-	_ = scripts.CreateMintSingleDigitalArtTx(se.GetStandardScript("digitalart_mint_single"), client, metadata, sellerAcct.Address()).
+	_ = scripts.CreateMintSingleDigitalArtTx(se, client, metadata, profile, sellerAcct.Address()).
 		SignProposeAndPayAs(sequelAccount).
 		Test(t).
 		AssertSuccess().
@@ -89,7 +94,6 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 			SignProposeAndPayAs(sellerAcctName).
 			UInt64Argument(nftID).
 			UFix64Argument("200.0").
-			BooleanArgument(true).
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
@@ -104,14 +108,14 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 					"paymentVaultType": "A.0ae53cb6e3f42a79.FlowToken.Vault",
 					"payments": []interface{}{
 						map[string]interface{}{
-							"amount":   "160.00000000",
-							"rate":     "0.80000000",
+							"amount":   "10.00000000",
+							"rate":     "0.05000000",
 							"receiver": "0x1cf0e2f2f715450",
 							"role":     "Artist",
 						},
 						map[string]interface{}{
-							"amount":   "40.00000000",
-							"rate":     "0.20000000",
+							"amount":   "190.00000000",
+							"rate":     "0.95000000",
 							"receiver": "0x1cf0e2f2f715450",
 							"role":     "Owner",
 						},
@@ -188,9 +192,10 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 	scripts.FundAccountWithFUSD(t, se, buyerAcct.Address(), "1000.0")
 
-	metadata := buildTestMetadata(sellerAcct.Address(), 0)
+	profile := buildTestProfile(sellerAcct.Address())
+	metadata := buildTestMetadata(0)
 
-	_ = scripts.CreateMintSingleDigitalArtTx(se.GetStandardScript("digitalart_mint_single"), client, metadata, sellerAcct.Address()).
+	_ = scripts.CreateMintSingleDigitalArtTx(se, client, metadata, profile, sellerAcct.Address()).
 		SignProposeAndPayAs(sequelAccount).
 		Test(t).
 		AssertSuccess().
@@ -212,7 +217,6 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 			SignProposeAndPayAs(sellerAcctName).
 			UInt64Argument(nftID).
 			UFix64Argument("200.0").
-			BooleanArgument(true).
 			Argument(cadence.NewOptional(nil)).
 			Test(t).
 			AssertSuccess().
@@ -232,14 +236,15 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 					"paymentVaultType": "A.f8d6e0586b0a20c7.FUSD.Vault",
 					"payments": []interface{}{
 						map[string]interface{}{
-							"amount":   "160.00000000",
-							"rate":     "0.80000000",
+							"amount":   "10.00000000",
+							"rate":     "0.05000000",
 							"receiver": "0x1cf0e2f2f715450",
 							"role":     "Artist",
 						},
 						map[string]interface{}{
-							"amount":   "40.00000000",
-							"rate":     "0.20000000",
+							"amount": "190.00000000",
+
+							"rate":     "0.95000000",
 							"receiver": "0x1cf0e2f2f715450",
 							"role":     "Owner",
 						},

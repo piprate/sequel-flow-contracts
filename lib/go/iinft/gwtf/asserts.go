@@ -43,7 +43,7 @@ func (t TransactionResult) AssertSuccess() TransactionResult {
 }
 
 func (t TransactionResult) AssertEventCount(number int) TransactionResult {
-	assert.Equal(t.Testing, len(t.Events), number)
+	assert.Equal(t.Testing, number, len(t.Events))
 	return t
 
 }

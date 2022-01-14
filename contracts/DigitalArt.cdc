@@ -27,10 +27,13 @@ pub contract DigitalArt: NonFungibleToken {
 
     pub struct Master {
         pub let metadata: Metadata
+        pub let evergreenProfile: Evergreen.Profile
+
         pub var nextEditionId: UInt64
 
-        init(metadata: Metadata)  {
+        init(metadata: Metadata, evergreenProfile: Evergreen.Profile)  {
             self.metadata = metadata
+            self.evergreenProfile = evergreenProfile
             self.nextEditionId = 1
         }
 
@@ -64,14 +67,12 @@ pub contract DigitalArt: NonFungibleToken {
         pub let contentPreviewLink: String
         // MIME type (e.g. 'image/jpeg')
         pub let mimetype: String
-		pub let edition: UInt64
+		pub var edition: UInt64
 		pub let maxEdition: UInt64
 
 		pub let asset: String
 		pub let record: String
 		pub let assetHead: String
-
-		pub let evergreenProfile: Evergreen.Profile
 
         init(
             metadataLink: String,
@@ -86,8 +87,7 @@ pub contract DigitalArt: NonFungibleToken {
             maxEdition: UInt64,
             asset: String,
             record: String,
-            assetHead: String,
-            evergreenProfile: Evergreen.Profile
+            assetHead: String
     )  {
             self.metadataLink = metadataLink
             self.name = name
@@ -102,7 +102,10 @@ pub contract DigitalArt: NonFungibleToken {
             self.asset = asset
             self.record = record
             self.assetHead = assetHead
-            self.evergreenProfile = evergreenProfile
+        }
+
+        pub fun setEdition(edition: UInt64) {
+            self.edition = edition
         }
     }
 
@@ -114,12 +117,14 @@ pub contract DigitalArt: NonFungibleToken {
         pub let id: UInt64
 
         pub let metadata: Metadata
+        pub let evergreenProfile: Evergreen.Profile
 
         // initializer
         //
-        init(initID: UInt64, metadata: Metadata) {
+        init(initID: UInt64, metadata: Metadata, evergreenProfile: Evergreen.Profile) {
             self.id = initID
             self.metadata = metadata
+            self.evergreenProfile = evergreenProfile
         }
 
         pub fun getAssetID(): String {
@@ -127,7 +132,7 @@ pub contract DigitalArt: NonFungibleToken {
         }
 
         pub fun getEvergreenProfile(): Evergreen.Profile {
-            return self.metadata.evergreenProfile
+            return self.evergreenProfile
         }
     }
 
@@ -253,29 +258,16 @@ pub contract DigitalArt: NonFungibleToken {
 
         // sealMaster saves and freezes the master copy that then can be used
         // to mint NFT editions.
-        pub fun sealMaster(metadata: Metadata) {
+        pub fun sealMaster(metadata: Metadata, evergreenProfile: Evergreen.Profile) {
             pre {
                metadata.asset != "" : "Empty asset ID"
+               metadata.edition == UInt64(0) : "Edition should be zero"
                metadata.maxEdition >= UInt64(1) : "MaxEdition should be positive"
                !DigitalArt.masters.containsKey(metadata.asset) : "master already sealed"
             }
             DigitalArt.masters[metadata.asset] = Master(
-                metadata: Metadata(
-                    metadataLink: metadata.metadataLink,
-                    name: metadata.name,
-                    artist: metadata.artist,
-                    description: metadata.description,
-                    type: metadata.type,
-                    contentLink: metadata.contentLink,
-                    contentPreviewLink: metadata.contentPreviewLink,
-                    mimetype: metadata.mimetype,
-                    edition: 0,
-                    maxEdition: metadata.maxEdition,
-                    asset: metadata.asset,
-                    record: metadata.record,
-                    assetHead: metadata.assetHead,
-                    evergreenProfile: metadata.evergreenProfile
-                )
+                metadata: metadata,
+                evergreenProfile: evergreenProfile
             )
         }
 
@@ -287,6 +279,16 @@ pub contract DigitalArt: NonFungibleToken {
             let master = &DigitalArt.masters[masterId] as &Master
 
             return master.availableEditions()
+        }
+
+        pub fun evergreenProfile(masterId: String) : Evergreen.Profile {
+            pre {
+               DigitalArt.masters.containsKey(masterId) : "master not found"
+            }
+
+            let master = &DigitalArt.masters[masterId] as &Master
+
+            return master.evergreenProfile
         }
 
         pub fun mintEditionNFT(masterId: String) : @DigitalArt.NFT {
@@ -302,26 +304,13 @@ pub contract DigitalArt: NonFungibleToken {
 
             let metadata = master.metadata
             let edition = master.newEditionID()
+            metadata.setEdition(edition: edition)
 
             // create a new NFT
             var newNFT <- create NFT(
                 initID: DigitalArt.totalSupply,
-                metadata: Metadata(
-                  metadataLink: metadata.metadataLink,
-                  name: metadata.name,
-                  artist: metadata.artist,
-                  description: metadata.description,
-                  type: metadata.type,
-                  contentLink: metadata.contentLink,
-                  contentPreviewLink: metadata.contentPreviewLink,
-                  mimetype: metadata.mimetype,
-                  edition: edition,
-                  maxEdition: metadata.maxEdition,
-                  asset: metadata.asset,
-                  record: metadata.record,
-                  assetHead: metadata.assetHead,
-                  evergreenProfile: metadata.evergreenProfile
-                )
+                metadata: metadata,
+                evergreenProfile: master.evergreenProfile
             )
 
             emit Minted(id: DigitalArt.totalSupply, asset: metadata.asset, edition: edition)
@@ -331,26 +320,17 @@ pub contract DigitalArt: NonFungibleToken {
             return <- newNFT
         }
 
-        pub fun mintSingleNFT(metadata: Metadata) : @DigitalArt.NFT {
-            // create a new NFT
+        pub fun mintSingleNFT(metadata: Metadata, evergreenProfile: Evergreen.Profile) : @DigitalArt.NFT {
+            pre {
+               metadata.edition == UInt64(1) : "Edition should be = 1"
+               metadata.maxEdition == UInt64(1) : "MaxEdition should = 1"
+            }
+
+           // create a new NFT
             var newNFT <- create NFT(
                 initID: DigitalArt.totalSupply,
-                metadata: Metadata(
-                    metadataLink: metadata.metadataLink,
-                    name: metadata.name,
-                    artist: metadata.artist,
-                    description: metadata.description,
-                    type: metadata.type,
-                    contentLink: metadata.contentLink,
-                    contentPreviewLink: metadata.contentPreviewLink,
-                    mimetype: metadata.mimetype,
-                    edition: 1,
-                    maxEdition: 1,
-                    asset: metadata.asset,
-                    record: metadata.record,
-                    assetHead: metadata.assetHead,
-                    evergreenProfile: metadata.evergreenProfile
-                )
+                metadata: metadata,
+                evergreenProfile: evergreenProfile
             )
 
             emit Minted(id: DigitalArt.totalSupply, asset: metadata.asset, edition: UInt64(1))
