@@ -70,17 +70,20 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 	scripts.FundAccountWithFlow(t, se, buyerAcct.Address(), "1000.0")
 
 	profile := buildTestProfile(sellerAcct.Address())
-	metadata := buildTestMetadata(0)
+	metadata := buildTestMetadata(1)
 
-	_ = scripts.CreateMintSingleDigitalArtTx(se, client, metadata, profile, sellerAcct.Address()).
+	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 		SignProposeAndPayAs(sequelAccount).
 		Test(t).
-		AssertSuccess().
-		AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Minted", map[string]interface{}{
-			"id":      "0",
-			"asset":   "did:sequel:asset-id",
-			"edition": "1",
-		}))
+		AssertSuccess()
+
+	_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
+		SignProposeAndPayAs(sequelAccount).
+		StringArgument(metadata.Asset).
+		UInt64Argument(1).
+		Argument(cadence.Address(sellerAcct.Address())).
+		Test(t).
+		AssertSuccess()
 
 	var nftID uint64 = 0
 
@@ -193,17 +196,20 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 	scripts.FundAccountWithFUSD(t, se, buyerAcct.Address(), "1000.0")
 
 	profile := buildTestProfile(sellerAcct.Address())
-	metadata := buildTestMetadata(0)
+	metadata := buildTestMetadata(1)
 
-	_ = scripts.CreateMintSingleDigitalArtTx(se, client, metadata, profile, sellerAcct.Address()).
+	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 		SignProposeAndPayAs(sequelAccount).
 		Test(t).
-		AssertSuccess().
-		AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Minted", map[string]interface{}{
-			"id":      "0",
-			"asset":   "did:sequel:asset-id",
-			"edition": "1",
-		}))
+		AssertSuccess()
+
+	_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
+		SignProposeAndPayAs(sequelAccount).
+		StringArgument(metadata.Asset).
+		UInt64Argument(1).
+		Argument(cadence.Address(sellerAcct.Address())).
+		Test(t).
+		AssertSuccess()
 
 	var nftID uint64 = 0
 

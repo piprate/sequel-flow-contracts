@@ -1,4 +1,4 @@
-{{ define "digitalart_mint_edition_od_fusd" }}
+{{ define "digitalart_mint_on_demand_fusd" }}
 import NonFungibleToken from {{.NonFungibleToken}}
 import FungibleToken from {{.FungibleToken}}
 import FUSD from {{.FUSD}}
@@ -6,7 +6,7 @@ import Evergreen from {{.Evergreen}}
 import DigitalArt from {{.DigitalArt}}
 import SequelMarketplace from {{.SequelMarketplace}}
 
-transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64) {
+transaction(metadata: DigitalArt.Metadata, evergreenProfile: Evergreen.Profile, numEditions: UInt64, unitPrice: UFix64) {
     let admin: &DigitalArt.Admin
     let availableEditions: UInt64
     let evergreenProfile: Evergreen.Profile
@@ -16,6 +16,12 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64) {
 
     prepare(buyer: AuthAccount, platform: AuthAccount) {
         self.admin = platform.borrow<&DigitalArt.Admin>(from: DigitalArt.AdminStoragePath)!
+
+        let masterId = metadata.asset
+        if !self.admin.isSealed(masterId: masterId) {
+            self.admin.sealMaster(metadata: metadata, evergreenProfile: evergreenProfile)
+        }
+
         self.availableEditions = self.admin.availableEditions(masterId: masterId)
         self.evergreenProfile = self.admin.evergreenProfile(masterId: masterId)
 
@@ -48,7 +54,7 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64) {
 
         var i = UInt64(0)
         while i < numEditions {
-            self.tokenReceiver.deposit(token:<- self.admin.mintEditionNFT(masterId: masterId))
+            self.tokenReceiver.deposit(token:<- self.admin.mintEditionNFT(masterId: metadata.asset))
             i = i + 1
         }
 

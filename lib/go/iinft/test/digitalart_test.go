@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
@@ -302,8 +303,8 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 				SecondaryMarketCommission: 0.025,
 				Address:                   platformAcct.Address(),
 			},
-			evergreen.RoleGreenCause: {
-				Role:                      evergreen.RoleGreenCause,
+			"GreenFund": {
+				Role:                      "GreenFund",
 				InitialSaleCommission:     0.05,
 				SecondaryMarketCommission: 0.025,
 				Address:                   greenAcct.Address(),
@@ -311,17 +312,13 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 		},
 	}
 
-	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
-		SignProposeAndPayAs(sequelAccount).
-		Test(t).
-		AssertSuccess()
+	t.Run("Should be able to mint a token on demand (master not sealed)", func(t *testing.T) {
 
-	t.Run("Should be able to mint a token", func(t *testing.T) {
-
-		_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition_od_fusd")).
+		_ = client.Transaction(se.GetStandardScript("digitalart_mint_on_demand_fusd")).
 			PayloadSigner(buyerAcctName).
 			SignProposeAndPayAs(sequelAccount).
-			StringArgument(metadata.Asset).
+			Argument(iinft.MetadataToCadence(metadata, flow.HexToAddress(se.WellKnownAddresses()["DigitalArt"]))).
+			Argument(evergreen.ProfileToCadence(profile, flow.HexToAddress(se.WellKnownAddresses()["Evergreen"]))).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
 			Test(t).
@@ -363,78 +360,41 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 		assert.Equal(t, 5.0, scripts.GetFUSDBalance(t, se, platformAcct.Address()))
 		assert.Equal(t, 5.0, scripts.GetFUSDBalance(t, se, greenAcct.Address()))
 	})
-}
 
-func TestMintDigitalArtSingles(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
-	require.NoError(t, err)
+	t.Run("Should be able to mint a token on demand (master sealed)", func(t *testing.T) {
 
-	client.InitializeContracts().DoNotPrependNetworkToAccountNames().CreateAccounts("emulator-account")
-
-	se, err := scripts.NewEngine(client, false)
-	require.NoError(t, err)
-
-	userAcct := client.Account("emulator-user1")
-
-	_ = se.NewTransaction("account_setup").
-		SignProposeAndPayAs("emulator-user1").
-		Test(t).
-		AssertSuccess()
-
-	checkDigitalArtNFTSupply(t, se, 0)
-	checkDigitalArtCollectionLen(t, se, userAcct.Address().String(), 0)
-
-	metadata := &iinft.Metadata{
-		MetadataLink:       "QmMetadata",
-		Name:               "Pure Art",
-		Artist:             "Arty",
-		Description:        "Digital art in its purest form",
-		Type:               "Image",
-		ContentLink:        "QmContent",
-		ContentPreviewLink: "QmPreview",
-		Mimetype:           "image/jpeg",
-		Asset:              "did:sequel:asset-id",
-		Record:             "record-id",
-		AssetHead:          "asset-head-id",
-	}
-
-	profile := &evergreen.Profile{
-		ID: 0,
-		Roles: map[string]*evergreen.Role{
-			evergreen.RoleArtist: {
-				Role:                      evergreen.RoleArtist,
-				InitialSaleCommission:     0.8,
-				SecondaryMarketCommission: 0.2,
-				Address:                   userAcct.Address(),
-			},
-		},
-	}
-
-	t.Run("Should be able to mint a token", func(t *testing.T) {
-
-		_ = scripts.CreateMintSingleDigitalArtTx(se, client, metadata, profile, userAcct.Address()).
+		_ = client.Transaction(se.GetStandardScript("digitalart_mint_on_demand_fusd")).
+			PayloadSigner(buyerAcctName).
 			SignProposeAndPayAs(sequelAccount).
+			Argument(iinft.MetadataToCadence(metadata, flow.HexToAddress(se.WellKnownAddresses()["DigitalArt"]))).
+			Argument(evergreen.ProfileToCadence(profile, flow.HexToAddress(se.WellKnownAddresses()["Evergreen"]))).
+			UInt64Argument(1).
+			UFix64Argument("100.0").
 			Test(t).
 			AssertSuccess().
-			AssertEventCount(2).
-			AssertEmitEventName("A.f8d6e0586b0a20c7.DigitalArt.Minted", "A.f8d6e0586b0a20c7.DigitalArt.Deposit").
+			AssertEventCount(9).
+			AssertEmitEventName(
+				"A.f8d6e0586b0a20c7.DigitalArt.Minted",
+				"A.f8d6e0586b0a20c7.DigitalArt.Deposit",
+				"A.f8d6e0586b0a20c7.FUSD.TokensWithdrawn",
+				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited").
 			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Minted", map[string]interface{}{
-				"id":      "0",
+				"id":      "1",
 				"asset":   "did:sequel:asset-id",
-				"edition": "1",
+				"edition": "2",
 			})).
 			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Deposit", map[string]interface{}{
-				"id": "0",
-				"to": "0x1cf0e2f2f715450",
+				"id": "1",
+				"to": "0x179b6b1cb6755e31",
 			}))
 
 		// Assert that the account's collection is correct
-		checkTokenInDigitalArtCollection(t, se, userAcct.Address().String(), 0)
-		checkDigitalArtCollectionLen(t, se, userAcct.Address().String(), 1)
-		checkDigitalArtNFTSupply(t, se, 1)
+		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address().String(), 1)
+		checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 2)
+		checkDigitalArtNFTSupply(t, se, 2)
 
 		val, err := se.NewScript("digitalart_get_metadata").
-			Argument(cadence.NewAddress(userAcct.Address())).
+			Argument(cadence.NewAddress(buyerAcct.Address())).
 			UInt64Argument(0).
 			RunReturns()
 		require.NoError(t, err)
@@ -443,16 +403,11 @@ func TestMintDigitalArtSingles(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, uint64(1), meta.Edition)
-	})
 
-	t.Run("Shouldn't be able to borrow a reference to an NFT that doesn't exist", func(t *testing.T) {
-
-		// test for non-existent token
-		_, err := se.NewInlineScript(
-			inspectCollectionScript(se.WellKnownAddresses(), userAcct.Address().String(),
-				"DigitalArt", "DigitalArt.CollectionPublicPath", 5),
-		).RunReturns()
-		require.Error(t, err)
+		assert.Equal(t, 180.0, scripts.GetFUSDBalance(t, se, artistAcct.Address()))
+		assert.Equal(t, 800.0, scripts.GetFUSDBalance(t, se, buyerAcct.Address()))
+		assert.Equal(t, 10.0, scripts.GetFUSDBalance(t, se, platformAcct.Address()))
+		assert.Equal(t, 10.0, scripts.GetFUSDBalance(t, se, greenAcct.Address()))
 	})
 }
 

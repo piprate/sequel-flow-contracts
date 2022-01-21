@@ -26,15 +26,16 @@ pub contract DigitalArt: NonFungibleToken {
     access(self) var masters: {String: Master}
 
     pub struct Master {
-        pub let metadata: Metadata
-        pub let evergreenProfile: Evergreen.Profile
-
+        pub var metadata: Metadata?
+        pub var evergreenProfile: Evergreen.Profile?
         pub var nextEditionId: UInt64
+        pub var closed: Bool
 
         init(metadata: Metadata, evergreenProfile: Evergreen.Profile)  {
             self.metadata = metadata
             self.evergreenProfile = evergreenProfile
             self.nextEditionId = 1
+            self.closed = false
         }
 
         pub fun newEditionID() : UInt64 {
@@ -44,11 +45,20 @@ pub contract DigitalArt: NonFungibleToken {
         }
 
         pub fun availableEditions() : UInt64 {
-            if self.metadata.maxEdition >= self.nextEditionId {
-                return self.metadata.maxEdition - self.nextEditionId + UInt64(1)
+            if !self.closed && self.metadata!.maxEdition >= self.nextEditionId {
+                return self.metadata!.maxEdition - self.nextEditionId + UInt64(1)
             } else {
                 return 0
             }
+        }
+
+        // We close masters after all editions are minted instead of deleting master records
+        // This process ensures nobody can ever mint tokens with the same asset ID.
+        pub fun close() {
+            self.metadata = nil
+            self.evergreenProfile = nil
+            self.nextEditionId = 0
+            self.closed = true
         }
     }
 
@@ -271,6 +281,10 @@ pub contract DigitalArt: NonFungibleToken {
             )
         }
 
+        pub fun isSealed(masterId: String) : Bool {
+            return DigitalArt.masters.containsKey(masterId)
+        }
+
         pub fun availableEditions(masterId: String) : UInt64 {
             pre {
                DigitalArt.masters.containsKey(masterId) : "master not found"
@@ -288,7 +302,7 @@ pub contract DigitalArt: NonFungibleToken {
 
             let master = &DigitalArt.masters[masterId] as &Master
 
-            return master.evergreenProfile
+            return master.evergreenProfile!
         }
 
         pub fun mintEditionNFT(masterId: String) : @DigitalArt.NFT {
@@ -298,11 +312,9 @@ pub contract DigitalArt: NonFungibleToken {
 
             let master = &DigitalArt.masters[masterId] as &Master
 
-            if master.availableEditions() == 0 {
-                panic("no more tokens to mint")
-            }
+            assert(master.availableEditions() > 0, message: "no more tokens to mint")
 
-            let metadata = master.metadata
+            let metadata = master.metadata!
             let edition = master.newEditionID()
             metadata.setEdition(edition: edition)
 
@@ -310,32 +322,16 @@ pub contract DigitalArt: NonFungibleToken {
             var newNFT <- create NFT(
                 initID: DigitalArt.totalSupply,
                 metadata: metadata,
-                evergreenProfile: master.evergreenProfile
+                evergreenProfile: master.evergreenProfile!
             )
 
             emit Minted(id: DigitalArt.totalSupply, asset: metadata.asset, edition: edition)
 
             DigitalArt.totalSupply = DigitalArt.totalSupply + UInt64(1)
 
-            return <- newNFT
-        }
-
-        pub fun mintSingleNFT(metadata: Metadata, evergreenProfile: Evergreen.Profile) : @DigitalArt.NFT {
-            pre {
-               metadata.edition == UInt64(1) : "Edition should be = 1"
-               metadata.maxEdition == UInt64(1) : "MaxEdition should = 1"
+            if master.availableEditions() == 0 {
+                master.close()
             }
-
-           // create a new NFT
-            var newNFT <- create NFT(
-                initID: DigitalArt.totalSupply,
-                metadata: metadata,
-                evergreenProfile: evergreenProfile
-            )
-
-            emit Minted(id: DigitalArt.totalSupply, asset: metadata.asset, edition: UInt64(1))
-
-            DigitalArt.totalSupply = DigitalArt.totalSupply + UInt64(1)
 
             return <- newNFT
         }
