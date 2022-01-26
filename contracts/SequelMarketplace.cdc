@@ -145,7 +145,7 @@ pub contract SequelMarketplace {
         paymentVault: @FungibleToken.Vault,
         evergreenProfile: Evergreen.Profile,
     ) {
-        let artistAddress = evergreenProfile.roles["Artist"]!.address
+        let artistAddress = evergreenProfile.getRole(id: "Artist")!.address
 
         let payments = self.buildPayments(
             profile: evergreenProfile,
@@ -227,7 +227,7 @@ pub contract SequelMarketplace {
             assert(residualRate >= 0.0 && residualRate <= 1.0, message: "Residual rate must be in range [0..1)")
         }
 
-        for role in profile.roles.values {
+        for role in profile.roles {
             addPayment(role.id, role.address, role.commissionRate(initialSale: initialSale))
         }
 

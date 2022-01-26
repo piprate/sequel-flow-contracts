@@ -28,14 +28,23 @@ pub contract Evergreen {
 
     pub struct Profile {
         pub let id: UInt32
-        pub let roles: { String: Role }
+        pub let roles: [Role]
 
         init(
             id: UInt32,
-            roles: { String: Role }
+            roles: [Role]
         ) {
             self.id = id
             self.roles = roles
+        }
+
+        pub fun getRole(id: String): Role? {
+            for role in self.roles {
+                if (role.id == id) {
+                    return role
+                }
+            }
+            return nil
         }
     }
 

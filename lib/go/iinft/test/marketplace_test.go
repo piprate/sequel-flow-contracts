@@ -15,8 +15,8 @@ import (
 func buildTestProfile(artist flow.Address) *evergreen.Profile {
 	return &evergreen.Profile{
 		ID: 1,
-		Roles: map[string]*evergreen.Role{
-			evergreen.RoleArtist: {
+		Roles: []*evergreen.Role{
+			{
 				Role:                      evergreen.RoleArtist,
 				InitialSaleCommission:     0.8,
 				SecondaryMarketCommission: 0.05,

@@ -53,8 +53,8 @@ func TestSealDigitalArtMaster(t *testing.T) {
 
 	profile := &evergreen.Profile{
 		ID: 0,
-		Roles: map[string]*evergreen.Role{
-			evergreen.RoleArtist: {
+		Roles: []*evergreen.Role{
+			{
 				Role:                      evergreen.RoleArtist,
 				InitialSaleCommission:     0.8,
 				SecondaryMarketCommission: 0.2,
@@ -127,8 +127,8 @@ func TestMintDigitalArtEditions(t *testing.T) {
 
 	profile := &evergreen.Profile{
 		ID: 0,
-		Roles: map[string]*evergreen.Role{
-			evergreen.RoleArtist: {
+		Roles: []*evergreen.Role{
+			{
 				Role:                      evergreen.RoleArtist,
 				InitialSaleCommission:     0.8,
 				SecondaryMarketCommission: 0.2,
@@ -290,20 +290,20 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 
 	profile := &evergreen.Profile{
 		ID: 1,
-		Roles: map[string]*evergreen.Role{
-			evergreen.RoleArtist: {
+		Roles: []*evergreen.Role{
+			{
 				Role:                      evergreen.RoleArtist,
 				InitialSaleCommission:     0.9,
 				SecondaryMarketCommission: 0.025,
 				Address:                   artistAcct.Address(),
 			},
-			evergreen.RolePlatform: {
+			{
 				Role:                      evergreen.RolePlatform,
 				InitialSaleCommission:     0.05,
 				SecondaryMarketCommission: 0.025,
 				Address:                   platformAcct.Address(),
 			},
-			"GreenFund": {
+			{
 				Role:                      "GreenFund",
 				InitialSaleCommission:     0.05,
 				SecondaryMarketCommission: 0.025,
@@ -448,8 +448,8 @@ func TestTransferDigitalArt(t *testing.T) {
 
 	profile := &evergreen.Profile{
 		ID: 0,
-		Roles: map[string]*evergreen.Role{
-			evergreen.RoleArtist: {
+		Roles: []*evergreen.Role{
+			{
 				Role:                      evergreen.RoleArtist,
 				InitialSaleCommission:     0.8,
 				SecondaryMarketCommission: 0.2,

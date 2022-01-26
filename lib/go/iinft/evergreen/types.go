@@ -18,7 +18,7 @@ type (
 	}
 
 	Profile struct {
-		ID    uint32           `json:"id"`
-		Roles map[string]*Role `json:"roles"`
+		ID    uint32  `json:"id"`
+		Roles []*Role `json:"roles"`
 	}
 )

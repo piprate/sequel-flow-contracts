@@ -1,7 +1,6 @@
 package evergreen
 
 import (
-	"encoding/json"
 	"errors"
 
 	"github.com/onflow/cadence"
@@ -64,19 +63,17 @@ func ProfileFromCadence(val cadence.Value) (*Profile, error) {
 
 	res := Profile{
 		ID:    uint32(valStruct.Fields[0].(cadence.UInt32)),
-		Roles: map[string]*Role{},
+		Roles: []*Role{},
 	}
 
-	rolesDict := valStruct.Fields[1].(cadence.Dictionary)
-	var err error
-	for _, pair := range rolesDict.Pairs {
-		//fmt.Printf("%+v\n", pair.Value)
-		v, _ := json.MarshalIndent(pair.Value, "", "  ")
-		println(string(v))
-		res.Roles[pair.Key.ToGoValue().(string)], err = RoleFromCadence(pair.Value)
+	rolesArray := valStruct.Fields[1].(cadence.Array)
+	for _, roleVal := range rolesArray.Values {
+		role, err := RoleFromCadence(roleVal)
 		if err != nil {
 			return nil, err
 		}
+		res.Roles = append(res.Roles, role)
+
 	}
 
 	return &res, nil
@@ -84,17 +81,16 @@ func ProfileFromCadence(val cadence.Value) (*Profile, error) {
 
 func ProfileToCadence(profile *Profile, evergreenAddr flow.Address) cadence.Value {
 
-	rolePairs := make([]cadence.KeyValuePair, len(profile.Roles))
+	roles := make([]cadence.Value, len(profile.Roles))
 	i := 0
 	for _, role := range profile.Roles {
-		rolePairs[i].Key = cadence.String(role.Role)
-		rolePairs[i].Value = RoleToCadence(role, evergreenAddr)
+		roles[i] = RoleToCadence(role, evergreenAddr)
 		i++
 	}
 
 	return cadence.NewStruct([]cadence.Value{
 		cadence.UInt32(profile.ID),
-		cadence.NewDictionary(rolePairs),
+		cadence.NewArray(roles),
 	}).WithType(&cadence.StructType{
 		Location: common.AddressLocation{
 			Address: common.Address(evergreenAddr),
