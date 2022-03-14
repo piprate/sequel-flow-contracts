@@ -6,7 +6,7 @@ import Evergreen from {{.Evergreen}}
 import DigitalArt from {{.DigitalArt}}
 import SequelMarketplace from {{.SequelMarketplace}}
 
-transaction(metadata: DigitalArt.Metadata, evergreenProfile: Evergreen.Profile, numEditions: UInt64, unitPrice: UFix64) {
+transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64) {
     let admin: &DigitalArt.Admin
     let availableEditions: UInt64
     let evergreenProfile: Evergreen.Profile
@@ -17,8 +17,34 @@ transaction(metadata: DigitalArt.Metadata, evergreenProfile: Evergreen.Profile, 
     prepare(buyer: AuthAccount, platform: AuthAccount) {
         self.admin = platform.borrow<&DigitalArt.Admin>(from: DigitalArt.AdminStoragePath)!
 
-        let masterId = metadata.asset
         if !self.admin.isSealed(masterId: masterId) {
+            let metadata = DigitalArt.Metadata(
+                metadataLink: {{safe .Parameters.Metadata.MetadataLink}},
+                name: {{safe .Parameters.Metadata.Name}},
+                artist: {{safe .Parameters.Metadata.Artist}},
+                description: {{safe .Parameters.Metadata.Description}},
+                type: {{safe .Parameters.Metadata.Type}},
+                contentLink: {{safe .Parameters.Metadata.ContentLink}},
+                contentPreviewLink: {{safe .Parameters.Metadata.ContentPreviewLink}},
+                mimetype: {{safe .Parameters.Metadata.Mimetype}},
+                edition: {{.Parameters.Metadata.Edition}},
+                maxEdition: {{.Parameters.Metadata.MaxEdition}},
+                asset: masterId,
+                record: {{safe .Parameters.Metadata.Record}},
+                assetHead: {{safe .Parameters.Metadata.AssetHead}}
+            )
+            let evergreenProfile = Evergreen.Profile(
+                id: {{.Parameters.Profile.ID}},
+                roles: [
+                {{$last := dec (len .Parameters.Profile.Roles)}}
+                {{range $i, $role := .Parameters.Profile.Roles}}
+                    Evergreen.Role(id: {{safe $role.Role}},
+                       initialSaleCommission: {{$role.InitialSaleCommission}},
+                       secondaryMarketCommission: {{$role.SecondaryMarketCommission}},
+                       address: 0x{{$role.Address}}){{ if ne $i $last}},{{ end }}
+                {{end}}
+                ]
+            )
             self.admin.sealMaster(metadata: metadata, evergreenProfile: evergreenProfile)
         }
 
@@ -54,7 +80,7 @@ transaction(metadata: DigitalArt.Metadata, evergreenProfile: Evergreen.Profile, 
 
         var i = UInt64(0)
         while i < numEditions {
-            self.tokenReceiver.deposit(token:<- self.admin.mintEditionNFT(masterId: metadata.asset))
+            self.tokenReceiver.deposit(token:<- self.admin.mintEditionNFT(masterId: masterId))
             i = i + 1
         }
 

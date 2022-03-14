@@ -43,6 +43,13 @@
         "mainnet": "0x4eb8a10cb9f87357"
       }
     },
+    "MetadataViews": {
+      "source": "./contracts/standard/MetadataViews.cdc",
+      "aliases": {
+        "testnet": "0x631e88ae7f1d7c20",
+        "mainnet": "0x1d7e57aa55817448"
+      }
+    },
     "Collectible": {
       "source": "./contracts/thirdparty/xtingles/Collectible.cdc",
       "aliases": {

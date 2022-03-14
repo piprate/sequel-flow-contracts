@@ -8,6 +8,13 @@ import (
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
 )
 
+type (
+	MindOnDemandParameters struct {
+		Metadata *iinft.Metadata
+		Profile  *evergreen.Profile
+	}
+)
+
 func CreateSealDigitalArtTx(se *Engine, client *gwtf.GoWithTheFlow, metadata *iinft.Metadata,
 	profile *evergreen.Profile) gwtf.FlowTransactionBuilder {
 

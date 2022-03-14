@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
@@ -274,10 +273,11 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 	checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 0)
 
 	metadata := &iinft.Metadata{
-		MetadataLink:       "QmMetadata",
-		Name:               "Pure Art",
-		Artist:             "Arty",
-		Description:        "Digital art in its purest form",
+		MetadataLink: "QmMetadata",
+		Name:         "Pure Art",
+		Artist:       "Arty",
+		Description: `Digital art in its purest form
+The End.`,
 		Type:               "Image",
 		ContentLink:        "QmContent",
 		ContentPreviewLink: "QmPreview",
@@ -314,11 +314,13 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 
 	t.Run("Should be able to mint a token on demand (master not sealed)", func(t *testing.T) {
 
-		_ = client.Transaction(se.GetStandardScript("digitalart_mint_on_demand_fusd")).
+		_ = client.Transaction(se.GetCustomScript("digitalart_mint_on_demand_fusd", scripts.MindOnDemandParameters{
+			Metadata: metadata,
+			Profile:  profile,
+		})).
 			PayloadSigner(buyerAcctName).
 			SignProposeAndPayAs(sequelAccount).
-			Argument(iinft.MetadataToCadence(metadata, flow.HexToAddress(se.WellKnownAddresses()["DigitalArt"]))).
-			Argument(evergreen.ProfileToCadence(profile, flow.HexToAddress(se.WellKnownAddresses()["Evergreen"]))).
+			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
 			Test(t).
@@ -363,11 +365,13 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 
 	t.Run("Should be able to mint a token on demand (master sealed)", func(t *testing.T) {
 
-		_ = client.Transaction(se.GetStandardScript("digitalart_mint_on_demand_fusd")).
+		_ = client.Transaction(se.GetCustomScript("digitalart_mint_on_demand_fusd", scripts.MindOnDemandParameters{
+			Metadata: metadata,
+			Profile:  profile,
+		})).
 			PayloadSigner(buyerAcctName).
 			SignProposeAndPayAs(sequelAccount).
-			Argument(iinft.MetadataToCadence(metadata, flow.HexToAddress(se.WellKnownAddresses()["DigitalArt"]))).
-			Argument(evergreen.ProfileToCadence(profile, flow.HexToAddress(se.WellKnownAddresses()["Evergreen"]))).
+			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
 			Test(t).

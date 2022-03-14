@@ -5,7 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/scripts"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -66,6 +68,46 @@ func TestEngine_GetStandardScript_Versus(t *testing.T) {
 	require.NoError(t, err)
 
 	res := e.GetStandardScript("versus_get_art")
+
+	println(res)
+}
+
+func TestEngine_GetCustomScript_MOD_FUSD(t *testing.T) {
+	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false)
+	require.NoError(t, err)
+
+	client.InitializeContracts()
+
+	e, err := scripts.NewEngine(client, false)
+	require.NoError(t, err)
+
+	res := e.GetCustomScript("digitalart_mint_on_demand_fusd", &scripts.MindOnDemandParameters{
+		Metadata: &iinft.Metadata{
+			MetadataLink:       "QmMetadata",
+			Name:               "Pure Art",
+			Artist:             "Arty",
+			Description:        "Digital art in its purest form",
+			Type:               "Image",
+			ContentLink:        "QmContent",
+			ContentPreviewLink: "QmPreview",
+			Mimetype:           "image/jpeg",
+			MaxEdition:         4,
+			Asset:              "did:sequel:asset-id",
+			Record:             "record-id",
+			AssetHead:          "asset-head-id",
+		},
+		Profile: &evergreen.Profile{
+			ID: 0,
+			Roles: []*evergreen.Role{
+				{
+					Role:                      evergreen.RoleArtist,
+					InitialSaleCommission:     0.8,
+					SecondaryMarketCommission: 0.2,
+					Address:                   flow.HexToAddress("0x01cf0e2f2f715450"),
+				},
+			},
+		},
+	})
 
 	println(res)
 }

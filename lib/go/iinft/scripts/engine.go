@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/onflow/cadence/runtime/format"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
 	"github.com/rs/zerolog/log"
 )
@@ -18,7 +19,20 @@ var goTemplates *template.Template
 
 func init() {
 	var err error
-	goTemplates, err = template.New("").ParseFS(templateFS, "templates/transactions/*.cdc", "templates/scripts/*.cdc", "templates/scripts/**/*.cdc")
+	goTemplates, err = template.New("").Funcs(template.FuncMap{
+		// increment function
+		"inc": func(i int) int {
+			return i + 1
+		},
+		// decrement function
+		"dec": func(i int) int {
+			return i - 1
+		},
+		// turn a string into Cadence safe form
+		"safe": func(v string) string {
+			return format.String(v)
+		},
+	}).ParseFS(templateFS, "templates/transactions/*.cdc", "templates/scripts/*.cdc", "templates/scripts/**/*.cdc")
 	if err != nil {
 		panic(err)
 	}
@@ -30,6 +44,10 @@ type (
 		preloadedTemplates map[string]string
 		wellKnownAddresses map[string]string
 	}
+)
+
+const (
+	ParamsKey = "Parameters"
 )
 
 var (
@@ -97,6 +115,21 @@ func (e *Engine) GetStandardScript(scriptID string) string {
 	}
 
 	return s
+}
+
+func (e *Engine) GetCustomScript(scriptID string, params interface{}) string {
+	data := map[string]interface{}{
+		ParamsKey: params,
+	}
+	for k, v := range e.wellKnownAddresses {
+		data[k] = v
+	}
+	buf := &bytes.Buffer{}
+	if err := goTemplates.ExecuteTemplate(buf, scriptID, data); err != nil {
+		panic(err)
+	}
+
+	return string(buf.Bytes())
 }
 
 func (e *Engine) NewTransaction(scriptID string) gwtf.FlowTransactionBuilder {

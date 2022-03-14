@@ -3,10 +3,10 @@ package evergreen
 import "github.com/onflow/flow-go-sdk"
 
 const (
-	RoleArtist     = "Artist"
-	RolePlatform   = "Platform"
-	RoleGreenCause = "Green"
-	RoleCollector  = "Collector"
+	RoleArtist    = "Artist"
+	RolePlatform  = "Platform"
+	RoleCollector = "Collector"
+	RoleOwner     = "Owner"
 )
 
 type (
