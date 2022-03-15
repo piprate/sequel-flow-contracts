@@ -8,7 +8,7 @@ pub contract DigitalArt: NonFungibleToken {
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
-    pub event Minted(id: UInt64, asset: String, edition: UInt64)
+    pub event Minted(id: UInt64, asset: String, edition: UInt64, modID: UInt64)
 
     // Named Paths
     //
@@ -305,7 +305,7 @@ pub contract DigitalArt: NonFungibleToken {
             return master.evergreenProfile!
         }
 
-        pub fun mintEditionNFT(masterId: String) : @DigitalArt.NFT {
+        pub fun mintEditionNFT(masterId: String, modID: UInt64) : @DigitalArt.NFT {
             pre {
                DigitalArt.masters.containsKey(masterId) : "master not found"
             }
@@ -325,7 +325,7 @@ pub contract DigitalArt: NonFungibleToken {
                 evergreenProfile: master.evergreenProfile!
             )
 
-            emit Minted(id: DigitalArt.totalSupply, asset: metadata.asset, edition: edition)
+            emit Minted(id: DigitalArt.totalSupply, asset: metadata.asset, edition: edition, modID: modID)
 
             DigitalArt.totalSupply = DigitalArt.totalSupply + UInt64(1)
 

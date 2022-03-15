@@ -6,7 +6,7 @@ import Evergreen from {{.Evergreen}}
 import DigitalArt from {{.DigitalArt}}
 import SequelMarketplace from {{.SequelMarketplace}}
 
-transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64) {
+transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UInt64) {
     let admin: &DigitalArt.Admin
     let availableEditions: UInt64
     let evergreenProfile: Evergreen.Profile
@@ -80,7 +80,7 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64) {
 
         var i = UInt64(0)
         while i < numEditions {
-            self.tokenReceiver.deposit(token:<- self.admin.mintEditionNFT(masterId: masterId))
+            self.tokenReceiver.deposit(token:<- self.admin.mintEditionNFT(masterId: masterId, modID: modID))
             i = i + 1
         }
 
