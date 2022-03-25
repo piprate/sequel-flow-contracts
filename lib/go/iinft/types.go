@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
@@ -88,6 +89,16 @@ func MetadataToCadence(metadata *Metadata, digitalArtAddr flow.Address) cadence.
 func ToFloat64(value cadence.Value) float64 {
 	val, _ := strconv.ParseFloat(value.(cadence.UFix64).String(), 64)
 	return val
+}
+
+func UFix64ToString(v float64) string {
+	vStr := strconv.FormatFloat(v, 'f', -1, 64)
+	if strings.Index(vStr, ".") != -1 {
+		return vStr
+	} else {
+		return vStr + ".0"
+	}
+
 }
 
 func UFix64FromFloat64(v float64) cadence.Value {

@@ -156,6 +156,7 @@ func TestMintDigitalArtEditions(t *testing.T) {
 				"id":      "0",
 				"asset":   "did:sequel:asset-id",
 				"edition": "1",
+				"modID":   "0",
 			})).
 			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Deposit", map[string]interface{}{
 				"id": "0",
@@ -193,6 +194,7 @@ func TestMintDigitalArtEditions(t *testing.T) {
 				"id":      "1",
 				"asset":   "did:sequel:asset-id",
 				"edition": "2",
+				"modID":   "0",
 			})).
 			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Deposit", map[string]interface{}{
 				"id": "1",
@@ -323,6 +325,7 @@ The End.`,
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
+			UInt64Argument(123).
 			Test(t).
 			AssertSuccess().
 			AssertEventCount(9).
@@ -335,6 +338,7 @@ The End.`,
 				"id":      "0",
 				"asset":   "did:sequel:asset-id",
 				"edition": "1",
+				"modID":   "123",
 			})).
 			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Deposit", map[string]interface{}{
 				"id": "0",
@@ -374,6 +378,7 @@ The End.`,
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
+			UInt64Argument(123).
 			Test(t).
 			AssertSuccess().
 			AssertEventCount(9).
@@ -386,6 +391,7 @@ The End.`,
 				"id":      "1",
 				"asset":   "did:sequel:asset-id",
 				"edition": "2",
+				"modID":   "123",
 			})).
 			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Deposit", map[string]interface{}{
 				"id": "1",

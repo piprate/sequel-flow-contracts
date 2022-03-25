@@ -7,8 +7,11 @@ pub fun main(address: Address): UFix64 {
 
     let vaultRef = account.getCapability(/public/fusdBalance)!
         .borrow<&FUSD.Vault{FungibleToken.Balance}>()
-        ?? panic("Could not borrow Balance reference to the Vault")
 
-    return vaultRef.balance
+    if vaultRef !=  nil {
+        return vaultRef!.balance
+    } else {
+        return 0.0
+    }
 }
 {{ end }}
