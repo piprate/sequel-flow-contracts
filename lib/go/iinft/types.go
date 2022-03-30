@@ -13,8 +13,9 @@ import (
 
 type (
 	Metadata struct {
-		MetadataLink       string
-		Name               string
+		MetadataLink string
+		Name         string
+		// Artist is the DID of the artist who created the given digital art.
 		Artist             string
 		Description        string
 		Type               string

@@ -97,7 +97,7 @@ func TestEngine_GetCustomScript_MOD_FUSD(t *testing.T) {
 		Metadata: &iinft.Metadata{
 			MetadataLink:       "QmMetadata",
 			Name:               "Pure Art",
-			Artist:             "Arty",
+			Artist:             "did:sequel:artist",
 			Description:        "Digital art in its purest form",
 			Type:               "Image",
 			ContentLink:        "QmContent",

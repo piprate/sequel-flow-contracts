@@ -30,7 +30,7 @@ func buildTestMetadata(maxEdition uint64) *iinft.Metadata {
 	return &iinft.Metadata{
 		MetadataLink:       "QmMetadata",
 		Name:               "Pure Art",
-		Artist:             "Arty",
+		Artist:             "did:sequel:artist",
 		Description:        "Digital art in its purest form",
 		Type:               "Image",
 		ContentLink:        "QmContent",

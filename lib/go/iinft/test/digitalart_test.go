@@ -38,7 +38,7 @@ func TestSealDigitalArtMaster(t *testing.T) {
 	sampleMetadata := &iinft.Metadata{
 		MetadataLink:       "QmMetadata",
 		Name:               "Pure Art",
-		Artist:             "Arty",
+		Artist:             "did:sequel:artist",
 		Description:        "Digital art in its purest form",
 		Type:               "Image",
 		ContentLink:        "QmContent",
@@ -112,7 +112,7 @@ func TestMintDigitalArtEditions(t *testing.T) {
 	metadata := &iinft.Metadata{
 		MetadataLink:       "QmMetadata",
 		Name:               "Pure Art",
-		Artist:             "Arty",
+		Artist:             "did:sequel:artist",
 		Description:        "Digital art in its purest form",
 		Type:               "Image",
 		ContentLink:        "QmContent",
@@ -277,7 +277,7 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 	metadata := &iinft.Metadata{
 		MetadataLink: "QmMetadata",
 		Name:         "Pure Art",
-		Artist:       "Arty",
+		Artist:       "did:sequel:artist",
 		Description: `Digital art in its purest form
 The End.`,
 		Type:               "Image",
@@ -444,7 +444,7 @@ func TestTransferDigitalArt(t *testing.T) {
 	metadata := &iinft.Metadata{
 		MetadataLink:       "QmMetadata",
 		Name:               "Pure Art",
-		Artist:             "Arty",
+		Artist:             "did:sequel:artist",
 		Description:        "Digital art in its purest form",
 		Type:               "Image",
 		ContentLink:        "QmContent",
