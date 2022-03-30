@@ -53,6 +53,12 @@ func (f *GoWithTheFlow) CreateAccountsE(saAccountName string) (*GoWithTheFlow, e
 			return nil, err
 		}
 		f.Logger.Info("Account created " + a.Address.String())
+		if a.Address.String() != account.Address().String() {
+			// this condition happens when we create accounts defined in flow.json
+			// after some other accounts were created manually.
+			// In this case, account addresses may not match the expected values
+			f.Logger.Error("Account address mismatch. Expected " + account.Address().String() + ", got " + a.Address.String())
+		}
 	}
 	return f, nil
 }

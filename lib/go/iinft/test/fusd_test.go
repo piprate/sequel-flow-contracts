@@ -13,7 +13,7 @@ func TestGetFUSDBalance(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
 	require.NoError(t, err)
 
-	client.InitializeContracts().DoNotPrependNetworkToAccountNames().CreateAccounts("emulator-account")
+	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)

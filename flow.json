@@ -110,17 +110,25 @@
       "address": "0xf8d6e0586b0a20c7",
       "key": "7cc3a167907702780552edebe976d4ad85213d7fd214e7fbc89b587043ec117b"
     },
-    "emulator-user1": {
+    "emulator-sequel-admin": {
       "address": "0x01cf0e2f2f715450",
-      "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
+      "key": "bc85264399410a518dc97149f9589883c0f8472dab8fb4d7abc80d7bb6b28447"
+    },
+    "emulator-sequel-platform": {
+      "address": "0x179b6b1cb6755e31",
+      "key": "c70856e54b2b25888ac13ad975ba652d0c95108d60d7df5754fc0649616975de"
+    },
+    "emulator-user1": {
+      "address": "0xf3fcd2c1a78f5eee",
+      "key": "80025f0d1f2fd1ba0e18f447681fdd6a68a62ea86c2c2fefa811df086d40db3c"
     },
     "emulator-user2": {
-      "address": "0x179b6b1cb6755e31",
-      "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
+      "address": "0xe03daebed8ca0615",
+      "key": "76e26282dafb246d58778187d37d72efade3679c06ba423855388acdf8bb1e3d"
     },
     "emulator-user3": {
-      "address": "0xf3fcd2c1a78f5eee",
-      "key": "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8"
+      "address": "0x045a1763c93006ca",
+      "key": "1c6f9682cc8e70128e356f95d13f41d2fc6c9493397b69e0ff0b1f6f2f0ec02b"
     }
   },
   "deployments": {
@@ -132,11 +140,14 @@
         "Edition",
         "Collectible",
         "Art",
-        "Content",
+        "Content"
+      ],
+      "emulator-sequel-admin": [
         "Evergreen",
         "DigitalArt",
         "SequelMarketplace"
       ],
+      "emulator-sequel-platform": [],
       "emulator-user1": [],
       "emulator-user2": [],
       "emulator-user3": []

@@ -18,11 +18,17 @@ func TestNewGoWithTheFlowFS(t *testing.T) {
 	client, err := NewGoWithTheFlowFS("../../..", "emulator", true)
 	require.NoError(t, err)
 
+	_, err = client.CreateAccountsE("emulator-account")
+	require.NoError(t, err)
+
 	client.InitializeContracts()
 }
 
 func TestNewGoWithTheFlowEmbedded(t *testing.T) {
 	client, err := NewGoWithTheFlowEmbedded("emulator", true)
+	require.NoError(t, err)
+
+	_, err = client.CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
 	client.InitializeContracts()

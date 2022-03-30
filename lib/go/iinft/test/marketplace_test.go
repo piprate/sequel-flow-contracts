@@ -47,7 +47,7 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
 	require.NoError(t, err)
 
-	client.InitializeContracts().DoNotPrependNetworkToAccountNames().CreateAccounts("emulator-account")
+	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -101,61 +101,61 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 			Test(t).
 			AssertSuccess().
 			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.SequelMarketplace.TokenListed",
+				"A.01cf0e2f2f715450.SequelMarketplace.TokenListed",
 				map[string]interface{}{
-					"listingID":        "44",
+					"listingID":        "50",
 					"metadataLink":     "link",
 					"asset":            "did:sequel:asset-id",
 					"nftID":            "0",
-					"nftType":          "A.f8d6e0586b0a20c7.DigitalArt.NFT",
+					"nftType":          "A.01cf0e2f2f715450.DigitalArt.NFT",
 					"paymentVaultType": "A.0ae53cb6e3f42a79.FlowToken.Vault",
 					"payments": []interface{}{
 						map[string]interface{}{
 							"amount":   "10.00000000",
 							"rate":     "0.05000000",
-							"receiver": "0x1cf0e2f2f715450",
+							"receiver": "0xf3fcd2c1a78f5eee",
 							"role":     "Artist",
 						},
 						map[string]interface{}{
 							"amount":   "190.00000000",
 							"rate":     "0.95000000",
-							"receiver": "0x1cf0e2f2f715450",
+							"receiver": "0xf3fcd2c1a78f5eee",
 							"role":     "Owner",
 						},
 					},
 					"price":             "200.00000000",
-					"storefrontAddress": "0x1cf0e2f2f715450",
+					"storefrontAddress": "0xf3fcd2c1a78f5eee",
 				})).
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
 					"ftVaultType":       "Type\u003cA.0ae53cb6e3f42a79.FlowToken.Vault\u003e()",
-					"listingResourceID": "44",
+					"listingResourceID": "50",
 					"nftID":             "0",
-					"nftType":           "Type\u003cA.f8d6e0586b0a20c7.DigitalArt.NFT\u003e()",
+					"nftType":           "Type\u003cA.01cf0e2f2f715450.DigitalArt.NFT\u003e()",
 					"price":             "200.00000000",
-					"storefrontAddress": "0x1cf0e2f2f715450", // seller's address without leading 0
+					"storefrontAddress": "0xf3fcd2c1a78f5eee", // seller's address without leading 0
 				}))
 	})
 
 	t.Run("Should be able to buy an NFT from seller's Storefront", func(t *testing.T) {
 		_ = se.NewTransaction("marketplace_buy_flow").
 			SignProposeAndPayAs(buyerAcctName).
-			UInt64Argument(44).
+			UInt64Argument(50).
 			Argument(cadence.NewAddress(sellerAcct.Address())).
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
 			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.SequelMarketplace.TokenSold",
+				"A.01cf0e2f2f715450.SequelMarketplace.TokenSold",
 				map[string]interface{}{
-					"listingID":         "44",
+					"listingID":         "50",
 					"nftID":             "0",
-					"nftType":           "A.f8d6e0586b0a20c7.DigitalArt.NFT",
+					"nftType":           "A.01cf0e2f2f715450.DigitalArt.NFT",
 					"paymentVaultType":  "A.0ae53cb6e3f42a79.FlowToken.Vault",
 					"price":             "200.00000000",
-					"storefrontAddress": "0x1cf0e2f2f715450",
-					"buyerAddress":      "0x179b6b1cb6755e31",
+					"storefrontAddress": "0xf3fcd2c1a78f5eee",
+					"buyerAddress":      "0xe03daebed8ca0615",
 					"metadataLink":      "link",
 				}))
 
@@ -170,7 +170,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
 	require.NoError(t, err)
 
-	client.InitializeContracts().DoNotPrependNetworkToAccountNames().CreateAccounts("emulator-account")
+	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -229,65 +229,65 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.StorefrontInitialized",
 				map[string]interface{}{
-					"storefrontResourceID": "46",
+					"storefrontResourceID": "52",
 				})).
 			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.SequelMarketplace.TokenListed",
+				"A.01cf0e2f2f715450.SequelMarketplace.TokenListed",
 				map[string]interface{}{
-					"listingID":        "47",
+					"listingID":        "53",
 					"asset":            "did:sequel:asset-id",
 					"metadataLink":     "",
 					"nftID":            "0",
-					"nftType":          "A.f8d6e0586b0a20c7.DigitalArt.NFT",
+					"nftType":          "A.01cf0e2f2f715450.DigitalArt.NFT",
 					"paymentVaultType": "A.f8d6e0586b0a20c7.FUSD.Vault",
 					"payments": []interface{}{
 						map[string]interface{}{
 							"amount":   "10.00000000",
 							"rate":     "0.05000000",
-							"receiver": "0x1cf0e2f2f715450",
+							"receiver": "0xf3fcd2c1a78f5eee",
 							"role":     "Artist",
 						},
 						map[string]interface{}{
 							"amount": "190.00000000",
 
 							"rate":     "0.95000000",
-							"receiver": "0x1cf0e2f2f715450",
+							"receiver": "0xf3fcd2c1a78f5eee",
 							"role":     "Owner",
 						},
 					},
 					"price":             "200.00000000",
-					"storefrontAddress": "0x1cf0e2f2f715450",
+					"storefrontAddress": "0xf3fcd2c1a78f5eee",
 				})).
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
 					"ftVaultType":       "Type\u003cA.f8d6e0586b0a20c7.FUSD.Vault\u003e()",
-					"listingResourceID": "47",
+					"listingResourceID": "53",
 					"nftID":             "0",
-					"nftType":           "Type\u003cA.f8d6e0586b0a20c7.DigitalArt.NFT\u003e()",
+					"nftType":           "Type\u003cA.01cf0e2f2f715450.DigitalArt.NFT\u003e()",
 					"price":             "200.00000000",
-					"storefrontAddress": "0x1cf0e2f2f715450", // seller's address without leading 0
+					"storefrontAddress": "0xf3fcd2c1a78f5eee", // seller's address without leading 0
 				}))
 	})
 
 	t.Run("Should be able to buy an NFT from seller's Storefront", func(t *testing.T) {
 		_ = se.NewTransaction("marketplace_buy_fusd").
 			SignProposeAndPayAs(buyerAcctName).
-			UInt64Argument(47).
+			UInt64Argument(53).
 			Argument(cadence.NewAddress(sellerAcct.Address())).
 			Argument(cadence.NewOptional(nil)).
 			Test(t).
 			AssertSuccess().
 			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.SequelMarketplace.TokenSold",
+				"A.01cf0e2f2f715450.SequelMarketplace.TokenSold",
 				map[string]interface{}{
-					"listingID":         "47",
+					"listingID":         "53",
 					"nftID":             "0",
-					"nftType":           "A.f8d6e0586b0a20c7.DigitalArt.NFT",
+					"nftType":           "A.01cf0e2f2f715450.DigitalArt.NFT",
 					"paymentVaultType":  "A.f8d6e0586b0a20c7.FUSD.Vault",
 					"price":             "200.00000000",
-					"storefrontAddress": "0x1cf0e2f2f715450",
-					"buyerAddress":      "0x179b6b1cb6755e31",
+					"storefrontAddress": "0xf3fcd2c1a78f5eee",
+					"buyerAddress":      "0xe03daebed8ca0615",
 					"metadataLink":      "",
 				}))
 

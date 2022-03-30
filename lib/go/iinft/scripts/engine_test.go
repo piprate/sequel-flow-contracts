@@ -22,6 +22,9 @@ func TestNewEngine_emulator(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowEmbedded("emulator", true)
 	require.NoError(t, err)
 
+	_, err = client.CreateAccountsE("emulator-account")
+	require.NoError(t, err)
+
 	client.InitializeContracts()
 
 	_, err = scripts.NewEngine(client, false)
@@ -48,6 +51,9 @@ func TestEngine_GetStandardScript(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowEmbedded("testnet", false)
 	require.NoError(t, err)
 
+	_, err = client.CreateAccountsE("emulator-account")
+	require.NoError(t, err)
+
 	client.InitializeContracts()
 
 	e, err := scripts.NewEngine(client, false)
@@ -62,6 +68,9 @@ func TestEngine_GetStandardScript_Versus(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false)
 	require.NoError(t, err)
 
+	_, err = client.CreateAccountsE("emulator-account")
+	require.NoError(t, err)
+
 	client.InitializeContracts()
 
 	e, err := scripts.NewEngine(client, false)
@@ -74,6 +83,9 @@ func TestEngine_GetStandardScript_Versus(t *testing.T) {
 
 func TestEngine_GetCustomScript_MOD_FUSD(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false)
+	require.NoError(t, err)
+
+	_, err = client.CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
 	client.InitializeContracts()
@@ -103,7 +115,7 @@ func TestEngine_GetCustomScript_MOD_FUSD(t *testing.T) {
 					Role:                      evergreen.RoleArtist,
 					InitialSaleCommission:     0.8,
 					SecondaryMarketCommission: 0.2,
-					Address:                   flow.HexToAddress("0x01cf0e2f2f715450"),
+					Address:                   flow.HexToAddress("0xf669cb8d41ce0c74"),
 				},
 			},
 		},

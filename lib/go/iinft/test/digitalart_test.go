@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	sequelAccount = "emulator-account"
+	sequelAccount = "emulator-sequel-admin"
 )
 
 func init() {
@@ -28,7 +28,7 @@ func TestSealDigitalArtMaster(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
 	require.NoError(t, err)
 
-	client.InitializeContracts().DoNotPrependNetworkToAccountNames()
+	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -94,7 +94,7 @@ func TestMintDigitalArtEditions(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
 	require.NoError(t, err)
 
-	client.InitializeContracts().DoNotPrependNetworkToAccountNames().CreateAccounts("emulator-account")
+	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -151,16 +151,16 @@ func TestMintDigitalArtEditions(t *testing.T) {
 			Test(t).
 			AssertSuccess().
 			AssertEventCount(2).
-			AssertEmitEventName("A.f8d6e0586b0a20c7.DigitalArt.Minted", "A.f8d6e0586b0a20c7.DigitalArt.Deposit").
-			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Minted", map[string]interface{}{
+			AssertEmitEventName("A.01cf0e2f2f715450.DigitalArt.Minted", "A.01cf0e2f2f715450.DigitalArt.Deposit").
+			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Minted", map[string]interface{}{
 				"id":      "0",
 				"asset":   "did:sequel:asset-id",
 				"edition": "1",
 				"modID":   "0",
 			})).
-			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Deposit", map[string]interface{}{
+			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Deposit", map[string]interface{}{
 				"id": "0",
-				"to": "0x1cf0e2f2f715450",
+				"to": "0xf3fcd2c1a78f5eee",
 			}))
 
 		// Assert that the account's collection is correct
@@ -189,16 +189,16 @@ func TestMintDigitalArtEditions(t *testing.T) {
 			Test(t).
 			AssertSuccess().
 			AssertEventCount(2).
-			AssertEmitEventName("A.f8d6e0586b0a20c7.DigitalArt.Minted", "A.f8d6e0586b0a20c7.DigitalArt.Deposit").
-			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Minted", map[string]interface{}{
+			AssertEmitEventName("A.01cf0e2f2f715450.DigitalArt.Minted", "A.01cf0e2f2f715450.DigitalArt.Deposit").
+			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Minted", map[string]interface{}{
 				"id":      "1",
 				"asset":   "did:sequel:asset-id",
 				"edition": "2",
 				"modID":   "0",
 			})).
-			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Deposit", map[string]interface{}{
+			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Deposit", map[string]interface{}{
 				"id": "1",
-				"to": "0x1cf0e2f2f715450",
+				"to": "0xf3fcd2c1a78f5eee",
 			}))
 
 		// Assert that the account's collection is correct
@@ -233,7 +233,7 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
 	require.NoError(t, err)
 
-	client.InitializeContracts().DoNotPrependNetworkToAccountNames().CreateAccounts("emulator-account")
+	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -330,19 +330,19 @@ The End.`,
 			AssertSuccess().
 			AssertEventCount(9).
 			AssertEmitEventName(
-				"A.f8d6e0586b0a20c7.DigitalArt.Minted",
-				"A.f8d6e0586b0a20c7.DigitalArt.Deposit",
+				"A.01cf0e2f2f715450.DigitalArt.Minted",
+				"A.01cf0e2f2f715450.DigitalArt.Deposit",
 				"A.f8d6e0586b0a20c7.FUSD.TokensWithdrawn",
 				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited").
-			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Minted", map[string]interface{}{
+			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Minted", map[string]interface{}{
 				"id":      "0",
 				"asset":   "did:sequel:asset-id",
 				"edition": "1",
 				"modID":   "123",
 			})).
-			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Deposit", map[string]interface{}{
+			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Deposit", map[string]interface{}{
 				"id": "0",
-				"to": "0x179b6b1cb6755e31",
+				"to": "0xe03daebed8ca0615",
 			}))
 
 		// Assert that the account's collection is correct
@@ -383,19 +383,19 @@ The End.`,
 			AssertSuccess().
 			AssertEventCount(9).
 			AssertEmitEventName(
-				"A.f8d6e0586b0a20c7.DigitalArt.Minted",
-				"A.f8d6e0586b0a20c7.DigitalArt.Deposit",
+				"A.01cf0e2f2f715450.DigitalArt.Minted",
+				"A.01cf0e2f2f715450.DigitalArt.Deposit",
 				"A.f8d6e0586b0a20c7.FUSD.TokensWithdrawn",
 				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited").
-			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Minted", map[string]interface{}{
+			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Minted", map[string]interface{}{
 				"id":      "1",
 				"asset":   "did:sequel:asset-id",
 				"edition": "2",
 				"modID":   "123",
 			})).
-			AssertEmitEvent(gwtf.NewTestEvent("A.f8d6e0586b0a20c7.DigitalArt.Deposit", map[string]interface{}{
+			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Deposit", map[string]interface{}{
 				"id": "1",
-				"to": "0x179b6b1cb6755e31",
+				"to": "0xe03daebed8ca0615",
 			}))
 
 		// Assert that the account's collection is correct
@@ -425,7 +425,7 @@ func TestTransferDigitalArt(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
 	require.NoError(t, err)
 
-	client.InitializeContracts().DoNotPrependNetworkToAccountNames().CreateAccounts("emulator-account")
+	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
