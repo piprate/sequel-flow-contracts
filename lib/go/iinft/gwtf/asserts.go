@@ -14,10 +14,10 @@ type TransactionResult struct {
 	Testing *testing.T
 }
 
-func (f FlowTransactionBuilder) Test(t *testing.T) TransactionResult {
+func (tb FlowTransactionBuilder) Test(t *testing.T) TransactionResult {
 	locale, _ := time.LoadLocation("UTC")
 	time.Local = locale
-	events, err := f.RunE()
+	events, err := tb.RunE()
 	var formattedEvents []*FormatedEvent
 	for _, event := range events {
 		ev := ParseEvent(event, uint64(0), time.Unix(0, 0), []string{})

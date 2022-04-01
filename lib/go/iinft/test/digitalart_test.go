@@ -244,7 +244,7 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 
 	// set up platform account
 
-	platformAcctName := "emulator-account"
+	platformAcctName := "emulator-sequel-platform"
 	platformAcct := client.Account(platformAcctName)
 
 	scripts.FundAccountWithFlow(t, client, platformAcct.Address(), "10.0")
