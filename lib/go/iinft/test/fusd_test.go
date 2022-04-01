@@ -10,10 +10,10 @@ import (
 )
 
 func TestGetFUSDBalance(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
 	require.NoError(t, err)
 
-	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
+	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -25,7 +25,13 @@ func TestGetFUSDBalance(t *testing.T) {
 
 	assert.Equal(t, 0.0, scripts.GetFUSDBalance(t, se, artistAcct.Address()))
 
+	scripts.FundAccountWithFlow(t, client, artistAcct.Address(), "10.0")
+
 	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcctName).Test(t).AssertSuccess()
 
 	assert.Equal(t, 0.0, scripts.GetFUSDBalance(t, se, artistAcct.Address()))
+
+	scripts.FundAccountWithFUSD(t, se, artistAcct.Address(), "123.56")
+
+	assert.Equal(t, 123.56, scripts.GetFUSDBalance(t, se, artistAcct.Address()))
 }

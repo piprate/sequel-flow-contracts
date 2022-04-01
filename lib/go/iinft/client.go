@@ -8,6 +8,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/emulator"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -33,19 +34,19 @@ func (f *fileLoader) WriteFile(filename string, data []byte, perm os.FileMode) e
 }
 
 // NewGoWithTheFlowFS creates a new local go with the flow client
-func NewGoWithTheFlowFS(flowBasePath string, network string, inMemory bool) (*gwtf.GoWithTheFlow, error) {
+func NewGoWithTheFlowFS(flowBasePath string, network string, inMemory, enableTxFees bool) (*gwtf.GoWithTheFlow, error) {
 	return NewGoWithTheFlowError(&fileLoader{
 		baseDir:  flowBasePath,
 		fsLoader: &afero.Afero{Fs: afero.NewOsFs()},
-	}, network, inMemory)
+	}, network, inMemory, enableTxFees)
 }
 
 // NewGoWithTheFlowEmbedded creates a new test go with the flow client based on embedded setup
-func NewGoWithTheFlowEmbedded(network string, inMemory bool) (*gwtf.GoWithTheFlow, error) {
-	return NewGoWithTheFlowError(&embeddedFileLoader{}, network, inMemory)
+func NewGoWithTheFlowEmbedded(network string, inMemory, enableTxFees bool) (*gwtf.GoWithTheFlow, error) {
+	return NewGoWithTheFlowError(&embeddedFileLoader{}, network, inMemory, enableTxFees)
 }
 
-func NewGoWithTheFlowError(baseLoader flowkit.ReaderWriter, network string, inMemory bool) (*gwtf.GoWithTheFlow, error) {
+func NewGoWithTheFlowError(baseLoader flowkit.ReaderWriter, network string, inMemory, enableTxFees bool) (*gwtf.GoWithTheFlow, error) {
 
 	state, err := flowkit.Load([]string{"flow.json"}, baseLoader)
 	if err != nil {
@@ -55,9 +56,9 @@ func NewGoWithTheFlowError(baseLoader flowkit.ReaderWriter, network string, inMe
 	logger := NewFlowKitLogger()
 	var service *services.Services
 	if inMemory {
-		//YAY we can run it inline in memory!
+		// YAY, we can run it inline in memory!
 		acc, _ := state.EmulatorServiceAccount()
-		gw := gateway.NewEmulatorGateway(acc)
+		gw := emulator.NewGateway(acc, enableTxFees)
 		service = services.NewServices(gw, state, logger)
 	} else {
 		network, err := state.Networks().ByName(network)

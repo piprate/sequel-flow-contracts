@@ -46,8 +46,8 @@ func (f *GoWithTheFlow) CreateAccountsE(saAccountName string) (*GoWithTheFlow, e
 			signerAccount,
 			[]crypto.PublicKey{account.Key().ToConfig().PrivateKey.PublicKey()},
 			[]int{1000},
-			account.Key().SigAlgo(),
-			account.Key().HashAlgo(),
+			[]crypto.SignatureAlgorithm{account.Key().SigAlgo()},
+			[]crypto.HashAlgorithm{account.Key().HashAlgo()},
 			[]string{})
 		if err != nil {
 			return nil, err

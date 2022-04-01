@@ -44,10 +44,10 @@ func buildTestMetadata(maxEdition uint64) *iinft.Metadata {
 }
 
 func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
 	require.NoError(t, err)
 
-	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
+	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -57,6 +57,8 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 	sellerAcctName := "emulator-user1"
 	sellerAcct := client.Account(sellerAcctName)
 
+	scripts.FundAccountWithFlow(t, client, sellerAcct.Address(), "10.0")
+
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 	_ = se.NewTransaction("account_setup_flow_token").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
@@ -65,20 +67,22 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 	buyerAcctName := "emulator-user2"
 	buyerAcct := client.Account(buyerAcctName)
 
+	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "10.0")
+
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 	_ = se.NewTransaction("account_setup_flow_token").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
-	scripts.FundAccountWithFlow(t, se, buyerAcct.Address(), "1000.0")
+	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "1000.0")
 
 	profile := buildTestProfile(sellerAcct.Address())
 	metadata := buildTestMetadata(1)
 
 	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
-		SignProposeAndPayAs(sequelAccount).
+		SignProposeAndPayAs(adminAccount).
 		Test(t).
 		AssertSuccess()
 
 	_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
-		SignProposeAndPayAs(sequelAccount).
+		SignProposeAndPayAs(adminAccount).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
 		Argument(cadence.Address(sellerAcct.Address())).
@@ -103,7 +107,7 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.01cf0e2f2f715450.SequelMarketplace.TokenListed",
 				map[string]interface{}{
-					"listingID":        "50",
+					"listingID":        "82",
 					"metadataLink":     "link",
 					"asset":            "did:sequel:asset-id",
 					"nftID":            "0",
@@ -130,7 +134,7 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
 					"ftVaultType":       "Type\u003cA.0ae53cb6e3f42a79.FlowToken.Vault\u003e()",
-					"listingResourceID": "50",
+					"listingResourceID": "82",
 					"nftID":             "0",
 					"nftType":           "Type\u003cA.01cf0e2f2f715450.DigitalArt.NFT\u003e()",
 					"price":             "200.00000000",
@@ -141,7 +145,7 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 	t.Run("Should be able to buy an NFT from seller's Storefront", func(t *testing.T) {
 		_ = se.NewTransaction("marketplace_buy_flow").
 			SignProposeAndPayAs(buyerAcctName).
-			UInt64Argument(50).
+			UInt64Argument(82).
 			Argument(cadence.NewAddress(sellerAcct.Address())).
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
@@ -149,7 +153,7 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.01cf0e2f2f715450.SequelMarketplace.TokenSold",
 				map[string]interface{}{
-					"listingID":         "50",
+					"listingID":         "82",
 					"nftID":             "0",
 					"nftType":           "A.01cf0e2f2f715450.DigitalArt.NFT",
 					"paymentVaultType":  "A.0ae53cb6e3f42a79.FlowToken.Vault",
@@ -167,10 +171,10 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 }
 
 func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
 	require.NoError(t, err)
 
-	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
+	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -182,14 +186,18 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 	sellerAcctName := "emulator-user1"
 	sellerAcct := client.Account(sellerAcctName)
 
+	scripts.FundAccountWithFlow(t, client, sellerAcct.Address(), "10.0")
+
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
 	// set up buyer account
 
 	buyerAcctName := "emulator-user2"
-	buyerAcct, err := client.State.Accounts().ByName(buyerAcctName)
+	buyerAcct := client.Account(buyerAcctName)
 	require.NoError(t, err)
+
+	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
@@ -199,12 +207,12 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 	metadata := buildTestMetadata(1)
 
 	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
-		SignProposeAndPayAs(sequelAccount).
+		SignProposeAndPayAs(adminAccount).
 		Test(t).
 		AssertSuccess()
 
 	_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
-		SignProposeAndPayAs(sequelAccount).
+		SignProposeAndPayAs(adminAccount).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
 		Argument(cadence.Address(sellerAcct.Address())).
@@ -229,12 +237,12 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.StorefrontInitialized",
 				map[string]interface{}{
-					"storefrontResourceID": "52",
+					"storefrontResourceID": "86",
 				})).
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.01cf0e2f2f715450.SequelMarketplace.TokenListed",
 				map[string]interface{}{
-					"listingID":        "53",
+					"listingID":        "87",
 					"asset":            "did:sequel:asset-id",
 					"metadataLink":     "",
 					"nftID":            "0",
@@ -262,7 +270,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
 					"ftVaultType":       "Type\u003cA.f8d6e0586b0a20c7.FUSD.Vault\u003e()",
-					"listingResourceID": "53",
+					"listingResourceID": "87",
 					"nftID":             "0",
 					"nftType":           "Type\u003cA.01cf0e2f2f715450.DigitalArt.NFT\u003e()",
 					"price":             "200.00000000",
@@ -273,7 +281,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 	t.Run("Should be able to buy an NFT from seller's Storefront", func(t *testing.T) {
 		_ = se.NewTransaction("marketplace_buy_fusd").
 			SignProposeAndPayAs(buyerAcctName).
-			UInt64Argument(53).
+			UInt64Argument(87).
 			Argument(cadence.NewAddress(sellerAcct.Address())).
 			Argument(cadence.NewOptional(nil)).
 			Test(t).
@@ -281,7 +289,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.01cf0e2f2f715450.SequelMarketplace.TokenSold",
 				map[string]interface{}{
-					"listingID":         "53",
+					"listingID":         "87",
 					"nftID":             "0",
 					"nftType":           "A.01cf0e2f2f715450.DigitalArt.NFT",
 					"paymentVaultType":  "A.f8d6e0586b0a20c7.FUSD.Vault",

@@ -19,7 +19,7 @@ func init() {
 }
 
 func TestNewEngine_emulator(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("emulator", true)
+	client, err := iinft.NewGoWithTheFlowEmbedded("emulator", true, false)
 	require.NoError(t, err)
 
 	_, err = client.CreateAccountsE("emulator-account")
@@ -31,8 +31,24 @@ func TestNewEngine_emulator(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestNewEngine_emulatorWithFees(t *testing.T) {
+	client, err := iinft.NewGoWithTheFlowEmbedded("emulator", true, true)
+	require.NoError(t, err)
+
+	_, err = client.DoNotPrependNetworkToAccountNames().CreateAccountsE("emulator-account")
+	require.NoError(t, err)
+
+	adminAcct := client.Account("emulator-sequel-admin")
+	scripts.FundAccountWithFlow(t, client, adminAcct.Address(), "1000.0")
+
+	client.InitializeContracts()
+
+	_, err = scripts.NewEngine(client, false)
+	require.NoError(t, err)
+}
+
 func TestNewEngine_testnet(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("testnet", false)
+	client, err := iinft.NewGoWithTheFlowEmbedded("testnet", false, false)
 	require.NoError(t, err)
 
 	_, err = scripts.NewEngine(client, false)
@@ -40,7 +56,7 @@ func TestNewEngine_testnet(t *testing.T) {
 }
 
 func TestNewEngine_mainnet(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false)
+	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false, false)
 	require.NoError(t, err)
 
 	_, err = scripts.NewEngine(client, false)
@@ -48,7 +64,7 @@ func TestNewEngine_mainnet(t *testing.T) {
 }
 
 func TestEngine_GetStandardScript(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("testnet", false)
+	client, err := iinft.NewGoWithTheFlowEmbedded("testnet", false, false)
 	require.NoError(t, err)
 
 	_, err = client.CreateAccountsE("emulator-account")
@@ -65,7 +81,7 @@ func TestEngine_GetStandardScript(t *testing.T) {
 }
 
 func TestEngine_GetStandardScript_Versus(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false)
+	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false, false)
 	require.NoError(t, err)
 
 	_, err = client.CreateAccountsE("emulator-account")
@@ -82,7 +98,7 @@ func TestEngine_GetStandardScript_Versus(t *testing.T) {
 }
 
 func TestEngine_GetCustomScript_MOD_FUSD(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false)
+	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false, false)
 	require.NoError(t, err)
 
 	_, err = client.CreateAccountsE("emulator-account")

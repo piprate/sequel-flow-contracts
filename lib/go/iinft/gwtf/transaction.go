@@ -229,8 +229,11 @@ func (t FlowTransactionBuilder) Argument(value cadence.Value) FlowTransactionBui
 func (t FlowTransactionBuilder) StringArrayArgument(value ...string) FlowTransactionBuilder {
 	array := []cadence.Value{}
 	for _, val := range value {
-		cadenceStr, _ := cadence.NewString(val)
-		array = append(array, cadenceStr)
+		value, err := cadence.NewString(val)
+		if err != nil {
+			panic(err)
+		}
+		array = append(array, value)
 	}
 	t.Arguments = append(t.Arguments, cadence.NewArray(array))
 	return t
@@ -295,6 +298,7 @@ func (t FlowTransactionBuilder) RunE() ([]flow.Event, error) {
 		t.GasLimit,
 		t.Arguments,
 		t.GoWithTheFlow.Network,
+		true,
 	)
 	if err != nil {
 		return nil, err
@@ -316,7 +320,7 @@ func (t FlowTransactionBuilder) RunE() ([]flow.Event, error) {
 	t.GoWithTheFlow.Logger.StartProgress("Sending transaction...")
 	defer t.GoWithTheFlow.Logger.StopProgress()
 	txBytes := []byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode()))
-	_, res, err := t.GoWithTheFlow.Services.Transactions.SendSigned(txBytes)
+	_, res, err := t.GoWithTheFlow.Services.Transactions.SendSigned(txBytes, true)
 
 	if err != nil {
 		return nil, err

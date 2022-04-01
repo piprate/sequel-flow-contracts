@@ -17,7 +17,7 @@ import (
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Stamp})
 
-	client, err := iinft.NewGoWithTheFlowFS(".", "emulator", false)
+	client, err := iinft.NewGoWithTheFlowFS(".", "emulator", false, false)
 	if err != nil {
 		os.Exit(-1)
 	}

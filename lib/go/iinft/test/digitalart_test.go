@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	sequelAccount = "emulator-sequel-admin"
+	adminAccount = "emulator-sequel-admin"
 )
 
 func init() {
@@ -25,10 +25,10 @@ func init() {
 }
 
 func TestSealDigitalArtMaster(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
 	require.NoError(t, err)
 
-	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
+	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -65,7 +65,7 @@ func TestSealDigitalArtMaster(t *testing.T) {
 	t.Run("Should be able to seal new digital art master", func(t *testing.T) {
 
 		_ = scripts.CreateSealDigitalArtTx(se, client, sampleMetadata, profile).
-			SignProposeAndPayAs(sequelAccount).
+			SignProposeAndPayAs(adminAccount).
 			Test(t).
 			AssertSuccess()
 	})
@@ -78,28 +78,30 @@ func TestSealDigitalArtMaster(t *testing.T) {
 		// Seal the master
 
 		_ = scripts.CreateSealDigitalArtTx(se, client, &sampleMetadata2, profile).
-			SignProposeAndPayAs(sequelAccount).
+			SignProposeAndPayAs(adminAccount).
 			Test(t).
 			AssertSuccess()
 
 		// try again
 		_ = scripts.CreateSealDigitalArtTx(se, client, &sampleMetadata2, profile).
-			SignProposeAndPayAs(sequelAccount).
+			SignProposeAndPayAs(adminAccount).
 			Test(t).
 			AssertFailure("master already sealed")
 	})
 }
 
 func TestMintDigitalArtEditions(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
 	require.NoError(t, err)
 
-	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
+	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
 	userAcct := client.Account("emulator-user1")
+
+	scripts.FundAccountWithFlow(t, client, userAcct.Address(), "10.0")
 
 	_ = se.NewTransaction("account_setup").
 		SignProposeAndPayAs("emulator-user1").
@@ -137,20 +139,20 @@ func TestMintDigitalArtEditions(t *testing.T) {
 	}
 
 	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
-		SignProposeAndPayAs(sequelAccount).
+		SignProposeAndPayAs(adminAccount).
 		Test(t).
 		AssertSuccess()
 
 	t.Run("Should be able to mint a token", func(t *testing.T) {
 
 		_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
-			SignProposeAndPayAs(sequelAccount).
+			SignProposeAndPayAs(adminAccount).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			Argument(cadence.Address(userAcct.Address())).
 			Test(t).
 			AssertSuccess().
-			AssertEventCount(2).
+			AssertEventCount(5).
 			AssertEmitEventName("A.01cf0e2f2f715450.DigitalArt.Minted", "A.01cf0e2f2f715450.DigitalArt.Deposit").
 			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Minted", map[string]interface{}{
 				"id":      "0",
@@ -182,13 +184,13 @@ func TestMintDigitalArtEditions(t *testing.T) {
 
 	t.Run("Editions should have different metadata", func(t *testing.T) {
 		_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
-			SignProposeAndPayAs(sequelAccount).
+			SignProposeAndPayAs(adminAccount).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			Argument(cadence.Address(userAcct.Address())).
 			Test(t).
 			AssertSuccess().
-			AssertEventCount(2).
+			AssertEventCount(5).
 			AssertEmitEventName("A.01cf0e2f2f715450.DigitalArt.Minted", "A.01cf0e2f2f715450.DigitalArt.Deposit").
 			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Minted", map[string]interface{}{
 				"id":      "1",
@@ -230,10 +232,10 @@ func TestMintDigitalArtEditions(t *testing.T) {
 }
 
 func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
 	require.NoError(t, err)
 
-	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
+	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -245,12 +247,16 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 	platformAcctName := "emulator-account"
 	platformAcct := client.Account(platformAcctName)
 
+	scripts.FundAccountWithFlow(t, client, platformAcct.Address(), "10.0")
+
 	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(platformAcctName).Test(t).AssertSuccess()
 
 	// set up green account
 
 	greenAcctName := "emulator-user3"
 	greenAcct := client.Account(greenAcctName)
+
+	scripts.FundAccountWithFlow(t, client, greenAcct.Address(), "10.0")
 
 	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(greenAcctName).Test(t).AssertSuccess()
 
@@ -259,13 +265,16 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 	artistAcctName := "emulator-user1"
 	artistAcct := client.Account(artistAcctName)
 
+	scripts.FundAccountWithFlow(t, client, artistAcct.Address(), "10.0")
+
 	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcctName).Test(t).AssertSuccess()
 
 	// set up buyer account
 
 	buyerAcctName := "emulator-user2"
-	buyerAcct, err := client.State.Accounts().ByName(buyerAcctName)
-	require.NoError(t, err)
+	buyerAcct := client.Account(buyerAcctName)
+
+	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
@@ -321,14 +330,14 @@ The End.`,
 			Profile:  profile,
 		})).
 			PayloadSigner(buyerAcctName).
-			SignProposeAndPayAs(sequelAccount).
+			SignProposeAndPayAs(adminAccount).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
 			UInt64Argument(123).
 			Test(t).
 			AssertSuccess().
-			AssertEventCount(9).
+			AssertEventCount(12).
 			AssertEmitEventName(
 				"A.01cf0e2f2f715450.DigitalArt.Minted",
 				"A.01cf0e2f2f715450.DigitalArt.Deposit",
@@ -374,14 +383,14 @@ The End.`,
 			Profile:  profile,
 		})).
 			PayloadSigner(buyerAcctName).
-			SignProposeAndPayAs(sequelAccount).
+			SignProposeAndPayAs(adminAccount).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
 			UInt64Argument(123).
 			Test(t).
 			AssertSuccess().
-			AssertEventCount(9).
+			AssertEventCount(12).
 			AssertEmitEventName(
 				"A.01cf0e2f2f715450.DigitalArt.Minted",
 				"A.01cf0e2f2f715450.DigitalArt.Deposit",
@@ -422,10 +431,10 @@ The End.`,
 }
 
 func TestTransferDigitalArt(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true)
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
 	require.NoError(t, err)
 
-	client.CreateAccounts("emulator-account").InitializeContracts().DoNotPrependNetworkToAccountNames()
+	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -433,8 +442,12 @@ func TestTransferDigitalArt(t *testing.T) {
 	senderAcctName := "emulator-user1"
 	senderAcct := client.Account(senderAcctName)
 
+	scripts.FundAccountWithFlow(t, client, senderAcct.Address(), "10.0")
+
 	receiverAcctName := "emulator-user2"
 	receiverAcct := client.Account(receiverAcctName)
+
+	scripts.FundAccountWithFlow(t, client, receiverAcct.Address(), "10.0")
 
 	_ = se.NewTransaction("account_setup").
 		SignProposeAndPayAs(senderAcctName).
@@ -469,12 +482,12 @@ func TestTransferDigitalArt(t *testing.T) {
 	}
 
 	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
-		SignProposeAndPayAs(sequelAccount).
+		SignProposeAndPayAs(adminAccount).
 		Test(t).
 		AssertSuccess()
 
 	_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
-		SignProposeAndPayAs(sequelAccount).
+		SignProposeAndPayAs(adminAccount).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
 		Argument(cadence.Address(senderAcct.Address())).

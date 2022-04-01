@@ -34,13 +34,11 @@ func TestScriptArguments(t *testing.T) {
 			StringArgument("test").
 			DateStringAsUnixTimestamp("July 29, 2021 08:00:00 AM", "America/New_York")
 
-		testStr, _ := cadence.NewString("test")
-
 		assert.Contains(t, builder.Arguments, cadence.NewBool(true))
 		assert.Contains(t, builder.Arguments, cadence.NewBytes([]byte{1}))
 		assert.Contains(t, builder.Arguments, fix)
 		assert.Contains(t, builder.Arguments, ufix)
-		assert.Contains(t, builder.Arguments, testStr)
+		assert.Contains(t, builder.Arguments, NewCadenceString("test"))
 		assert.Contains(t, builder.Arguments, dateFix)
 
 	})
