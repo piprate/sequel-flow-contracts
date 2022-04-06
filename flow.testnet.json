@@ -28,26 +28,30 @@
         "mainnet": "0x3c5959b568896393"
       }
     },
-    "DigitalArt": "./contracts/DigitalArt.cdc"
+    "Evergreen": "./contracts/Evergreen.cdc",
+    "DigitalArt": "./contracts/DigitalArt.cdc",
+    "SequelMarketplace": "./contracts/SequelMarketplace.cdc"
   },
   "networks": {
     "mainnet": "access.mainnet.nodes.onflow.org:9000",
     "testnet": "access.devnet.nodes.onflow.org:9000"
   },
   "accounts": {
-    "testnet-account": {
+    "testnet-sequel-admin": {
       "address": "8eacbc4234067b7d",
-      "key": "${TESTNET_ACCOUNT}"
+      "key": "${TESTNET_SEQUEL_ADMIN}"
     },
-    "testnet-sequel" : {
+    "testnet-sequel-platform" : {
       "address": "28e872069e9ca2b4",
-      "key": "${TESTNET_SEQUEL}"
+      "key": "${TESTNET_SEQUEL_PLATFORM}"
     }
   },
   "deployments": {
     "testnet": {
-      "testnet-account": [
-        "DigitalArt"
+      "testnet-sequel-admin": [
+        "Evergreen",
+        "DigitalArt",
+        "SequelMarketplace"
       ]
     }
   }
