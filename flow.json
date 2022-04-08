@@ -134,6 +134,7 @@
   "deployments": {
     "emulator": {
       "emulator-account": [
+        "MetadataViews",
         "NonFungibleToken",
         "FUSD",
         "NFTStorefront",

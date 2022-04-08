@@ -26,20 +26,20 @@ func buildTestProfile(artist flow.Address) *evergreen.Profile {
 	}
 }
 
-func buildTestMetadata(maxEdition uint64) *iinft.Metadata {
-	return &iinft.Metadata{
-		MetadataLink:       "QmMetadata",
-		Name:               "Pure Art",
-		Artist:             "did:sequel:artist",
-		Description:        "Digital art in its purest form",
-		Type:               "Image",
-		ContentLink:        "QmContent",
-		ContentPreviewLink: "QmPreview",
-		Mimetype:           "image/jpeg",
-		MaxEdition:         maxEdition,
-		Asset:              "did:sequel:asset-id",
-		Record:             "record-id",
-		AssetHead:          "asset-head-id",
+func buildTestMetadata(maxEdition uint64) *iinft.DigitalArtMetadata {
+	return &iinft.DigitalArtMetadata{
+		MetadataURI:       "ipfs://QmMetadata",
+		Name:              "Pure Art",
+		Artist:            "did:sequel:artist",
+		Description:       "Digital art in its purest form",
+		Type:              "Image",
+		ContentURI:        "ipfs://QmContent",
+		ContentPreviewURI: "ipfs://QmPreview",
+		ContentMimetype:   "image/jpeg",
+		MaxEdition:        maxEdition,
+		Asset:             "did:sequel:asset-id",
+		Record:            "record-id",
+		AssetHead:         "asset-head-id",
 	}
 }
 
@@ -107,7 +107,7 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.01cf0e2f2f715450.SequelMarketplace.TokenListed",
 				map[string]interface{}{
-					"listingID":        "82",
+					"listingID":        "83",
 					"metadataLink":     "link",
 					"asset":            "did:sequel:asset-id",
 					"nftID":            "0",
@@ -134,7 +134,7 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
 					"ftVaultType":       "Type\u003cA.0ae53cb6e3f42a79.FlowToken.Vault\u003e()",
-					"listingResourceID": "82",
+					"listingResourceID": "83",
 					"nftID":             "0",
 					"nftType":           "Type\u003cA.01cf0e2f2f715450.DigitalArt.NFT\u003e()",
 					"price":             "200.00000000",
@@ -145,7 +145,7 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 	t.Run("Should be able to buy an NFT from seller's Storefront", func(t *testing.T) {
 		_ = se.NewTransaction("marketplace_buy_flow").
 			SignProposeAndPayAs(buyerAcctName).
-			UInt64Argument(82).
+			UInt64Argument(83).
 			Argument(cadence.NewAddress(sellerAcct.Address())).
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
@@ -153,7 +153,7 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.01cf0e2f2f715450.SequelMarketplace.TokenSold",
 				map[string]interface{}{
-					"listingID":         "82",
+					"listingID":         "83",
 					"nftID":             "0",
 					"nftType":           "A.01cf0e2f2f715450.DigitalArt.NFT",
 					"paymentVaultType":  "A.0ae53cb6e3f42a79.FlowToken.Vault",
@@ -237,12 +237,12 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.StorefrontInitialized",
 				map[string]interface{}{
-					"storefrontResourceID": "86",
+					"storefrontResourceID": "87",
 				})).
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.01cf0e2f2f715450.SequelMarketplace.TokenListed",
 				map[string]interface{}{
-					"listingID":        "87",
+					"listingID":        "88",
 					"asset":            "did:sequel:asset-id",
 					"metadataLink":     "",
 					"nftID":            "0",
@@ -270,7 +270,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
 					"ftVaultType":       "Type\u003cA.f8d6e0586b0a20c7.FUSD.Vault\u003e()",
-					"listingResourceID": "87",
+					"listingResourceID": "88",
 					"nftID":             "0",
 					"nftType":           "Type\u003cA.01cf0e2f2f715450.DigitalArt.NFT\u003e()",
 					"price":             "200.00000000",
@@ -281,7 +281,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 	t.Run("Should be able to buy an NFT from seller's Storefront", func(t *testing.T) {
 		_ = se.NewTransaction("marketplace_buy_fusd").
 			SignProposeAndPayAs(buyerAcctName).
-			UInt64Argument(87).
+			UInt64Argument(88).
 			Argument(cadence.NewAddress(sellerAcct.Address())).
 			Argument(cadence.NewOptional(nil)).
 			Test(t).
@@ -289,7 +289,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.01cf0e2f2f715450.SequelMarketplace.TokenSold",
 				map[string]interface{}{
-					"listingID":         "87",
+					"listingID":         "88",
 					"nftID":             "0",
 					"nftType":           "A.01cf0e2f2f715450.DigitalArt.NFT",
 					"paymentVaultType":  "A.f8d6e0586b0a20c7.FUSD.Vault",

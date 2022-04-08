@@ -1,4 +1,5 @@
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
+import MetadataViews from "./standard/MetadataViews.cdc"
 import Evergreen from "./Evergreen.cdc"
 
 pub contract DigitalArt: NonFungibleToken {
@@ -17,7 +18,6 @@ pub contract DigitalArt: NonFungibleToken {
     pub let AdminStoragePath: StoragePath
     pub let AdminPrivatePath: PrivatePath
 
-    // totalSupply
     // The total number of DigitalArt NFTs that have been minted
     //
     pub var totalSupply: UInt64
@@ -25,28 +25,33 @@ pub contract DigitalArt: NonFungibleToken {
     // Variable size dictionary of Master resources
     access(self) var masters: {String: Master}
 
+    // Master enables mint-on-demand functionality and defines a master copy of a token
+    // that is used to mint a number of editions (limited by metadata.maxEditions).
+    // Once all editions are minted, the master is 'closed' but remains on-chain
+    // to prevent re-minting NFTs with the same asset ID.
+    //
     pub struct Master {
         pub var metadata: Metadata?
         pub var evergreenProfile: Evergreen.Profile?
-        pub var nextEditionId: UInt64
+        pub var nextEdition: UInt64
         pub var closed: Bool
 
         init(metadata: Metadata, evergreenProfile: Evergreen.Profile)  {
             self.metadata = metadata
             self.evergreenProfile = evergreenProfile
-            self.nextEditionId = 1
+            self.nextEdition = 1
             self.closed = false
         }
 
         pub fun newEditionID() : UInt64 {
-            let val = self.nextEditionId
-            self.nextEditionId = self.nextEditionId + UInt64(1)
+            let val = self.nextEdition
+            self.nextEdition = self.nextEdition + UInt64(1)
             return val
         }
 
         pub fun availableEditions() : UInt64 {
-            if !self.closed && self.metadata!.maxEdition >= self.nextEditionId {
-                return self.metadata!.maxEdition - self.nextEditionId + UInt64(1)
+            if !self.closed && self.metadata!.maxEdition >= self.nextEdition {
+                return self.metadata!.maxEdition - self.nextEdition + UInt64(1)
             } else {
                 return 0
             }
@@ -57,59 +62,75 @@ pub contract DigitalArt: NonFungibleToken {
         pub fun close() {
             self.metadata = nil
             self.evergreenProfile = nil
-            self.nextEditionId = 0
+            self.nextEdition = 0
             self.closed = true
         }
     }
 
+    // Metadata defines Digital Art's metadata.
+    //
     pub struct Metadata {
-        // Link to IPFS file
-        pub let metadataLink: String
         // Name
         pub let name: String
         // Artist name
         pub let artist: String
         // Description
         pub let description: String
-        // Media type: Audio, Video
+        // Media type: Image, Audio, Video
         pub let type: String
-        pub let contentLink: String
-        pub let contentPreviewLink: String
+        // A URI of the original digital art content.
+        pub let contentURI: String
+        // A URI of the digital art preview content (i.e. a thumbnail).
+        pub let contentPreviewURI: String
         // MIME type (e.g. 'image/jpeg')
         pub let mimetype: String
-		pub var edition: UInt64
-		pub let maxEdition: UInt64
-
-		pub let asset: String
-		pub let record: String
+        // Edition number of the given NFT. Editions are unique for the same master,
+        // identified by the asset ID.
+        pub var edition: UInt64
+        // The number of editions that may have been produced for the given master.
+        // This number can't be exceeded by the contract, but not all the editions
+        // may have been minted (yet or ever).
+        // If maxEdition == 1, the given NFT is one-of-a-kind.
+        pub let maxEdition: UInt64
+        // The DID of the master's asset. This ID is the same
+        // for all editions of a particular Digital Art NFT.
+        pub let asset: String
+        // A URI of the full digital art's metadata JSON
+        // as it existed at the time the master was sealed.
+        pub let metadataURI: String
+        // The ChainLocker record ID of the full metadata JSON
+        // as it existed at the time the master was sealed.
+        pub let record: String
+        // The ChainLocker asset head ID of the full metadata JSON.
+        // It can be used to retrieve the current metadata JSON (if changed).
 		pub let assetHead: String
 
         init(
-            metadataLink: String,
             name: String,
             artist: String,
             description: String,
             type: String,
-            contentLink: String,
-            contentPreviewLink: String,
+            contentURI: String,
+            contentPreviewURI: String,
             mimetype: String,
             edition: UInt64,
             maxEdition: UInt64,
             asset: String,
+            metadataURI: String,
             record: String,
             assetHead: String
     )  {
-            self.metadataLink = metadataLink
             self.name = name
             self.artist = artist
             self.description = description
             self.type = type
-            self.contentLink = contentLink
-            self.contentPreviewLink = contentPreviewLink
+            self.contentURI = contentURI
+            self.contentPreviewURI = contentPreviewURI
             self.mimetype = mimetype
             self.edition = edition
             self.maxEdition = maxEdition
             self.asset = asset
+            self.metadataURI = metadataURI
             self.record = record
             self.assetHead = assetHead
         }
@@ -122,7 +143,7 @@ pub contract DigitalArt: NonFungibleToken {
     // NFT
     // DigitalArt as an NFT
     //
-    pub resource NFT: NonFungibleToken.INFT, Evergreen.Token {
+    pub resource NFT: NonFungibleToken.INFT, MetadataViews.Resolver, Evergreen.Token {
         // The token's ID
         pub let id: UInt64
 
@@ -135,6 +156,30 @@ pub contract DigitalArt: NonFungibleToken {
             self.id = initID
             self.metadata = metadata
             self.evergreenProfile = evergreenProfile
+        }
+
+        pub fun getViews(): [Type] {
+            return [
+                Type<MetadataViews.Display>(),
+                Type<DigitalArt.Metadata>()
+            ]
+        }
+
+        pub fun resolveView(_ view: Type): AnyStruct? {
+            switch view {
+                case Type<MetadataViews.Display>():
+                    return MetadataViews.Display(
+                        name: self.metadata.name,
+                        description: self.metadata.description,
+                        thumbnail: MetadataViews.HTTPFile(
+                            url: self.metadata.contentPreviewURI
+                        )
+                    )
+                case Type<DigitalArt.Metadata>():
+                    return self.metadata
+            }
+
+            return nil
         }
 
         pub fun getAssetID(): String {
@@ -166,7 +211,14 @@ pub contract DigitalArt: NonFungibleToken {
     // Collection
     // A collection of DigitalArt NFTs owned by an account
     //
-    pub resource Collection: CollectionPublic, Evergreen.CollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
+    pub resource Collection:
+            CollectionPublic,
+            Evergreen.CollectionPublic,
+            NonFungibleToken.Provider,
+            NonFungibleToken.Receiver,
+            NonFungibleToken.CollectionPublic,
+            MetadataViews.ResolverCollection {
+
         // dictionary of NFT conforming tokens
         // NFT is a resource type with an `UInt64` ID field
         //
@@ -227,6 +279,12 @@ pub contract DigitalArt: NonFungibleToken {
             } else {
                 return nil
             }
+        }
+
+        pub fun borrowViewResolver(id: UInt64): &AnyResource{MetadataViews.Resolver} {
+            let nft = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+            let digitalArtNFT = nft as! &DigitalArt.NFT
+            return digitalArtNFT as &AnyResource{MetadataViews.Resolver}
         }
 
         pub fun borrowEvergreenToken(id: UInt64): &AnyResource{Evergreen.Token}? {

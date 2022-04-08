@@ -19,17 +19,17 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
 
         if !self.admin.isSealed(masterId: masterId) {
             let metadata = DigitalArt.Metadata(
-                metadataLink: {{safe .Parameters.Metadata.MetadataLink}},
                 name: {{safe .Parameters.Metadata.Name}},
                 artist: {{safe .Parameters.Metadata.Artist}},
                 description: {{safe .Parameters.Metadata.Description}},
                 type: {{safe .Parameters.Metadata.Type}},
-                contentLink: {{safe .Parameters.Metadata.ContentLink}},
-                contentPreviewLink: {{safe .Parameters.Metadata.ContentPreviewLink}},
-                mimetype: {{safe .Parameters.Metadata.Mimetype}},
+                contentURI: {{safe .Parameters.Metadata.ContentURI}},
+                contentPreviewURI: {{safe .Parameters.Metadata.ContentPreviewURI}},
+                mimetype: {{safe .Parameters.Metadata.ContentMimetype}},
                 edition: {{.Parameters.Metadata.Edition}},
                 maxEdition: {{.Parameters.Metadata.MaxEdition}},
                 asset: masterId,
+                metadataURI: {{safe .Parameters.Metadata.MetadataURI}},
                 record: {{safe .Parameters.Metadata.Record}},
                 assetHead: {{safe .Parameters.Metadata.AssetHead}}
             )

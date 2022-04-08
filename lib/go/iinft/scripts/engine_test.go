@@ -109,20 +109,20 @@ func TestEngine_GetCustomScript_MOD_FUSD(t *testing.T) {
 	e, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	res := e.GetCustomScript("digitalart_mint_on_demand_fusd", &scripts.MindOnDemandParameters{
-		Metadata: &iinft.Metadata{
-			MetadataLink:       "QmMetadata",
-			Name:               "Pure Art",
-			Artist:             "did:sequel:artist",
-			Description:        "Digital art in its purest form",
-			Type:               "Image",
-			ContentLink:        "QmContent",
-			ContentPreviewLink: "QmPreview",
-			Mimetype:           "image/jpeg",
-			MaxEdition:         4,
-			Asset:              "did:sequel:asset-id",
-			Record:             "record-id",
-			AssetHead:          "asset-head-id",
+	res := e.GetCustomScript("digitalart_mint_on_demand_fusd", &scripts.MintOnDemandParameters{
+		Metadata: &iinft.DigitalArtMetadata{
+			MetadataURI:       "ipfs://QmMetadata",
+			Name:              "Pure Art",
+			Artist:            "did:sequel:artist",
+			Description:       "Digital art in its purest form",
+			Type:              "Image",
+			ContentURI:        "ipfs://QmContent",
+			ContentPreviewURI: "ipfs://QmPreview",
+			ContentMimetype:   "image/jpeg",
+			MaxEdition:        4,
+			Asset:             "did:sequel:asset-id",
+			Record:            "record-id",
+			AssetHead:         "asset-head-id",
 		},
 		Profile: &evergreen.Profile{
 			ID: 0,

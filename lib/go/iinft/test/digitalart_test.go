@@ -35,19 +35,19 @@ func TestSealDigitalArtMaster(t *testing.T) {
 
 	userAcct := client.Account("emulator-user1")
 
-	sampleMetadata := &iinft.Metadata{
-		MetadataLink:       "QmMetadata",
-		Name:               "Pure Art",
-		Artist:             "did:sequel:artist",
-		Description:        "Digital art in its purest form",
-		Type:               "Image",
-		ContentLink:        "QmContent",
-		ContentPreviewLink: "QmPreview",
-		Mimetype:           "image/jpeg",
-		MaxEdition:         4,
-		Asset:              "did:sequel:asset-id",
-		Record:             "record-id",
-		AssetHead:          "asset-head-id",
+	sampleMetadata := &iinft.DigitalArtMetadata{
+		MetadataURI:       "ipfs://QmMetadata",
+		Name:              "Pure Art",
+		Artist:            "did:sequel:artist",
+		Description:       "Digital art in its purest form",
+		Type:              "Image",
+		ContentURI:        "ipfs://QmContent",
+		ContentPreviewURI: "ipfs://QmPreview",
+		ContentMimetype:   "image/jpeg",
+		MaxEdition:        4,
+		Asset:             "did:sequel:asset-id",
+		Record:            "record-id",
+		AssetHead:         "asset-head-id",
 	}
 
 	profile := &evergreen.Profile{
@@ -111,19 +111,19 @@ func TestMintDigitalArtEditions(t *testing.T) {
 	checkDigitalArtNFTSupply(t, se, 0)
 	checkDigitalArtCollectionLen(t, se, userAcct.Address().String(), 0)
 
-	metadata := &iinft.Metadata{
-		MetadataLink:       "QmMetadata",
-		Name:               "Pure Art",
-		Artist:             "did:sequel:artist",
-		Description:        "Digital art in its purest form",
-		Type:               "Image",
-		ContentLink:        "QmContent",
-		ContentPreviewLink: "QmPreview",
-		Mimetype:           "image/jpeg",
-		MaxEdition:         4,
-		Asset:              "did:sequel:asset-id",
-		Record:             "record-id",
-		AssetHead:          "asset-head-id",
+	metadata := &iinft.DigitalArtMetadata{
+		MetadataURI:       "ipfs://QmMetadata",
+		Name:              "Pure Art",
+		Artist:            "did:sequel:artist",
+		Description:       "Digital art in its purest form",
+		Type:              "Image",
+		ContentURI:        "ipfs://QmContent",
+		ContentPreviewURI: "ipfs://QmPreview",
+		ContentMimetype:   "image/jpeg",
+		MaxEdition:        4,
+		Asset:             "did:sequel:asset-id",
+		Record:            "record-id",
+		AssetHead:         "asset-head-id",
 	}
 
 	profile := &evergreen.Profile{
@@ -176,7 +176,7 @@ func TestMintDigitalArtEditions(t *testing.T) {
 			RunReturns()
 		require.NoError(t, err)
 
-		meta, err := iinft.MetadataFromCadence(val)
+		meta, err := iinft.DigitalArtMetadataFromCadence(val)
 		require.NoError(t, err)
 
 		assert.Equal(t, uint64(1), meta.Edition)
@@ -214,7 +214,7 @@ func TestMintDigitalArtEditions(t *testing.T) {
 			RunReturns()
 		require.NoError(t, err)
 
-		meta, err := iinft.MetadataFromCadence(val)
+		meta, err := iinft.DigitalArtMetadataFromCadence(val)
 		require.NoError(t, err)
 
 		assert.Equal(t, uint64(2), meta.Edition)
@@ -283,20 +283,20 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 	checkDigitalArtNFTSupply(t, se, 0)
 	checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 0)
 
-	metadata := &iinft.Metadata{
-		MetadataLink: "QmMetadata",
-		Name:         "Pure Art",
-		Artist:       "did:sequel:artist",
+	metadata := &iinft.DigitalArtMetadata{
+		MetadataURI: "ipfs://QmMetadata",
+		Name:        "Pure Art",
+		Artist:      "did:sequel:artist",
 		Description: `Digital art in its purest form
 The End.`,
-		Type:               "Image",
-		ContentLink:        "QmContent",
-		ContentPreviewLink: "QmPreview",
-		Mimetype:           "image/jpeg",
-		MaxEdition:         4,
-		Asset:              "did:sequel:asset-id",
-		Record:             "record-id",
-		AssetHead:          "asset-head-id",
+		Type:              "Image",
+		ContentURI:        "ipfs://QmContent",
+		ContentPreviewURI: "ipfs://QmPreview",
+		ContentMimetype:   "image/jpeg",
+		MaxEdition:        4,
+		Asset:             "did:sequel:asset-id",
+		Record:            "record-id",
+		AssetHead:         "asset-head-id",
 	}
 
 	profile := &evergreen.Profile{
@@ -325,7 +325,7 @@ The End.`,
 
 	t.Run("Should be able to mint a token on demand (master not sealed)", func(t *testing.T) {
 
-		_ = client.Transaction(se.GetCustomScript("digitalart_mint_on_demand_fusd", scripts.MindOnDemandParameters{
+		_ = client.Transaction(se.GetCustomScript("digitalart_mint_on_demand_fusd", scripts.MintOnDemandParameters{
 			Metadata: metadata,
 			Profile:  profile,
 		})).
@@ -365,7 +365,7 @@ The End.`,
 			RunReturns()
 		require.NoError(t, err)
 
-		meta, err := iinft.MetadataFromCadence(val)
+		meta, err := iinft.DigitalArtMetadataFromCadence(val)
 		require.NoError(t, err)
 
 		assert.Equal(t, uint64(1), meta.Edition)
@@ -378,7 +378,7 @@ The End.`,
 
 	t.Run("Should be able to mint a token on demand (master sealed)", func(t *testing.T) {
 
-		_ = client.Transaction(se.GetCustomScript("digitalart_mint_on_demand_fusd", scripts.MindOnDemandParameters{
+		_ = client.Transaction(se.GetCustomScript("digitalart_mint_on_demand_fusd", scripts.MintOnDemandParameters{
 			Metadata: metadata,
 			Profile:  profile,
 		})).
@@ -418,7 +418,7 @@ The End.`,
 			RunReturns()
 		require.NoError(t, err)
 
-		meta, err := iinft.MetadataFromCadence(val)
+		meta, err := iinft.DigitalArtMetadataFromCadence(val)
 		require.NoError(t, err)
 
 		assert.Equal(t, uint64(1), meta.Edition)
@@ -454,19 +454,19 @@ func TestTransferDigitalArt(t *testing.T) {
 		Test(t).
 		AssertSuccess()
 
-	metadata := &iinft.Metadata{
-		MetadataLink:       "QmMetadata",
-		Name:               "Pure Art",
-		Artist:             "did:sequel:artist",
-		Description:        "Digital art in its purest form",
-		Type:               "Image",
-		ContentLink:        "QmContent",
-		ContentPreviewLink: "QmPreview",
-		Mimetype:           "image/jpeg",
-		MaxEdition:         4,
-		Asset:              "did:sequel:asset-id",
-		Record:             "record-id",
-		AssetHead:          "asset-head-id",
+	metadata := &iinft.DigitalArtMetadata{
+		MetadataURI:       "ipfs://QmMetadata",
+		Name:              "Pure Art",
+		Artist:            "did:sequel:artist",
+		Description:       "Digital art in its purest form",
+		Type:              "Image",
+		ContentURI:        "ipfs://QmContent",
+		ContentPreviewURI: "ipfs://QmPreview",
+		ContentMimetype:   "image/jpeg",
+		MaxEdition:        4,
+		Asset:             "did:sequel:asset-id",
+		Record:            "record-id",
+		AssetHead:         "asset-head-id",
 	}
 
 	profile := &evergreen.Profile{
