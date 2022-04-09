@@ -88,8 +88,8 @@ pub contract DigitalArt: NonFungibleToken {
         // identified by the asset ID.
         pub var edition: UInt64
         // The number of editions that may have been produced for the given master.
-        // This number can't be exceeded by the contract, but not all the editions
-        // may have been minted (yet or ever).
+        // This number can't be exceeded by the contract, but there is no obligation
+        // to mint all the declared editions.
         // If maxEdition == 1, the given NFT is one-of-a-kind.
         pub let maxEdition: UInt64
         // The DID of the master's asset. This ID is the same
