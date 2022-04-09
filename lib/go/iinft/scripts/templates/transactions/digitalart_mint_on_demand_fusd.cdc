@@ -59,7 +59,10 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
         if buyer.borrow<&DigitalArt.Collection>(from: DigitalArt.CollectionStoragePath) == nil {
             let collection <- DigitalArt.createEmptyCollection() as! @DigitalArt.Collection
             buyer.save(<-collection, to: DigitalArt.CollectionStoragePath)
-            buyer.link<&{NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver}>(DigitalArt.CollectionPublicPath, target: DigitalArt.CollectionStoragePath)
+            buyer.link<&{NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver, DigitalArt.CollectionPublic}>(
+                DigitalArt.CollectionPublicPath,
+                target: DigitalArt.CollectionStoragePath
+            )
         }
 
         self.tokenReceiver = buyer.getCapability(DigitalArt.CollectionPublicPath)
