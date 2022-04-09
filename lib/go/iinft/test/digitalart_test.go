@@ -182,6 +182,71 @@ func TestMintDigitalArtEditions(t *testing.T) {
 		assert.Equal(t, uint64(1), meta.Edition)
 	})
 
+	t.Run("Should be able to read metadata view (Display)", func(t *testing.T) {
+
+		displayVal, err := client.Script(`
+import NonFungibleToken from 0xf8d6e0586b0a20c7
+import MetadataViews from 0xf8d6e0586b0a20c7
+import DigitalArt from 0x01cf0e2f2f715450
+
+pub fun main(address:Address, tokenID:UInt64) : MetadataViews.Display? {
+    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+    if let item = collection.borrowDigitalArt(id: tokenID) {
+        if let view = item.resolveView(Type<MetadataViews.Display>()) {
+            return view as! MetadataViews.Display
+        }
+    }
+
+    return nil
+}
+`).
+			Argument(cadence.Address(userAcct.Address())).
+			UInt64Argument(0).
+			RunReturns()
+		require.NoError(t, err)
+
+		displayStruct, ok := displayVal.(cadence.Optional).Value.(cadence.Struct)
+		require.True(t, ok)
+		assert.Equal(t, "MetadataViews.Display", displayStruct.StructType.QualifiedIdentifier)
+		assert.Equal(t, "Pure Art", displayStruct.Fields[0].ToGoValue().(string))
+		assert.Equal(t, "Digital art in its purest form", displayStruct.Fields[1].ToGoValue().(string))
+		thumbnailStruct, ok := displayStruct.Fields[2].(cadence.Struct)
+		require.True(t, ok)
+		assert.Equal(t, "MetadataViews.HTTPFile", thumbnailStruct.StructType.QualifiedIdentifier)
+		assert.Equal(t, "ipfs://QmPreview", thumbnailStruct.Fields[0].ToGoValue().(string))
+	})
+
+	t.Run("Should be able to read metadata view (DigitalArt.Metadata)", func(t *testing.T) {
+
+		val, err := client.Script(`
+import NonFungibleToken from 0xf8d6e0586b0a20c7
+import MetadataViews from 0xf8d6e0586b0a20c7
+import DigitalArt from 0x01cf0e2f2f715450
+
+pub fun main(address:Address, tokenID:UInt64) : DigitalArt.Metadata? {
+    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+    if let item = collection.borrowDigitalArt(id: tokenID) {
+        if let view = item.resolveView(Type<DigitalArt.Metadata>()) {
+            return view as! DigitalArt.Metadata
+        }
+    }
+
+    return nil
+}
+`).
+			Argument(cadence.Address(userAcct.Address())).
+			UInt64Argument(0).
+			RunReturns()
+		require.NoError(t, err)
+
+		meta, err := iinft.DigitalArtMetadataFromCadence(val)
+		require.NoError(t, err)
+
+		assert.Equal(t, "Pure Art", meta.Name)
+		assert.Equal(t, "Digital art in its purest form", meta.Description)
+		assert.Equal(t, uint64(1), meta.Edition)
+	})
+
 	t.Run("Editions should have different metadata", func(t *testing.T) {
 		_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
 			SignProposeAndPayAs(adminAccount).
