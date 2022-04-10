@@ -5,7 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/scripts"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -17,7 +19,10 @@ func init() {
 }
 
 func TestNewEngine_emulator(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("emulator", true)
+	client, err := iinft.NewGoWithTheFlowEmbedded("emulator", true, false)
+	require.NoError(t, err)
+
+	_, err = client.CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
 	client.InitializeContracts()
@@ -26,8 +31,24 @@ func TestNewEngine_emulator(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestNewEngine_emulatorWithFees(t *testing.T) {
+	client, err := iinft.NewGoWithTheFlowEmbedded("emulator", true, true)
+	require.NoError(t, err)
+
+	_, err = client.DoNotPrependNetworkToAccountNames().CreateAccountsE("emulator-account")
+	require.NoError(t, err)
+
+	adminAcct := client.Account("emulator-sequel-admin")
+	scripts.FundAccountWithFlow(t, client, adminAcct.Address(), "1000.0")
+
+	client.InitializeContracts()
+
+	_, err = scripts.NewEngine(client, false)
+	require.NoError(t, err)
+}
+
 func TestNewEngine_testnet(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("testnet", false)
+	client, err := iinft.NewGoWithTheFlowEmbedded("testnet", false, false)
 	require.NoError(t, err)
 
 	_, err = scripts.NewEngine(client, false)
@@ -35,7 +56,7 @@ func TestNewEngine_testnet(t *testing.T) {
 }
 
 func TestNewEngine_mainnet(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false)
+	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false, false)
 	require.NoError(t, err)
 
 	_, err = scripts.NewEngine(client, false)
@@ -43,7 +64,10 @@ func TestNewEngine_mainnet(t *testing.T) {
 }
 
 func TestEngine_GetStandardScript(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("testnet", false)
+	client, err := iinft.NewGoWithTheFlowEmbedded("testnet", false, false)
+	require.NoError(t, err)
+
+	_, err = client.CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
 	client.InitializeContracts()
@@ -57,7 +81,10 @@ func TestEngine_GetStandardScript(t *testing.T) {
 }
 
 func TestEngine_GetStandardScript_Versus(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false)
+	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false, false)
+	require.NoError(t, err)
+
+	_, err = client.CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
 	client.InitializeContracts()
@@ -66,6 +93,49 @@ func TestEngine_GetStandardScript_Versus(t *testing.T) {
 	require.NoError(t, err)
 
 	res := e.GetStandardScript("versus_get_art")
+
+	println(res)
+}
+
+func TestEngine_GetCustomScript_MOD_FUSD(t *testing.T) {
+	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false, false)
+	require.NoError(t, err)
+
+	_, err = client.CreateAccountsE("emulator-account")
+	require.NoError(t, err)
+
+	client.InitializeContracts()
+
+	e, err := scripts.NewEngine(client, false)
+	require.NoError(t, err)
+
+	res := e.GetCustomScript("digitalart_mint_on_demand_fusd", &scripts.MintOnDemandParameters{
+		Metadata: &iinft.DigitalArtMetadata{
+			MetadataURI:       "ipfs://QmMetadata",
+			Name:              "Pure Art",
+			Artist:            "did:sequel:artist",
+			Description:       "Digital art in its purest form",
+			Type:              "Image",
+			ContentURI:        "ipfs://QmContent",
+			ContentPreviewURI: "ipfs://QmPreview",
+			ContentMimetype:   "image/jpeg",
+			MaxEdition:        4,
+			Asset:             "did:sequel:asset-id",
+			Record:            "record-id",
+			AssetHead:         "asset-head-id",
+		},
+		Profile: &evergreen.Profile{
+			ID: 0,
+			Roles: []*evergreen.Role{
+				{
+					Role:                      evergreen.RoleArtist,
+					InitialSaleCommission:     0.8,
+					SecondaryMarketCommission: 0.2,
+					Address:                   flow.HexToAddress("0xf669cb8d41ce0c74"),
+				},
+			},
+		},
+	})
 
 	println(res)
 }

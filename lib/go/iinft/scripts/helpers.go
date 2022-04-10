@@ -1,51 +1,26 @@
 package scripts
 
 import (
-	"fmt"
-
 	_ "github.com/kevinburke/go-bindata"
-	"github.com/onflow/cadence"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
 )
 
-func CreateSealDigitalArtTx(script string, client *gwtf.GoWithTheFlow, metadata *iinft.Metadata) gwtf.FlowTransactionBuilder {
-	tx := client.Transaction(script).
-		StringArgument(metadata.MetadataLink).
-		StringArgument(metadata.Name).
-		StringArgument(metadata.Artist).
-		StringArgument(metadata.Description).
-		StringArgument(metadata.Type).
-		StringArgument(metadata.ContentLink).
-		StringArgument(metadata.ContentPreviewLink).
-		StringArgument(metadata.Mimetype).
-		UInt64Argument(metadata.MaxEdition).
-		StringArgument(metadata.Asset).
-		StringArgument(metadata.Record).
-		StringArgument(metadata.AssetHead).
-		UInt32Argument(metadata.ParticipationProfile.ID)
-
-	artistRole, ok := metadata.ParticipationProfile.Roles[iinft.ParticipationRoleArtist]
-	if ok {
-		tx = tx.Argument(cadence.NewOptional(cadence.Address(artistRole.Address))).
-			UFix64Argument(fmt.Sprintf("%.4f", artistRole.InitialSaleCommission)).
-			UFix64Argument(fmt.Sprintf("%.4f", artistRole.SecondaryMarketCommission))
-	} else {
-		tx = tx.Argument(cadence.NewOptional(nil)).
-			UFix64Argument("0.0").
-			UFix64Argument("0.0")
+type (
+	MintOnDemandParameters struct {
+		Metadata *iinft.DigitalArtMetadata
+		Profile  *evergreen.Profile
 	}
+)
 
-	platformRole, ok := metadata.ParticipationProfile.Roles[iinft.ParticipationRolePlatform]
-	if ok {
-		tx = tx.Argument(cadence.NewOptional(cadence.Address(platformRole.Address))).
-			UFix64Argument(fmt.Sprintf("%.4f", platformRole.InitialSaleCommission)).
-			UFix64Argument(fmt.Sprintf("%.4f", platformRole.SecondaryMarketCommission))
-	} else {
-		tx = tx.Argument(cadence.NewOptional(nil)).
-			UFix64Argument("0.0").
-			UFix64Argument("0.0")
-	}
+func CreateSealDigitalArtTx(se *Engine, client *gwtf.GoWithTheFlow, metadata *iinft.DigitalArtMetadata,
+	profile *evergreen.Profile) gwtf.FlowTransactionBuilder {
+
+	tx := client.Transaction(se.GetStandardScript("master_seal")).
+		Argument(iinft.DigitalArtMetadataToCadence(metadata, flow.HexToAddress(se.WellKnownAddresses()["DigitalArt"]))).
+		Argument(evergreen.ProfileToCadence(profile, flow.HexToAddress(se.WellKnownAddresses()["Evergreen"])))
 
 	return tx
 }

@@ -8,7 +8,9 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/onflow/cadence/runtime/format"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
+	"github.com/rs/zerolog/log"
 )
 
 //go:embed templates
@@ -17,7 +19,20 @@ var goTemplates *template.Template
 
 func init() {
 	var err error
-	goTemplates, err = template.New("").ParseFS(templateFS, "templates/transactions/*.cdc", "templates/scripts/*.cdc", "templates/scripts/**/*.cdc")
+	goTemplates, err = template.New("").Funcs(template.FuncMap{
+		// increment function
+		"inc": func(i int) int {
+			return i + 1
+		},
+		// decrement function
+		"dec": func(i int) int {
+			return i - 1
+		},
+		// turn a string into Cadence safe form
+		"safe": func(v string) string {
+			return format.String(v)
+		},
+	}).ParseFS(templateFS, "templates/transactions/*.cdc", "templates/scripts/*.cdc", "templates/scripts/**/*.cdc")
 	if err != nil {
 		panic(err)
 	}
@@ -31,8 +46,16 @@ type (
 	}
 )
 
+const (
+	ParamsKey = "Parameters"
+)
+
 var (
-	requiredWellKnownAddresses = []string{"FungibleToken", "FlowToken", "NonFungibleToken", "FUSD", "Collectible", "Edition", "Art", "Content", "DigitalArt"}
+	requiredWellKnownAddresses = []string{
+		"FungibleToken", "FlowToken", "NonFungibleToken", "NFTStorefront", "FUSD",
+		"Collectible", "Edition", "Art", "Content", "Evergreen",
+		"DigitalArt", "SequelMarketplace",
+	}
 )
 
 func NewEngine(client *gwtf.GoWithTheFlow, preload bool) (*Engine, error) {
@@ -69,7 +92,7 @@ func (e *Engine) loadContractAddresses() error {
 			return fmt.Errorf("address not found for contract %s", requiredAddress)
 		}
 	}
-	fmt.Printf("%v\n", e.wellKnownAddresses)
+	log.Debug().Str("addresses", fmt.Sprintf("%v", e.wellKnownAddresses)).Msg("Loaded contract addresses")
 
 	return nil
 }
@@ -94,8 +117,27 @@ func (e *Engine) GetStandardScript(scriptID string) string {
 	return s
 }
 
+func (e *Engine) GetCustomScript(scriptID string, params interface{}) string {
+	data := map[string]interface{}{
+		ParamsKey: params,
+	}
+	for k, v := range e.wellKnownAddresses {
+		data[k] = v
+	}
+	buf := &bytes.Buffer{}
+	if err := goTemplates.ExecuteTemplate(buf, scriptID, data); err != nil {
+		panic(err)
+	}
+
+	return string(buf.Bytes())
+}
+
 func (e *Engine) NewTransaction(scriptID string) gwtf.FlowTransactionBuilder {
 	return e.client.Transaction(e.GetStandardScript(scriptID))
+}
+
+func (e *Engine) NewInlineTransaction(script string) gwtf.FlowTransactionBuilder {
+	return e.client.Transaction(script)
 }
 
 func (e *Engine) NewScript(scriptID string) gwtf.FlowScriptBuilder {

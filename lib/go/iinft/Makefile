@@ -28,6 +28,9 @@ cov:
 module-updates:
 	go list -u -m -json all | go-mod-outdated -direct -update
 
+install:
+	GOBIN=`pwd`/bin/ go install -v github.com/piprate/sequel-flow-contracts/lib/go/iinft/cmd/...
+
 help:
 	@echo ''
 	@echo ' Targets:'

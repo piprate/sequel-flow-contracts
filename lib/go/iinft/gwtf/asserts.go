@@ -14,10 +14,10 @@ type TransactionResult struct {
 	Testing *testing.T
 }
 
-func (f FlowTransactionBuilder) Test(t *testing.T) TransactionResult {
+func (tb FlowTransactionBuilder) Test(t *testing.T) TransactionResult {
 	locale, _ := time.LoadLocation("UTC")
 	time.Local = locale
-	events, err := f.RunE()
+	events, err := tb.RunE()
 	var formattedEvents []*FormatedEvent
 	for _, event := range events {
 		ev := ParseEvent(event, uint64(0), time.Unix(0, 0), []string{})
@@ -43,7 +43,7 @@ func (t TransactionResult) AssertSuccess() TransactionResult {
 }
 
 func (t TransactionResult) AssertEventCount(number int) TransactionResult {
-	assert.Equal(t.Testing, len(t.Events), number)
+	assert.Equal(t.Testing, number, len(t.Events))
 	return t
 
 }
@@ -92,6 +92,29 @@ func (t TransactionResult) AssertEmitEventJson(event ...string) TransactionResul
 	return t
 }
 
+func (t TransactionResult) AssertPartialEvent(expected *FormatedEvent) TransactionResult {
+
+	events := t.Events
+	for index, ev := range events {
+		//todo do we need more then just name here?
+		if ev.Name == expected.Name {
+			for key := range ev.Fields {
+				_, exist := expected.Fields[key]
+				if !exist {
+					delete(events[index].Fields, key)
+				}
+			}
+		}
+	}
+
+	assert.Contains(t.Testing, events, expected)
+
+	for _, ev := range events {
+		t.Testing.Log(ev.String())
+	}
+
+	return t
+}
 func (t TransactionResult) AssertEmitEvent(event ...*FormatedEvent) TransactionResult {
 	for _, ev := range event {
 		assert.Contains(t.Testing, t.Events, ev)

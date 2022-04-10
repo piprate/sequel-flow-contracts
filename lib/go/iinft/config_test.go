@@ -8,7 +8,7 @@ import (
 )
 
 func TestLoadFlowKitAccount(t *testing.T) {
-	acct, err := iinft.LoadFlowKitAccount("01cf0e2f2f715450", "d5457a187e9642a8e49d4032b3b4f85c92da7202c79681d9302c6e444e7033a8")
+	acct, err := iinft.LoadFlowKitAccount("f669cb8d41ce0c74", "80025f0d1f2fd1ba0e18f447681fdd6a68a62ea86c2c2fefa811df086d40db3c")
 	require.NoError(t, err)
 	require.NotEmpty(t, acct)
 }

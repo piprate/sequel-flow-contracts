@@ -15,15 +15,29 @@ func init() {
 }
 
 func TestNewGoWithTheFlowFS(t *testing.T) {
-	client, err := NewGoWithTheFlowFS("../../..", "emulator", true)
+	client, err := NewGoWithTheFlowFS("../../..", "emulator", true, false)
+	require.NoError(t, err)
+
+	_, err = client.CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
 	client.InitializeContracts()
 }
 
 func TestNewGoWithTheFlowEmbedded(t *testing.T) {
-	client, err := NewGoWithTheFlowEmbedded("emulator", true)
+	client, err := NewGoWithTheFlowEmbedded("emulator", true, false)
+	require.NoError(t, err)
+
+	_, err = client.CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
 	client.InitializeContracts()
+}
+
+func TestNewGoWithTheFlowEmbedded_WithTxFees(t *testing.T) {
+	client, err := NewGoWithTheFlowEmbedded("emulator", true, true)
+	require.NoError(t, err)
+
+	_, err = client.DoNotPrependNetworkToAccountNames().CreateAccountsE("emulator-account")
+	require.NoError(t, err)
 }

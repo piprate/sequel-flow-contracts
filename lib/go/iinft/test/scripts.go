@@ -48,7 +48,7 @@ func inspectCollectionLenScript(addrMap map[string]string, userAddr, tokenContra
 // inspectCollectionScript creates a script that retrieves an NFT collection
 // from storage and tries to borrow a reference for an NFT that it owns.
 // If it owns it, it will not fail.
-func inspectCollectionScript(addrMap map[string]string, userAddr, tokenContractName, publicLocation string, nftID int) string {
+func inspectCollectionScript(addrMap map[string]string, userAddr, tokenContractName, publicLocation string, nftID uint64) string {
 	template := `
 		import NonFungibleToken from %s
 		import %s from %s

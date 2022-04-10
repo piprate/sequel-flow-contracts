@@ -1,4 +1,4 @@
-{{ define "digitalart_mint" }}
+{{ define "digitalart_mint_edition" }}
 import NonFungibleToken from {{.NonFungibleToken}}
 import DigitalArt from {{.DigitalArt}}
 
@@ -25,7 +25,7 @@ transaction(masterId: String, amount: UInt64, recipientAddr: Address) {
 
         var i = UInt64(0)
         while i < amount {
-            let newNFT <- self.admin.mintNFT(masterId: masterId)
+            let newNFT <- self.admin.mintEditionNFT(masterId: masterId, modID: 0)
             receiver.deposit(token: <-newNFT)
             i = i + 1
         }
