@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	adminAccount = "emulator-sequel-admin"
+	adminAccount       = "emulator-sequel-admin"
+	initialFlowBalance = 0.001
 )
 
 func init() {
@@ -492,6 +493,189 @@ The End.`,
 		assert.Equal(t, 800.0, scripts.GetFUSDBalance(t, se, buyerAcct.Address()))
 		assert.Equal(t, 10.0, scripts.GetFUSDBalance(t, se, platformAcct.Address()))
 		assert.Equal(t, 10.0, scripts.GetFUSDBalance(t, se, greenAcct.Address()))
+	})
+}
+
+func TestMintDigitalArtEditionsOnDemandFlow(t *testing.T) {
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	require.NoError(t, err)
+
+	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+
+	se, err := scripts.NewEngine(client, false)
+	require.NoError(t, err)
+
+	// set up platform account
+
+	platformAcctName := "emulator-sequel-platform"
+	platformAcct := client.Account(platformAcctName)
+
+	// set up green account
+
+	greenAcctName := "emulator-user3"
+	greenAcct := client.Account(greenAcctName)
+
+	// set up artist account
+
+	artistAcctName := "emulator-user1"
+	artistAcct := client.Account(artistAcctName)
+
+	// set up buyer account
+
+	buyerAcctName := "emulator-user2"
+	buyerAcct := client.Account(buyerAcctName)
+
+	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "1000.0")
+
+	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
+
+	checkDigitalArtNFTSupply(t, se, 0)
+	checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 0)
+
+	metadata := &iinft.DigitalArtMetadata{
+		MetadataURI: "ipfs://QmMetadata",
+		Name:        "Pure Art",
+		Artist:      "did:sequel:artist",
+		Description: `Digital art in its purest form
+The End.`,
+		Type:              "Image",
+		ContentURI:        "ipfs://QmContent",
+		ContentPreviewURI: "ipfs://QmPreview",
+		ContentMimetype:   "image/jpeg",
+		MaxEdition:        4,
+		Asset:             "did:sequel:asset-id",
+		Record:            "record-id",
+		AssetHead:         "asset-head-id",
+	}
+
+	profile := &evergreen.Profile{
+		ID: 1,
+		Roles: []*evergreen.Role{
+			{
+				Role:                      evergreen.RoleArtist,
+				InitialSaleCommission:     0.9,
+				SecondaryMarketCommission: 0.025,
+				Address:                   artistAcct.Address(),
+			},
+			{
+				Role:                      evergreen.RolePlatform,
+				InitialSaleCommission:     0.05,
+				SecondaryMarketCommission: 0.025,
+				Address:                   platformAcct.Address(),
+			},
+			{
+				Role:                      "GreenFund",
+				InitialSaleCommission:     0.05,
+				SecondaryMarketCommission: 0.025,
+				Address:                   greenAcct.Address(),
+			},
+		},
+	}
+
+	t.Run("Should be able to mint a token on demand (master not sealed)", func(t *testing.T) {
+
+		_ = client.Transaction(se.GetCustomScript("digitalart_mint_on_demand_flow", scripts.MintOnDemandParameters{
+			Metadata: metadata,
+			Profile:  profile,
+		})).
+			PayloadSigner(buyerAcctName).
+			SignProposeAndPayAs(adminAccount).
+			StringArgument(metadata.Asset).
+			UInt64Argument(1).
+			UFix64Argument("100.0").
+			UInt64Argument(123).
+			Test(t).
+			AssertSuccess().
+			AssertEventCount(12).
+			AssertEmitEventName(
+				"A.01cf0e2f2f715450.DigitalArt.Minted",
+				"A.01cf0e2f2f715450.DigitalArt.Deposit",
+				"A.0ae53cb6e3f42a79.FlowToken.TokensWithdrawn",
+				"A.0ae53cb6e3f42a79.FlowToken.TokensDeposited").
+			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Minted", map[string]interface{}{
+				"id":      "0",
+				"asset":   "did:sequel:asset-id",
+				"edition": "1",
+				"modID":   "123",
+			})).
+			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Deposit", map[string]interface{}{
+				"id": "0",
+				"to": "0xe03daebed8ca0615",
+			}))
+
+		// Assert that the account's collection is correct
+		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address().String(), 0)
+		checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 1)
+		checkDigitalArtNFTSupply(t, se, 1)
+
+		val, err := se.NewScript("digitalart_get_metadata").
+			Argument(cadence.NewAddress(buyerAcct.Address())).
+			UInt64Argument(0).
+			RunReturns()
+		require.NoError(t, err)
+
+		meta, err := iinft.DigitalArtMetadataFromCadence(val)
+		require.NoError(t, err)
+
+		assert.Equal(t, uint64(1), meta.Edition)
+
+		assert.InDelta(t, initialFlowBalance+1000.0-100.0, scripts.GetFlowBalance(t, se, buyerAcct.Address()), 0.001)
+		assert.Equal(t, initialFlowBalance+90.0, scripts.GetFlowBalance(t, se, artistAcct.Address()))
+		assert.Equal(t, initialFlowBalance+5.0, scripts.GetFlowBalance(t, se, platformAcct.Address()))
+		assert.Equal(t, initialFlowBalance+5.0, scripts.GetFlowBalance(t, se, greenAcct.Address()))
+	})
+
+	t.Run("Should be able to mint a token on demand (master sealed)", func(t *testing.T) {
+
+		_ = client.Transaction(se.GetCustomScript("digitalart_mint_on_demand_flow", scripts.MintOnDemandParameters{
+			Metadata: metadata,
+			Profile:  profile,
+		})).
+			PayloadSigner(buyerAcctName).
+			SignProposeAndPayAs(adminAccount).
+			StringArgument(metadata.Asset).
+			UInt64Argument(1).
+			UFix64Argument("100.0").
+			UInt64Argument(123).
+			Test(t).
+			AssertSuccess().
+			AssertEventCount(12).
+			AssertEmitEventName(
+				"A.01cf0e2f2f715450.DigitalArt.Minted",
+				"A.01cf0e2f2f715450.DigitalArt.Deposit",
+				"A.0ae53cb6e3f42a79.FlowToken.TokensWithdrawn",
+				"A.0ae53cb6e3f42a79.FlowToken.TokensDeposited").
+			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Minted", map[string]interface{}{
+				"id":      "1",
+				"asset":   "did:sequel:asset-id",
+				"edition": "2",
+				"modID":   "123",
+			})).
+			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Deposit", map[string]interface{}{
+				"id": "1",
+				"to": "0xe03daebed8ca0615",
+			}))
+
+		// Assert that the account's collection is correct
+		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address().String(), 1)
+		checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 2)
+		checkDigitalArtNFTSupply(t, se, 2)
+
+		val, err := se.NewScript("digitalart_get_metadata").
+			Argument(cadence.NewAddress(buyerAcct.Address())).
+			UInt64Argument(0).
+			RunReturns()
+		require.NoError(t, err)
+
+		meta, err := iinft.DigitalArtMetadataFromCadence(val)
+		require.NoError(t, err)
+
+		assert.Equal(t, uint64(1), meta.Edition)
+
+		assert.InDelta(t, initialFlowBalance+1000.0-2*100.0, scripts.GetFlowBalance(t, se, buyerAcct.Address()), 0.001)
+		assert.Equal(t, initialFlowBalance+2*90.0, scripts.GetFlowBalance(t, se, artistAcct.Address()))
+		assert.Equal(t, initialFlowBalance+2*5.0, scripts.GetFlowBalance(t, se, platformAcct.Address()))
+		assert.Equal(t, initialFlowBalance+2*5.0, scripts.GetFlowBalance(t, se, greenAcct.Address()))
 	})
 }
 

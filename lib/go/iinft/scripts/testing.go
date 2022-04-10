@@ -49,6 +49,15 @@ func FundAccountWithFlow(t *testing.T, client *gwtf.GoWithTheFlow, receiverAddre
 		AssertSuccess()
 }
 
+func GetFlowBalance(t *testing.T, se *Engine, address flow.Address) float64 {
+	v, err := se.NewScript("account_balance_flow").
+		Argument(cadence.NewAddress(address)).
+		RunReturns()
+	require.NoError(t, err)
+
+	return iinft.ToFloat64(v)
+}
+
 func PrepareFUSDMinter(t *testing.T, se *Engine, minterAddress flow.Address) {
 	_ = se.NewTransaction("service_setup_fusd_minter").
 		SignProposeAndPayAsService().
