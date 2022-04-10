@@ -1,8 +1,8 @@
 package main
 
 /*
-	This utility creates all accounts mentioned in the deployment section of flow.json
-    to local emulator instance. This is for development purposes only.
+   This utility creates all accounts mentioned in the deployment section of flow.json
+   to local emulator instance. This is for development purposes only.
 */
 
 import (
