@@ -190,7 +190,7 @@ func (t FlowScriptBuilder) UFix64Argument(value string) FlowScriptBuilder {
 // Run executes a read only script
 func (t FlowScriptBuilder) Run() {
 	result := t.RunFailOnError()
-	log.Printf("Script run from result: %v\n", CadenceValueToJsonString(result))
+	log.Printf("Script run from result: %v\n", CadenceValueToJSONString(result))
 }
 
 // RunReturns executes a read only script
@@ -227,15 +227,14 @@ func (t FlowScriptBuilder) RunFailOnError() cadence.Value {
 		os.Exit(1)
 	}
 	return result
-
 }
 
-//RunReturnsJsonString runs the script and returns pretty printed json string
-func (t FlowScriptBuilder) RunReturnsJsonString() string {
-	return CadenceValueToJsonString(t.RunFailOnError())
+// RunReturnsJSONString runs the script and returns pretty printed json string
+func (t FlowScriptBuilder) RunReturnsJSONString() string {
+	return CadenceValueToJSONString(t.RunFailOnError())
 }
 
-//RunReturnsInterface runs the script and returns interface{}
+// RunReturnsInterface runs the script and returns interface{}
 func (t FlowScriptBuilder) RunReturnsInterface() interface{} {
 	return CadenceValueToInterface(t.RunFailOnError())
 }

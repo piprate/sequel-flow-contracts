@@ -69,6 +69,5 @@ func TestEvent(t *testing.T) {
 		err = writeProgressToFile("foo", 1)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "foo: is a directory")
-
 	})
 }

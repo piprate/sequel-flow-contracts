@@ -60,53 +60,53 @@ func (e EventFetcherBuilder) Event(eventName string) EventFetcherBuilder {
 	return e
 }
 
-//EventIgnoringFields fetch event and ignore the specified fields
+// EventIgnoringFields fetch event and ignore the specified fields
 func (e EventFetcherBuilder) EventIgnoringFields(eventName string, ignoreFields []string) EventFetcherBuilder {
 	e.EventsAndIgnoreFields[eventName] = ignoreFields
 	return e
 }
 
-//Start specify what blockHeight to fetch starting atm. This can be negative related to end/until
+// Start specify what blockHeight to fetch starting atm. This can be negative related to end/until
 func (e EventFetcherBuilder) Start(blockHeight int64) EventFetcherBuilder {
 	e.FromIndex = blockHeight
 	return e
 }
 
-//From specify what blockHeight to fetch from. This can be negative related to end.
+// From specify what blockHeight to fetch from. This can be negative related to end.
 func (e EventFetcherBuilder) From(blockHeight int64) EventFetcherBuilder {
 	e.FromIndex = blockHeight
 	return e
 }
 
-//End specify what index to end at
+// End specify what index to end at
 func (e EventFetcherBuilder) End(blockHeight uint64) EventFetcherBuilder {
 	e.EndIndex = blockHeight
 	e.EndAtCurrentHeight = false
 	return e
 }
 
-//Last fetch events from the number last blocks
+// Last fetch events from the number last blocks
 func (e EventFetcherBuilder) Last(number uint64) EventFetcherBuilder {
 	e.EndAtCurrentHeight = true
 	e.FromIndex = -int64(number)
 	return e
 }
 
-//Until specify what index to end at
+// Until specify what index to end at
 func (e EventFetcherBuilder) Until(blockHeight uint64) EventFetcherBuilder {
 	e.EndIndex = blockHeight
 	e.EndAtCurrentHeight = false
 	return e
 }
 
-//UntilCurrent Specify to fetch events until the current Block
+// UntilCurrent Specify to fetch events until the current Block
 func (e EventFetcherBuilder) UntilCurrent() EventFetcherBuilder {
 	e.EndAtCurrentHeight = true
 	e.EndIndex = 0
 	return e
 }
 
-//TrackProgressIn Specify a file to store progress in
+// TrackProgressIn Specify a file to store progress in
 func (e EventFetcherBuilder) TrackProgressIn(fileName string) EventFetcherBuilder {
 	e.ProgressFile = fileName
 	e.EndIndex = 0
@@ -131,7 +131,7 @@ func exists(path string) (bool, error) {
 
 func writeProgressToFile(fileName string, blockHeight uint64) error {
 
-	err := ioutil.WriteFile(fileName, []byte(fmt.Sprintf("%d", blockHeight)), 0644)
+	err := ioutil.WriteFile(fileName, []byte(fmt.Sprintf("%d", blockHeight)), 0644) //nolint:gosec // inherited from GWTF
 
 	if err != nil {
 		return fmt.Errorf("could not create initial progress file %v", err)
@@ -150,7 +150,7 @@ func readProgressFromFile(fileName string) (int64, error) {
 	return strconv.ParseInt(stringValue, 10, 64)
 }
 
-//Run runs the eventfetcher returning events or an error
+// Run runs the eventfetcher returning events or an error
 func (e EventFetcherBuilder) Run() ([]*FormatedEvent, error) {
 
 	//if we have a progress file read the value from it and set it as oldHeight
@@ -198,7 +198,7 @@ func (e EventFetcherBuilder) Run() ([]*FormatedEvent, error) {
 
 	e.GoWithTheFlow.Logger.Info(fmt.Sprintf("Fetching events from %d to %d", fromIndex, endIndex))
 
-	var events []string
+	events := make([]string, len(e.EventsAndIgnoreFields))
 	for key := range e.EventsAndIgnoreFields {
 		events = append(events, key)
 	}
@@ -221,10 +221,9 @@ func (e EventFetcherBuilder) Run() ([]*FormatedEvent, error) {
 	})
 
 	return formatedEvents, nil
-
 }
 
-//PrintEvents prints th events, ignoring fields specified for the given event typeID
+// PrintEvents prints th events, ignoring fields specified for the given event typeID
 func PrintEvents(events []flow.Event, ignoreFields map[string][]string) {
 	if len(events) > 0 {
 		log.Println("EVENTS")
@@ -248,7 +247,7 @@ func PrintEvents(events []flow.Event, ignoreFields map[string][]string) {
 	}
 }
 
-//FormatEvents
+// FormatEvents
 func FormatEvents(blockEvents []client.BlockEvents, ignoreFields map[string][]string) []*FormatedEvent {
 	var events []*FormatedEvent
 
@@ -261,13 +260,12 @@ func FormatEvents(blockEvents []client.BlockEvents, ignoreFields map[string][]st
 	return events
 }
 
-//ParseEvent parses a flow event into a more terse representation
+// ParseEvent parses a flow event into a more terse representation
 func ParseEvent(event flow.Event, blockHeight uint64, time time.Time, ignoreFields []string) *FormatedEvent {
 
-	var fieldNames []string
-
-	for _, eventTypeFields := range event.Value.EventType.Fields {
-		fieldNames = append(fieldNames, eventTypeFields.Identifier)
+	fieldNames := make([]string, len(event.Value.EventType.Fields))
+	for i, eventTypeFields := range event.Value.EventType.Fields {
+		fieldNames[i] = eventTypeFields.Identifier
 	}
 
 	finalFields := map[string]interface{}{}

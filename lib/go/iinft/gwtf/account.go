@@ -15,7 +15,6 @@ func (f *GoWithTheFlow) CreateAccounts(saAccountName string) *GoWithTheFlow {
 	}
 
 	return gwtf
-
 }
 
 // CreateAccountsE ensures that all accounts present in the deployment block for the given network is present

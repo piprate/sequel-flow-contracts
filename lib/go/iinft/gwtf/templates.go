@@ -38,10 +38,10 @@ func fileAsImageData(path string) (string, error) {
 		return "", fmt.Errorf("could not read imageFile %s, %w", path, err)
 	}
 
-	return contentAsImageDataUrl(content), nil
+	return contentAsImageDataURL(content), nil
 }
 
-func contentAsImageDataUrl(content []byte) string {
+func contentAsImageDataURL(content []byte) string {
 	contentType := http.DetectContentType(content)
 
 	// Encode as base64.
@@ -78,8 +78,8 @@ func (f *GoWithTheFlow) UploadFile(filename string, accountName string) error {
 	return f.UploadString(content, accountName)
 }
 
-func getUrl(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+func getURL(url string) ([]byte, error) {
+	resp, err := http.Get(url) //nolint:gosec // inherited from GWTF
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func getUrl(url string) ([]byte, error) {
 
 //DownloadAndUploadFile reads a file, base64 encodes it and chunk upload to /storage/upload
 func (f *GoWithTheFlow) DownloadAndUploadFile(url string, accountName string) error {
-	body, err := getUrl(url)
+	body, err := getURL(url)
 	if err != nil {
 		return err
 	}
@@ -100,19 +100,19 @@ func (f *GoWithTheFlow) DownloadAndUploadFile(url string, accountName string) er
 	return f.UploadString(encoded, accountName)
 }
 
-//DownloadImageAndUploadAsDataUrl download an image and upload as data url
-func (f *GoWithTheFlow) DownloadImageAndUploadAsDataUrl(url, accountName string) error {
-	body, err := getUrl(url)
+//DownloadImageAndUploadAsDataURL download an image and upload as data url
+func (f *GoWithTheFlow) DownloadImageAndUploadAsDataURL(url, accountName string) error {
+	body, err := getURL(url)
 	if err != nil {
 		return err
 	}
-	content := contentAsImageDataUrl(body)
+	content := contentAsImageDataURL(body)
 
 	return f.UploadString(content, accountName)
 }
 
-//UploadImageAsDataUrl will upload a image file from the filesystem into /storage/upload of the given account
-func (f *GoWithTheFlow) UploadImageAsDataUrl(filename string, accountName string) error {
+//UploadImageAsDataURL will upload a image file from the filesystem into /storage/upload of the given account
+func (f *GoWithTheFlow) UploadImageAsDataURL(filename string, accountName string) error {
 	content, err := fileAsImageData(filename)
 	if err != nil {
 		return err

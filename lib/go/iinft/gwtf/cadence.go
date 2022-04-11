@@ -8,8 +8,8 @@ import (
 	"github.com/onflow/cadence"
 )
 
-// CadenceValueToJsonString converts a cadence.Value into a json pretty printed string
-func CadenceValueToJsonString(value cadence.Value) string {
+// CadenceValueToJSONString converts a cadence.Value into a json pretty printed string
+func CadenceValueToJSONString(value cadence.Value) string {
 	if value == nil {
 		return "{}"
 	}
