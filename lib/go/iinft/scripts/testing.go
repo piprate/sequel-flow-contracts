@@ -14,6 +14,8 @@ import (
 )
 
 func ConfigureInMemoryEmulator(t *testing.T, client *gwtf.GoWithTheFlow, adminFlowDeposit string) {
+	t.Helper()
+
 	_, err := client.DoNotPrependNetworkToAccountNames().CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
@@ -26,6 +28,8 @@ func ConfigureInMemoryEmulator(t *testing.T, client *gwtf.GoWithTheFlow, adminFl
 }
 
 func FundAccountWithFlow(t *testing.T, client *gwtf.GoWithTheFlow, receiverAddress flow.Address, amount string) {
+	t.Helper()
+
 	contracts := client.State.Contracts().ByNetwork(client.Network)
 	addrMap := make(map[string]string)
 	for _, contract := range contracts {
@@ -39,7 +43,7 @@ func FundAccountWithFlow(t *testing.T, client *gwtf.GoWithTheFlow, receiverAddre
 		panic(err)
 	}
 
-	script := string(buf.Bytes())
+	script := buf.String()
 
 	_ = client.Transaction(script).
 		Argument(cadence.NewAddress(receiverAddress)).
@@ -50,6 +54,8 @@ func FundAccountWithFlow(t *testing.T, client *gwtf.GoWithTheFlow, receiverAddre
 }
 
 func GetFlowBalance(t *testing.T, se *Engine, address flow.Address) float64 {
+	t.Helper()
+
 	v, err := se.NewScript("account_balance_flow").
 		Argument(cadence.NewAddress(address)).
 		RunReturns()
@@ -59,6 +65,8 @@ func GetFlowBalance(t *testing.T, se *Engine, address flow.Address) float64 {
 }
 
 func PrepareFUSDMinter(t *testing.T, se *Engine, minterAddress flow.Address) {
+	t.Helper()
+
 	_ = se.NewTransaction("service_setup_fusd_minter").
 		SignProposeAndPayAsService().
 		Test(t).
@@ -72,6 +80,8 @@ func PrepareFUSDMinter(t *testing.T, se *Engine, minterAddress flow.Address) {
 }
 
 func FundAccountWithFUSD(t *testing.T, se *Engine, receiverAddress flow.Address, amount string) {
+	t.Helper()
+
 	_ = se.NewTransaction("account_fund_fusd").
 		Argument(cadence.NewAddress(receiverAddress)).
 		UFix64Argument(amount).
@@ -81,6 +91,8 @@ func FundAccountWithFUSD(t *testing.T, se *Engine, receiverAddress flow.Address,
 }
 
 func GetFUSDBalance(t *testing.T, se *Engine, address flow.Address) float64 {
+	t.Helper()
+
 	v, err := se.NewScript("account_balance_fusd").
 		Argument(cadence.NewAddress(address)).
 		RunReturns()

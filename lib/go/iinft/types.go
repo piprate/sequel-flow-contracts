@@ -122,12 +122,11 @@ func ToFloat64(value cadence.Value) float64 {
 
 func UFix64ToString(v float64) string {
 	vStr := strconv.FormatFloat(v, 'f', -1, 64)
-	if strings.Index(vStr, ".") != -1 {
+	if strings.Contains(vStr, ".") {
 		return vStr
 	} else {
 		return vStr + ".0"
 	}
-
 }
 
 func UFix64FromFloat64(v float64) cadence.Value {

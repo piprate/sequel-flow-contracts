@@ -109,9 +109,8 @@ func (e *Engine) GetStandardScript(scriptID string) string {
 			panic(err)
 		}
 
-		s = string(buf.Bytes())
+		s = buf.String()
 		e.preloadedTemplates[scriptID] = s
-
 	}
 
 	return s
@@ -129,7 +128,7 @@ func (e *Engine) GetCustomScript(scriptID string, params interface{}) string {
 		panic(err)
 	}
 
-	return string(buf.Bytes())
+	return buf.String()
 }
 
 func (e *Engine) NewTransaction(scriptID string) gwtf.FlowTransactionBuilder {
