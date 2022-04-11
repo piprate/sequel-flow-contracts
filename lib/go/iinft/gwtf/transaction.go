@@ -204,12 +204,12 @@ func (tb FlowTransactionBuilder) Fix64Argument(value string) FlowTransactionBuil
 	return tb.Argument(amount)
 }
 
-// DateStringAsUnixTimestamp sends a dateString parsed in the timezone as a unix timeszone ufix
+// DateStringAsUnixTimestamp sends a dateString parsed in the timezone as a unix timezone ufix
 func (tb FlowTransactionBuilder) DateStringAsUnixTimestamp(dateString string, timezone string) FlowTransactionBuilder {
 	return tb.UFix64Argument(parseTime(dateString, timezone))
 }
 
-func parseTime(timeString string, location string) string {
+func parseTime(timeString, location string) string {
 	loc, err := time.LoadLocation(location)
 	if err != nil {
 		panic(err)

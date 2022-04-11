@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"sort"
@@ -131,18 +130,18 @@ func exists(path string) (bool, error) {
 
 func writeProgressToFile(fileName string, blockHeight uint64) error {
 
-	err := ioutil.WriteFile(fileName, []byte(fmt.Sprintf("%d", blockHeight)), 0644) //nolint:gosec // inherited from GWTF
+	err := os.WriteFile(fileName, []byte(fmt.Sprintf("%d", blockHeight)), 0o0644) //nolint:gosec // inherited from GWTF
 
 	if err != nil {
-		return fmt.Errorf("could not create initial progress file %v", err)
+		return fmt.Errorf("could not create initial progress file %w", err)
 	}
 	return nil
 }
 
 func readProgressFromFile(fileName string) (int64, error) {
-	dat, err := ioutil.ReadFile(fileName)
+	dat, err := os.ReadFile(fileName)
 	if err != nil {
-		return 0, fmt.Errorf("ProgressFile is not valid %v", err)
+		return 0, fmt.Errorf("ProgressFile is not valid %w", err)
 	}
 
 	stringValue := strings.TrimSpace(string(dat))
@@ -153,7 +152,7 @@ func readProgressFromFile(fileName string) (int64, error) {
 // Run runs the eventfetcher returning events or an error
 func (e EventFetcherBuilder) Run() ([]*FormatedEvent, error) {
 
-	//if we have a progress file read the value from it and set it as oldHeight
+	// if we have a progress file read the value from it and set it as oldHeight
 	if e.ProgressFile != "" {
 
 		present, err := exists(e.ProgressFile)
@@ -164,14 +163,14 @@ func (e EventFetcherBuilder) Run() ([]*FormatedEvent, error) {
 		if !present {
 			err := writeProgressToFile(e.ProgressFile, 0)
 			if err != nil {
-				return nil, fmt.Errorf("could not create initial progress file %v", err)
+				return nil, fmt.Errorf("could not create initial progress file %w", err)
 			}
 
 			e.FromIndex = 0
 		} else {
 			oldHeight, err := readProgressFromFile(e.ProgressFile)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse progress file as block height %v", err)
+				return nil, fmt.Errorf("could not parse progress file as block height %w", err)
 			}
 			e.FromIndex = oldHeight
 		}
@@ -187,7 +186,7 @@ func (e EventFetcherBuilder) Run() ([]*FormatedEvent, error) {
 	}
 
 	fromIndex := e.FromIndex
-	//if we have a negative fromIndex is is relative to endIndex
+	// if we have a negative fromIndex is relative to endIndex
 	if e.FromIndex <= 0 {
 		fromIndex = int64(endIndex) + e.FromIndex
 	}
@@ -213,7 +212,7 @@ func (e EventFetcherBuilder) Run() ([]*FormatedEvent, error) {
 	if e.ProgressFile != "" {
 		err := writeProgressToFile(e.ProgressFile, endIndex+1)
 		if err != nil {
-			return nil, fmt.Errorf("could not write progress to file %v", err)
+			return nil, fmt.Errorf("could not write progress to file %w", err)
 		}
 	}
 	sort.Slice(formatedEvents, func(i, j int) bool {
@@ -314,7 +313,7 @@ func NewTestEvent(name string, fields map[string]interface{}) *FormatedEvent {
 	}
 }
 
-//String pretty print an event as a String
+// String pretty print an event as a String
 func (e FormatedEvent) String() string {
 	j, err := json.MarshalIndent(e, "", "  ")
 	if err != nil {

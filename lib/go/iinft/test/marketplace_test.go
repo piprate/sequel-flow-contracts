@@ -89,7 +89,7 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 		Test(t).
 		AssertSuccess()
 
-	var nftID uint64 = 0
+	var nftID uint64
 
 	// Assert that the account's collection is correct
 	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)
@@ -219,7 +219,7 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 		Test(t).
 		AssertSuccess()
 
-	var nftID uint64 = 0
+	var nftID uint64
 
 	// Assert that the account's collection is correct
 	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)

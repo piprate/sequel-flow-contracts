@@ -34,7 +34,7 @@ func (f *fileLoader) WriteFile(filename string, data []byte, perm os.FileMode) e
 }
 
 // NewGoWithTheFlowFS creates a new local go with the flow client
-func NewGoWithTheFlowFS(flowBasePath string, network string, inMemory, enableTxFees bool) (*gwtf.GoWithTheFlow, error) {
+func NewGoWithTheFlowFS(flowBasePath, network string, inMemory, enableTxFees bool) (*gwtf.GoWithTheFlow, error) {
 	return NewGoWithTheFlowError(&fileLoader{
 		baseDir:  flowBasePath,
 		fsLoader: &afero.Afero{Fs: afero.NewOsFs()},

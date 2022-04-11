@@ -23,12 +23,14 @@ linters-settings:
 linters:
   disable-all: true
   enable:
+    - asciicheck
     - bodyclose
-#   - deadcode
+    - contextcheck
     - depguard
     - dogsled
 #   - dupl
     - errcheck
+    - errorlint
     - exportloopref
     - exhaustive
     - goconst
@@ -40,23 +42,22 @@ linters:
     - gosec
     - gosimple
     - govet
+    - importas
     - ineffassign
     - misspell
     - nolintlint
     - nakedret
     - prealloc
     - predeclared
-#   - revive
+    - revive
     - staticcheck
-#   - structcheck
     - stylecheck
     - thelper
     - typecheck
     - unconvert
     - unparam
-#   - varcheck
-#   - whitespace
-#   - wsl
+    - unused
+    - wastedassign
 
 run:
   issues-exit-code: 1

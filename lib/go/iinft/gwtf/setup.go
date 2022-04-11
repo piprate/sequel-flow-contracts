@@ -92,7 +92,7 @@ func NewGoWithTheFlowError(paths []string, network string, inMemory bool, logLev
 	logger := output.NewStdoutLogger(logLevel)
 	var service *services.Services
 	if inMemory {
-		//YAY we can run it inline in memory!
+		// YAY, we can run it inline in memory!
 		acc, _ := state.EmulatorServiceAccount()
 		gw := gateway.NewEmulatorGateway(acc)
 		service = services.NewServices(gw, state, logger)

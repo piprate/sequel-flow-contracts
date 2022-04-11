@@ -1,7 +1,6 @@
 package scripts
 
 import (
-	_ "github.com/kevinburke/go-bindata"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"

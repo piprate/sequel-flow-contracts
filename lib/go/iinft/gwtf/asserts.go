@@ -97,7 +97,7 @@ func (t TransactionResult) AssertPartialEvent(expected *FormatedEvent) Transacti
 
 	events := t.Events
 	for index, ev := range events {
-		//todo do we need more then just name here?
+		// TODO do we need more then just name here?
 		if ev.Name == expected.Name {
 			for key := range ev.Fields {
 				_, exist := expected.Fields[key]
