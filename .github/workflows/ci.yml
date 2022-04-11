@@ -15,8 +15,9 @@ jobs:
         uses: actions/checkout@v2
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
-  #      with:
-  #        working-directory: lib/go/iinft
+        with:
+          args: --timeout 60s --verbose
+          working-directory: lib/go/iinft
 
   tidy:
     runs-on: ubuntu-latest
@@ -60,6 +61,6 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: always()
         with:
-          files: test-result.xml
+          files: lib/go/iinft/test-result.xml
 
 
