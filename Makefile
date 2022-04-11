@@ -1,6 +1,6 @@
 GOFILES_NOVENDOR = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
-.PHONY: all test help
+.PHONY: all test install-gotestsum test-report help
 
 all: test
 
