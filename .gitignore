@@ -29,3 +29,6 @@ lib/go/iinft/bin
 
 # Flow emulator
 flowdb
+
+test-result.xml
+

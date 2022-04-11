@@ -27,36 +27,36 @@ linters:
     - deadcode
     - depguard
     - dogsled
-   #- dupl
+#   - dupl
     - errcheck
     - exportloopref
     - exhaustive
     - goconst
- #  - gocritic
+#   - gocritic
     - gofmt
     - goimports
 #   - gomnd
     - gocyclo
-#   - gosec
+    - gosec
     - gosimple
     - govet
     - ineffassign
     - misspell
     - nolintlint
     - nakedret
-#    - prealloc
+    - prealloc
     - predeclared
 #   - revive
     - staticcheck
     - structcheck
-      #    - stylecheck
+    - stylecheck
     - thelper
     - typecheck
     - unconvert
     - unparam
     - varcheck
 #    - whitespace
-#   - wsl
+#    - wsl
 
 run:
   issues-exit-code: 0
