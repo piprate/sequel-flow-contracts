@@ -204,12 +204,12 @@ func (tb FlowTransactionBuilder) Fix64Argument(value string) FlowTransactionBuil
 	return tb.Argument(amount)
 }
 
-// DateStringAsUnixTimestamp sends a dateString parsed in the timezone as a unix timeszone ufix
+// DateStringAsUnixTimestamp sends a dateString parsed in the timezone as a unix timezone ufix
 func (tb FlowTransactionBuilder) DateStringAsUnixTimestamp(dateString string, timezone string) FlowTransactionBuilder {
 	return tb.UFix64Argument(parseTime(dateString, timezone))
 }
 
-func parseTime(timeString string, location string) string {
+func parseTime(timeString, location string) string {
 	loc, err := time.LoadLocation(location)
 	if err != nil {
 		panic(err)
@@ -241,13 +241,13 @@ func (tb FlowTransactionBuilder) Argument(value cadence.Value) FlowTransactionBu
 
 // StringArrayArgument add a string array argument to the transaction
 func (tb FlowTransactionBuilder) StringArrayArgument(value ...string) FlowTransactionBuilder {
-	var array []cadence.Value
-	for _, val := range value {
-		value, err := cadence.NewString(val)
+	array := make([]cadence.Value, len(value))
+	for i, val := range value {
+		v, err := cadence.NewString(val)
 		if err != nil {
 			panic(err)
 		}
-		array = append(array, value)
+		array[i] = v
 	}
 	tb.Arguments = append(tb.Arguments, cadence.NewArray(array))
 	return tb
@@ -302,10 +302,10 @@ func (tb FlowTransactionBuilder) RunE() ([]flow.Event, error) {
 		authorizerAccounts = append(authorizerAccounts, tb.MainSigner)
 	}
 
-	var authorizers []flow.Address
+	authorizers := make([]flow.Address, len(authorizerAccounts))
 	var signers []*flowkit.Account
-	for _, signer := range authorizerAccounts {
-		authorizers = append(authorizers, signer.Address())
+	for i, signer := range authorizerAccounts {
+		authorizers[i] = signer.Address()
 		if signer.Name() != tb.Payer.Name() {
 			signers = append(signers, signer)
 		}

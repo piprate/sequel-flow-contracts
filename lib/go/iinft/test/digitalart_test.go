@@ -17,8 +17,12 @@ import (
 )
 
 const (
-	adminAccount       = "emulator-sequel-admin"
-	initialFlowBalance = 0.001
+	adminAccountName    = "emulator-sequel-admin"
+	platformAccountName = "emulator-sequel-platform"
+	user1AccountName    = "emulator-user1"
+	user2AccountName    = "emulator-user2"
+	user3AccountName    = "emulator-user3"
+	initialFlowBalance  = 0.001
 )
 
 func init() {
@@ -34,7 +38,7 @@ func TestSealDigitalArtMaster(t *testing.T) {
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	userAcct := client.Account("emulator-user1")
+	userAcct := client.Account(user1AccountName)
 
 	sampleMetadata := &iinft.DigitalArtMetadata{
 		MetadataURI:       "ipfs://QmMetadata",
@@ -66,7 +70,7 @@ func TestSealDigitalArtMaster(t *testing.T) {
 	t.Run("Should be able to seal new digital art master", func(t *testing.T) {
 
 		_ = scripts.CreateSealDigitalArtTx(se, client, sampleMetadata, profile).
-			SignProposeAndPayAs(adminAccount).
+			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
 	})
@@ -79,13 +83,13 @@ func TestSealDigitalArtMaster(t *testing.T) {
 		// Seal the master
 
 		_ = scripts.CreateSealDigitalArtTx(se, client, &sampleMetadata2, profile).
-			SignProposeAndPayAs(adminAccount).
+			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
 
 		// try again
 		_ = scripts.CreateSealDigitalArtTx(se, client, &sampleMetadata2, profile).
-			SignProposeAndPayAs(adminAccount).
+			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("master already sealed")
 	})
@@ -100,12 +104,12 @@ func TestMintDigitalArtEditions(t *testing.T) {
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	userAcct := client.Account("emulator-user1")
+	userAcct := client.Account(user1AccountName)
 
 	scripts.FundAccountWithFlow(t, client, userAcct.Address(), "10.0")
 
 	_ = se.NewTransaction("account_setup").
-		SignProposeAndPayAs("emulator-user1").
+		SignProposeAndPayAs(user1AccountName).
 		Test(t).
 		AssertSuccess()
 
@@ -140,14 +144,14 @@ func TestMintDigitalArtEditions(t *testing.T) {
 	}
 
 	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
-		SignProposeAndPayAs(adminAccount).
+		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
 
 	t.Run("Should be able to mint a token", func(t *testing.T) {
 
 		_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
-			SignProposeAndPayAs(adminAccount).
+			SignProposeAndPayAs(adminAccountName).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			Argument(cadence.Address(userAcct.Address())).
@@ -250,7 +254,7 @@ pub fun main(address:Address, tokenID:UInt64) : DigitalArt.Metadata? {
 
 	t.Run("Editions should have different metadata", func(t *testing.T) {
 		_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
-			SignProposeAndPayAs(adminAccount).
+			SignProposeAndPayAs(adminAccountName).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			Argument(cadence.Address(userAcct.Address())).
@@ -310,16 +314,15 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 
 	// set up platform account
 
-	platformAcctName := "emulator-sequel-platform"
-	platformAcct := client.Account(platformAcctName)
+	platformAcct := client.Account(platformAccountName)
 
 	scripts.FundAccountWithFlow(t, client, platformAcct.Address(), "10.0")
 
-	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(platformAcctName).Test(t).AssertSuccess()
+	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(platformAccountName).Test(t).AssertSuccess()
 
 	// set up green account
 
-	greenAcctName := "emulator-user3"
+	greenAcctName := user3AccountName
 	greenAcct := client.Account(greenAcctName)
 
 	scripts.FundAccountWithFlow(t, client, greenAcct.Address(), "10.0")
@@ -328,7 +331,7 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 
 	// set up artist account
 
-	artistAcctName := "emulator-user1"
+	artistAcctName := user1AccountName
 	artistAcct := client.Account(artistAcctName)
 
 	scripts.FundAccountWithFlow(t, client, artistAcct.Address(), "10.0")
@@ -337,7 +340,7 @@ func TestMintDigitalArtEditionsOnDemandFUSD(t *testing.T) {
 
 	// set up buyer account
 
-	buyerAcctName := "emulator-user2"
+	buyerAcctName := user2AccountName
 	buyerAcct := client.Account(buyerAcctName)
 
 	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "10.0")
@@ -396,7 +399,7 @@ The End.`,
 			Profile:  profile,
 		})).
 			PayloadSigner(buyerAcctName).
-			SignProposeAndPayAs(adminAccount).
+			SignProposeAndPayAs(adminAccountName).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
@@ -449,7 +452,7 @@ The End.`,
 			Profile:  profile,
 		})).
 			PayloadSigner(buyerAcctName).
-			SignProposeAndPayAs(adminAccount).
+			SignProposeAndPayAs(adminAccountName).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
@@ -507,22 +510,21 @@ func TestMintDigitalArtEditionsOnDemandFlow(t *testing.T) {
 
 	// set up platform account
 
-	platformAcctName := "emulator-sequel-platform"
-	platformAcct := client.Account(platformAcctName)
+	platformAcct := client.Account(platformAccountName)
 
 	// set up green account
 
-	greenAcctName := "emulator-user3"
+	greenAcctName := user3AccountName
 	greenAcct := client.Account(greenAcctName)
 
 	// set up artist account
 
-	artistAcctName := "emulator-user1"
+	artistAcctName := user1AccountName
 	artistAcct := client.Account(artistAcctName)
 
 	// set up buyer account
 
-	buyerAcctName := "emulator-user2"
+	buyerAcctName := user2AccountName
 	buyerAcct := client.Account(buyerAcctName)
 
 	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "1000.0")
@@ -579,7 +581,7 @@ The End.`,
 			Profile:  profile,
 		})).
 			PayloadSigner(buyerAcctName).
-			SignProposeAndPayAs(adminAccount).
+			SignProposeAndPayAs(adminAccountName).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
@@ -632,7 +634,7 @@ The End.`,
 			Profile:  profile,
 		})).
 			PayloadSigner(buyerAcctName).
-			SignProposeAndPayAs(adminAccount).
+			SignProposeAndPayAs(adminAccountName).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
@@ -688,12 +690,12 @@ func TestTransferDigitalArt(t *testing.T) {
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	senderAcctName := "emulator-user1"
+	senderAcctName := user1AccountName
 	senderAcct := client.Account(senderAcctName)
 
 	scripts.FundAccountWithFlow(t, client, senderAcct.Address(), "10.0")
 
-	receiverAcctName := "emulator-user2"
+	receiverAcctName := user2AccountName
 	receiverAcct := client.Account(receiverAcctName)
 
 	scripts.FundAccountWithFlow(t, client, receiverAcct.Address(), "10.0")
@@ -731,12 +733,12 @@ func TestTransferDigitalArt(t *testing.T) {
 	}
 
 	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
-		SignProposeAndPayAs(adminAccount).
+		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
 
 	_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
-		SignProposeAndPayAs(adminAccount).
+		SignProposeAndPayAs(adminAccountName).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
 		Argument(cadence.Address(senderAcct.Address())).
@@ -795,6 +797,8 @@ func TestTransferDigitalArt(t *testing.T) {
 }
 
 func checkDigitalArtNFTSupply(t *testing.T, se *scripts.Engine, expectedSupply int) {
+	t.Helper()
+
 	_, err := se.NewInlineScript(
 		inspectNFTSupplyScript(se.WellKnownAddresses(), "DigitalArt", expectedSupply),
 	).RunReturns()
@@ -802,6 +806,8 @@ func checkDigitalArtNFTSupply(t *testing.T, se *scripts.Engine, expectedSupply i
 }
 
 func checkTokenInDigitalArtCollection(t *testing.T, se *scripts.Engine, userAddr string, nftID uint64) {
+	t.Helper()
+
 	_, err := se.NewInlineScript(
 		inspectCollectionScript(se.WellKnownAddresses(), userAddr, "DigitalArt", "DigitalArt.CollectionPublicPath", nftID),
 	).RunReturns()
@@ -809,6 +815,8 @@ func checkTokenInDigitalArtCollection(t *testing.T, se *scripts.Engine, userAddr
 }
 
 func checkDigitalArtCollectionLen(t *testing.T, se *scripts.Engine, userAddr string, length int) {
+	t.Helper()
+
 	_, err := se.NewInlineScript(
 		inspectCollectionLenScript(se.WellKnownAddresses(), userAddr, "DigitalArt", "DigitalArt.CollectionPublicPath", length),
 	).RunReturns()

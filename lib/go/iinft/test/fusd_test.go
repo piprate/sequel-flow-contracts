@@ -20,7 +20,7 @@ func TestGetFUSDBalance(t *testing.T) {
 
 	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address())
 
-	artistAcctName := "emulator-user1"
+	artistAcctName := user1AccountName
 	artistAcct := client.Account(artistAcctName)
 
 	assert.Equal(t, 0.0, scripts.GetFUSDBalance(t, se, artistAcct.Address()))
@@ -54,7 +54,7 @@ func TestSetUpFUSDAccount(t *testing.T) {
 
 	scripts.FundAccountWithFlow(t, client, platformAcct.Address(), "10.0")
 
-	artistAcctName := "emulator-user1"
+	artistAcctName := user1AccountName
 
 	_ = se.NewTransaction("account_setup_fusd").
 		ProposeAs(artistAcctName).

@@ -28,5 +28,4 @@ func TestErrorsInAccountCreation(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "could not find account with address 179b6b1cb6755e3")
 	})
-
 }

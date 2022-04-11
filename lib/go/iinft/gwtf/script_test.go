@@ -14,8 +14,8 @@ func TestSetupFails(t *testing.T) {
 	_, err := g.CreateAccountsE("foobar")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "could not find account with name foobar")
-
 }
+
 func TestScriptArguments(t *testing.T) {
 	g := NewGoWithTheFlow([]string{"../../../../flow.json"}, "emulator", true, output.NoneLog)
 	t.Parallel()
@@ -40,7 +40,6 @@ func TestScriptArguments(t *testing.T) {
 		assert.Contains(t, builder.Arguments, ufix)
 		assert.Contains(t, builder.Arguments, NewCadenceString("test"))
 		assert.Contains(t, builder.Arguments, dateFix)
-
 	})
 
 	t.Run("Word argument test", func(t *testing.T) {

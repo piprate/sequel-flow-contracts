@@ -24,23 +24,23 @@ func NewFlowKitLogger() output.Logger {
 	}
 }
 
-func (l logger) Debug(s string) {
+func (l *logger) Debug(s string) {
 	log.Debug().Msg(stripLineBreaks(s))
 }
 
-func (l logger) Info(s string) {
+func (l *logger) Info(s string) {
 	log.Info().Msg(stripLineBreaks(s))
 }
 
-func (l logger) Error(s string) {
+func (l *logger) Error(s string) {
 	log.Error().Msg(stripLineBreaks(s))
 }
 
-func (l logger) StartProgress(s string) {
+func (l *logger) StartProgress(s string) {
 	log.Debug().Msg(stripLineBreaks(s))
 }
 
-func (l logger) StopProgress() {
+func (l *logger) StopProgress() {
 	// do nothing
 }
 

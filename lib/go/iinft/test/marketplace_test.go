@@ -77,19 +77,19 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 	metadata := buildTestMetadata(1)
 
 	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
-		SignProposeAndPayAs(adminAccount).
+		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
 
 	_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
-		SignProposeAndPayAs(adminAccount).
+		SignProposeAndPayAs(adminAccountName).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
 		Argument(cadence.Address(sellerAcct.Address())).
 		Test(t).
 		AssertSuccess()
 
-	var nftID uint64 = 0
+	var nftID uint64
 
 	// Assert that the account's collection is correct
 	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)
@@ -207,19 +207,19 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 	metadata := buildTestMetadata(1)
 
 	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
-		SignProposeAndPayAs(adminAccount).
+		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
 
 	_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
-		SignProposeAndPayAs(adminAccount).
+		SignProposeAndPayAs(adminAccountName).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
 		Argument(cadence.Address(sellerAcct.Address())).
 		Test(t).
 		AssertSuccess()
 
-	var nftID uint64 = 0
+	var nftID uint64
 
 	// Assert that the account's collection is correct
 	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)

@@ -1,0 +1,64 @@
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+  goconst:
+    min-len: 2
+    min-occurrences: 3
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+  govet:
+    check-shadowing: true
+  nolintlint:
+    require-explanation: true
+    require-specific: true
+  funlen:
+    lines: 100
+    statements: 40
+
+linters:
+  disable-all: true
+  enable:
+    - asciicheck
+    - bodyclose
+    - contextcheck
+    - depguard
+    - dogsled
+#   - dupl
+    - errcheck
+    - errorlint
+    - exportloopref
+    - exhaustive
+    - goconst
+#   - gocritic
+    - gofmt
+    - goimports
+#   - gomnd
+    - gocyclo
+    - gosec
+    - gosimple
+    - govet
+    - importas
+    - ineffassign
+    - misspell
+    - nolintlint
+    - nakedret
+    - prealloc
+    - predeclared
+    - revive
+    - staticcheck
+    - stylecheck
+    - thelper
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - wastedassign
+
+run:
+  issues-exit-code: 1
+

@@ -4,7 +4,6 @@ go 1.16
 
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
-	github.com/kevinburke/go-bindata v3.22.0+incompatible
 	github.com/onflow/cadence v0.23.2
 	github.com/onflow/flow-cli v0.33.0
 	github.com/onflow/flow-emulator v0.31.0

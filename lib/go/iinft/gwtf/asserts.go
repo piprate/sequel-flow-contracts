@@ -18,10 +18,10 @@ func (tb FlowTransactionBuilder) Test(t *testing.T) TransactionResult {
 	locale, _ := time.LoadLocation("UTC")
 	time.Local = locale
 	events, err := tb.RunE()
-	var formattedEvents []*FormatedEvent
-	for _, event := range events {
+	formattedEvents := make([]*FormatedEvent, len(events))
+	for i, event := range events {
 		ev := ParseEvent(event, uint64(0), time.Unix(0, 0), []string{})
-		formattedEvents = append(formattedEvents, ev)
+		formattedEvents[i] = ev
 	}
 	return TransactionResult{
 		Err:     err,
@@ -37,6 +37,7 @@ func (t TransactionResult) AssertFailure(msg string) TransactionResult {
 	}
 	return t
 }
+
 func (t TransactionResult) AssertSuccess() TransactionResult {
 	assert.NoError(t.Testing, t.Err)
 	return t
@@ -45,8 +46,8 @@ func (t TransactionResult) AssertSuccess() TransactionResult {
 func (t TransactionResult) AssertEventCount(number int) TransactionResult {
 	assert.Equal(t.Testing, number, len(t.Events))
 	return t
-
 }
+
 func (t TransactionResult) AssertNoEvents() TransactionResult {
 	assert.Empty(t.Testing, t.Events)
 
@@ -58,9 +59,9 @@ func (t TransactionResult) AssertNoEvents() TransactionResult {
 }
 
 func (t TransactionResult) AssertEmitEventName(event ...string) TransactionResult {
-	var eventNames []string
-	for _, fe := range t.Events {
-		eventNames = append(eventNames, fe.Name)
+	eventNames := make([]string, len(t.Events))
+	for i, fe := range t.Events {
+		eventNames[i] = fe.Name
 	}
 
 	for _, ev := range event {
@@ -74,11 +75,11 @@ func (t TransactionResult) AssertEmitEventName(event ...string) TransactionResul
 	return t
 }
 
-func (t TransactionResult) AssertEmitEventJson(event ...string) TransactionResult {
+func (t TransactionResult) AssertEmitEventJSON(event ...string) TransactionResult {
 
-	var jsonEvents []string
-	for _, fe := range t.Events {
-		jsonEvents = append(jsonEvents, fe.String())
+	jsonEvents := make([]string, len(t.Events))
+	for i, fe := range t.Events {
+		jsonEvents[i] = fe.String()
 	}
 
 	for _, ev := range event {
@@ -96,7 +97,7 @@ func (t TransactionResult) AssertPartialEvent(expected *FormatedEvent) Transacti
 
 	events := t.Events
 	for index, ev := range events {
-		//todo do we need more then just name here?
+		// TODO do we need more then just name here?
 		if ev.Name == expected.Name {
 			for key := range ev.Fields {
 				_, exist := expected.Fields[key]

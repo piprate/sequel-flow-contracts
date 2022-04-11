@@ -66,14 +66,16 @@ func ProfileFromCadence(val cadence.Value) (*Profile, error) {
 		Roles: []*Role{},
 	}
 
-	rolesArray := valStruct.Fields[1].(cadence.Array)
+	rolesArray, ok := valStruct.Fields[1].(cadence.Array)
+	if !ok {
+		return nil, errors.New("bad Evergreen Profile value")
+	}
 	for _, roleVal := range rolesArray.Values {
 		role, err := RoleFromCadence(roleVal)
 		if err != nil {
 			return nil, err
 		}
 		res.Roles = append(res.Roles, role)
-
 	}
 
 	return &res, nil
