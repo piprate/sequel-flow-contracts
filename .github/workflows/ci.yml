@@ -27,13 +27,13 @@ jobs:
           echo "::set-output name=go-mod::$(go env GOMODCACHE)"
 
       - name: Go Build Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ steps.go-cache-paths.outputs.go-build }}
           key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
 
       - name: Go Mod Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ steps.go-cache-paths.outputs.go-mod }}
           key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
@@ -54,7 +54,7 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: '1.16.*'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: |
             ~/go/pkg/mod
@@ -72,9 +72,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Set up Go
       - uses: actions/setup-go@v3
         with:
           go-version: '1.16.*'
+      - name: Set up Cache
       - uses: actions/cache@v3
         with:
           path: |
@@ -83,11 +85,7 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-      - run: make test-report
-      - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
-        with:
-          files: lib/go/iinft/test-result.xml
+      - name: Test
+        run: make test
 
 
