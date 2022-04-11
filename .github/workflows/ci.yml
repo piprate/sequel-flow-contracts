@@ -16,11 +16,11 @@ jobs:
     steps:
       - uses: actions/setup-go@v2
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v3.1.0
         with:
-          args: "--timeout 3m --verbose --out-${NO_FUTURE}format colored-line-number"
+          args: --timeout 3m --verbose
           working-directory: lib/go/iinft
 
   tidy:
