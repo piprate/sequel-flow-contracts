@@ -38,11 +38,11 @@
   },
   "accounts": {
     "testnet-sequel-admin": {
-      "address": "8eacbc4234067b7d",
+      "address": "0x553d434d41d6941c",
       "key": "${TESTNET_SEQUEL_ADMIN}"
     },
     "testnet-sequel-platform" : {
-      "address": "28e872069e9ca2b4",
+      "address": "0x28e872069e9ca2b4",
       "key": "${TESTNET_SEQUEL_PLATFORM}"
     }
   },
