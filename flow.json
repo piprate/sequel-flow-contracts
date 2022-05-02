@@ -67,15 +67,15 @@
     "Art": {
       "source": "./contracts/thirdparty/versus/Art.cdc",
       "aliases": {
-        "testnet": "0xefb501878aa34730",
-        "mainnet": "0xd796ff17107bbff6"
+        "mainnet": "0xd796ff17107bbff6",
+        "testnet": "0x99ca04281098b33d"
       }
     },
     "Content": {
       "source": "./contracts/thirdparty/versus/Content.cdc",
       "aliases": {
-        "testnet": "0xefb501878aa34730",
-        "mainnet": "0xd796ff17107bbff6"
+        "mainnet": "0xd796ff17107bbff6",
+        "testnet": "0x99ca04281098b33d"
       }
     },
     "Evergreen": {
