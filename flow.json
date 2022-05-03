@@ -67,35 +67,35 @@
     "Art": {
       "source": "./contracts/thirdparty/versus/Art.cdc",
       "aliases": {
-        "testnet": "0xefb501878aa34730",
-        "mainnet": "0xd796ff17107bbff6"
+        "mainnet": "0xd796ff17107bbff6",
+        "testnet": "0x99ca04281098b33d"
       }
     },
     "Content": {
       "source": "./contracts/thirdparty/versus/Content.cdc",
       "aliases": {
-        "testnet": "0xefb501878aa34730",
-        "mainnet": "0xd796ff17107bbff6"
+        "mainnet": "0xd796ff17107bbff6",
+        "testnet": "0x99ca04281098b33d"
       }
     },
     "Evergreen": {
       "source": "./contracts/Evergreen.cdc",
       "aliases": {
-        "testnet": "0x8eacbc4234067b7d",
+        "testnet": "0x553d434d41d6941c",
         "mainnet": "0xf5b0eb433389ac3f"
       }
     },
     "DigitalArt": {
       "source": "./contracts/DigitalArt.cdc",
       "aliases": {
-        "testnet": "0x8eacbc4234067b7d",
+        "testnet": "0x553d434d41d6941c",
         "mainnet": "0xf5b0eb433389ac3f"
       }
     },
     "SequelMarketplace": {
       "source": "./contracts/SequelMarketplace.cdc",
       "aliases": {
-        "testnet": "0x8eacbc4234067b7d",
+        "testnet": "0x553d434d41d6941c",
         "mainnet": "0xf5b0eb433389ac3f"
       }
     }
