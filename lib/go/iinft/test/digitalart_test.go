@@ -217,8 +217,8 @@ pub fun main(address:Address, tokenID:UInt64) : MetadataViews.Display? {
 		assert.Equal(t, "Digital art in its purest form", displayStruct.Fields[1].ToGoValue().(string))
 		thumbnailStruct, ok := displayStruct.Fields[2].(cadence.Struct)
 		require.True(t, ok)
-		assert.Equal(t, "MetadataViews.HTTPFile", thumbnailStruct.StructType.QualifiedIdentifier)
-		assert.Equal(t, "ipfs://QmPreview", thumbnailStruct.Fields[0].ToGoValue().(string))
+		assert.Equal(t, "MetadataViews.IPFSFile", thumbnailStruct.StructType.QualifiedIdentifier)
+		assert.Equal(t, "QmPreview", thumbnailStruct.Fields[0].ToGoValue().(string))
 	})
 
 	t.Run("Should be able to read metadata view (DigitalArt.Metadata)", func(t *testing.T) {
