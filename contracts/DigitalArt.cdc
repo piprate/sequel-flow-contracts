@@ -168,13 +168,25 @@ pub contract DigitalArt: NonFungibleToken {
         pub fun resolveView(_ view: Type): AnyStruct? {
             switch view {
                 case Type<MetadataViews.Display>():
-                    return MetadataViews.Display(
-                        name: self.metadata.name,
-                        description: self.metadata.description,
-                        thumbnail: MetadataViews.HTTPFile(
-                            url: self.metadata.contentPreviewURI
+                    let thumbnailUri = self.metadata.contentPreviewURI
+                    if thumbnailUri.slice(from: 0, upTo: 4) == "ipfs" {
+                        return MetadataViews.Display(
+                            name: self.metadata.name,
+                            description: self.metadata.description,
+                            thumbnail: MetadataViews.IPFSFile(
+                               cid: thumbnailUri.slice(from: 7, upTo: thumbnailUri.length),
+                               ""
+                            )
                         )
-                    )
+                    } else {
+                        return MetadataViews.Display(
+                            name: self.metadata.name,
+                            description: self.metadata.description,
+                            thumbnail: MetadataViews.HTTPFile(
+                                url: thumbnailUri
+                            )
+                        )
+                    }
                 case Type<DigitalArt.Metadata>():
                     return self.metadata
             }
