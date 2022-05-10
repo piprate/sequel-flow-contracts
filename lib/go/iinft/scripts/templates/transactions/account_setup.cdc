@@ -1,5 +1,7 @@
 {{ define "account_setup" }}
 import NonFungibleToken from {{.NonFungibleToken}}
+import MetadataViews from {{.MetadataViews}}
+import Evergreen from {{.Evergreen}}
 import DigitalArt from {{.DigitalArt}}
 
 // This transaction is what an account would run
@@ -21,7 +23,7 @@ transaction {
         acct.save(<-collection, to: DigitalArt.CollectionStoragePath)
 
         // create a public capability for the collection
-        acct.link<&{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, DigitalArt.CollectionPublic}>(
+        acct.link<&{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection, Evergreen.CollectionPublic, DigitalArt.CollectionPublic}>(
             DigitalArt.CollectionPublicPath,
             target: DigitalArt.CollectionStoragePath
         )

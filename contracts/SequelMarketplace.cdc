@@ -219,12 +219,15 @@ pub contract SequelMarketplace {
 
         let addPayment = fun (roleID: String, address: Address, rate: UFix64) {
             assert(rate >= 0.0 && rate < 1.0, message: "Rate must be in range [0..1)")
-            let amount = price * rate
 
-            payments.append(Payment(role: roleID, receiver: address, amount: amount, rate: rate))
+            if rate != 0.0 {
+                let amount = price * rate
 
-            residualRate = residualRate - rate
-            assert(residualRate >= 0.0 && residualRate <= 1.0, message: "Residual rate must be in range [0..1)")
+                payments.append(Payment(role: roleID, receiver: address, amount: amount, rate: rate))
+
+                residualRate = residualRate - rate
+                assert(residualRate >= 0.0 && residualRate <= 1.0, message: "Residual rate must be in range [0..1)")
+            }
         }
 
         for role in profile.roles {

@@ -57,7 +57,7 @@ func ProfileFromCadence(val cadence.Value) (*Profile, error) {
 	}
 
 	valStruct, ok := val.(cadence.Struct)
-	if !ok || valStruct.StructType.QualifiedIdentifier != "Evergreen.Profile" || len(valStruct.Fields) != 3 {
+	if !ok || valStruct.StructType.QualifiedIdentifier != "Evergreen.Profile" || len(valStruct.Fields) != 2 {
 		return nil, errors.New("bad Evergreen Profile value")
 	}
 

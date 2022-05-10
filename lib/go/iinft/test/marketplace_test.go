@@ -4,44 +4,11 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/scripts"
 	"github.com/stretchr/testify/require"
 )
-
-func buildTestProfile(artist flow.Address) *evergreen.Profile {
-	return &evergreen.Profile{
-		ID: 1,
-		Roles: []*evergreen.Role{
-			{
-				Role:                      evergreen.RoleArtist,
-				InitialSaleCommission:     0.8,
-				SecondaryMarketCommission: 0.05,
-				Address:                   artist,
-			},
-		},
-	}
-}
-
-func buildTestMetadata(maxEdition uint64) *iinft.DigitalArtMetadata {
-	return &iinft.DigitalArtMetadata{
-		MetadataURI:       "ipfs://QmMetadata",
-		Name:              "Pure Art",
-		Artist:            "did:sequel:artist",
-		Description:       "Digital art in its purest form",
-		Type:              "Image",
-		ContentURI:        "ipfs://QmContent",
-		ContentPreviewURI: "ipfs://QmPreview",
-		ContentMimetype:   "image/jpeg",
-		MaxEdition:        maxEdition,
-		Asset:             "did:sequel:asset-id",
-		Record:            "record-id",
-		AssetHead:         "asset-head-id",
-	}
-}
 
 func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
@@ -51,6 +18,8 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
+
+	platformAcct := client.Account(platformAccountName)
 
 	// set up seller account
 
@@ -73,8 +42,8 @@ func TestMarketplace_ListAndBuyWithFlow(t *testing.T) {
 	_ = se.NewTransaction("account_setup_flow_token").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "1000.0")
 
-	profile := buildTestProfile(sellerAcct.Address())
-	metadata := buildTestMetadata(1)
+	metadata := SampleMetadata(1)
+	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address(), platformAcct.Address())
 
 	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
@@ -181,6 +150,8 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 
 	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address())
 
+	platformAcct := client.Account(platformAccountName)
+
 	// set up seller account
 
 	sellerAcctName := "emulator-user1"
@@ -203,8 +174,8 @@ func TestMarketplace_ListAndBuyWithFUSD(t *testing.T) {
 	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 	scripts.FundAccountWithFUSD(t, se, buyerAcct.Address(), "1000.0")
 
-	profile := buildTestProfile(sellerAcct.Address())
-	metadata := buildTestMetadata(1)
+	metadata := SampleMetadata(1)
+	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address(), platformAcct.Address())
 
 	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
