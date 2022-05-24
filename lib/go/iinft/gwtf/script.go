@@ -64,6 +64,12 @@ func (t FlowScriptBuilder) Argument(value cadence.Value) FlowScriptBuilder {
 	return t
 }
 
+// ArgumentList add a list argument to the transaction
+func (t FlowScriptBuilder) ArgumentList(values []cadence.Value) FlowScriptBuilder {
+	t.Arguments = append(t.Arguments, values...)
+	return t
+}
+
 // StringArgument add a String Argument to the transaction
 func (t FlowScriptBuilder) StringArgument(value string) FlowScriptBuilder {
 	return t.Argument(cadence.String(value))
@@ -217,7 +223,9 @@ func (t FlowScriptBuilder) RunReturns() (cadence.Value, error) {
 		return nil, err
 	}
 
-	f.Logger.Debug(fmt.Sprintf("Script run from path %s\n", scriptFilePath))
+	if t.ScriptAsString == "" {
+		f.Logger.Debug(fmt.Sprintf("Script run from path %s\n", scriptFilePath))
+	}
 	return result, nil
 }
 

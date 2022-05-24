@@ -347,9 +347,6 @@ func (tb FlowTransactionBuilder) RunE() ([]flow.Event, error) {
 		}
 	}
 
-	tb.GoWithTheFlow.Logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
-	tb.GoWithTheFlow.Logger.StartProgress("Sending transaction...")
-	defer tb.GoWithTheFlow.Logger.StopProgress()
 	txBytes := []byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode()))
 	_, res, err := tb.GoWithTheFlow.Services.Transactions.SendSigned(txBytes, true)
 
@@ -361,7 +358,7 @@ func (tb FlowTransactionBuilder) RunE() ([]flow.Event, error) {
 		return nil, res.Error
 	}
 
-	tb.GoWithTheFlow.Logger.Info(fmt.Sprintf("Transaction %s successfully applied\n", tb.FileName))
+	tb.GoWithTheFlow.Logger.Debug(fmt.Sprintf("Transaction %s successfully applied", tx.FlowTransaction().ID()))
 	return res.Events, nil
 }
 
