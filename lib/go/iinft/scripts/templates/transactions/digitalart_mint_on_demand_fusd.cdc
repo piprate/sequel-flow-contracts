@@ -35,13 +35,17 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
             )
             let evergreenProfile = Evergreen.Profile(
                 id: {{.Parameters.Profile.ID}},
+                description: {{safe .Parameters.Profile.Description}},
                 roles: [
-                {{$last := dec (len .Parameters.Profile.Roles)}}
-                {{range $i, $role := .Parameters.Profile.Roles}}
-                    Evergreen.Role(id: {{safe $role.Role}},
+                {{- $last := dec (len .Parameters.Profile.Roles)}}
+                {{- range $i, $role := .Parameters.Profile.Roles}}
+                    Evergreen.Role(id: {{safe $role.ID}},
+                       description: {{safe $role.Description}},
                        initialSaleCommission: {{$role.InitialSaleCommission}},
                        secondaryMarketCommission: {{$role.SecondaryMarketCommission}},
-                       address: 0x{{$role.Address}}){{ if ne $i $last}},{{ end }}
+                       address: 0x{{$role.Address}},
+                       receiverPath: {{if $role.ReceiverPath}}{{safe $role.ReceiverPath}}{{else}}nil{{end}}
+                    ){{ if ne $i $last}},{{ end }}
                 {{end}}
                 ]
             )
@@ -90,8 +94,10 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
         SequelMarketplace.payForMintedTokens(
             unitPrice: unitPrice,
             numEditions: numEditions,
-            paymentVaultPath: /public/fusdReceiver,
+            sellerRole: "Artist",
+            sellerVaultPath: /public/fusdReceiver,
             paymentVault: <-self.paymentVault,
+            defaultReceiverPath: /public/fusdReceiver,
             evergreenProfile: self.evergreenProfile,
         )
     }

@@ -28,7 +28,7 @@ func BasicEvergreenProfile(artist flow.Address) *evergreen.Profile {
 		ID: 1,
 		Roles: []*evergreen.Role{
 			{
-				Role:                      evergreen.RoleArtist,
+				ID:                        evergreen.RoleArtist,
 				InitialSaleCommission:     1.0,
 				SecondaryMarketCommission: 0.05,
 				Address:                   artist,
@@ -42,13 +42,13 @@ func PrimaryOnlyEvergreenProfile(artist, platform flow.Address) *evergreen.Profi
 		ID: 2,
 		Roles: []*evergreen.Role{
 			{
-				Role:                      evergreen.RoleArtist,
+				ID:                        evergreen.RoleArtist,
 				InitialSaleCommission:     0.8,
 				SecondaryMarketCommission: 0.05,
 				Address:                   artist,
 			},
 			{
-				Role:                      evergreen.RolePlatform,
+				ID:                        evergreen.RolePlatform,
 				InitialSaleCommission:     0.2,
 				SecondaryMarketCommission: 0.0,
 				Address:                   platform,

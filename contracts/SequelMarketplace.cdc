@@ -11,6 +11,7 @@ pub contract SequelMarketplace {
     pub struct Payment {
         pub let role: String
         pub let receiver: Address
+        // The amount of the payment FungibleToken that will be paid to the role's receiver.
         pub let amount: UFix64
         pub let rate: UFix64
 
@@ -19,6 +20,18 @@ pub contract SequelMarketplace {
             self.receiver = receiver
             self.amount = amount
             self.rate = rate
+        }
+    }
+
+    // PaymentInstructions
+    //
+    pub struct PaymentInstructions {
+        pub let payments: [Payment]
+        pub let saleCuts: [NFTStorefront.SaleCut]
+
+        init(payments: [Payment], saleCuts: [NFTStorefront.SaleCut]) {
+            self.payments = payments
+            self.saleCuts = saleCuts
         }
     }
 
@@ -63,47 +76,42 @@ pub contract SequelMarketplace {
         nftProviderCapability: Capability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic, Evergreen.CollectionPublic}>,
         nftType: Type,
         nftID: UInt64,
-        paymentVaultPath: PublicPath,
+        sellerVaultPath: PublicPath,
         paymentVaultType: Type,
         price: UFix64,
+        defaultReceiverPath: PublicPath,
         extraRoles: [Evergreen.Role],
         metadataLink: String?,
     ): UInt64 {
         let token = nftProviderCapability.borrow()!.borrowEvergreenToken(id: nftID)!
         let seller = storefront.owner!.address
 
-        let payments = self.buildPayments(
+        let instructions = self.buildPayments(
             profile: token.getEvergreenProfile(),
             seller: seller,
             sellerRole: "Owner",
+            sellerVaultPath: sellerVaultPath,
             price: price,
+            defaultReceiverPath: defaultReceiverPath,
             initialSale: false,
             extraRoles: extraRoles)
-
-        let saleCuts: [NFTStorefront.SaleCut] = []
-        for payment in payments {
-            let receiver = getAccount(payment.receiver).getCapability<&{FungibleToken.Receiver}>(paymentVaultPath)
-            assert(receiver.borrow() != nil, message: "Missing or mis-typed fungible token receiver")
-
-            saleCuts.append(NFTStorefront.SaleCut(receiver: receiver, amount: payment.amount))
-        }
 
         let listingID = storefront.createListing(
             nftProviderCapability: nftProviderCapability,
             nftType: nftType,
             nftID: nftID,
             salePaymentVaultType: paymentVaultType,
-            saleCuts: saleCuts
+            saleCuts: instructions.saleCuts
         )
 
         emit TokenListed(
-            storefrontAddress: storefront.owner!.address,
+            storefrontAddress: seller,
             listingID: listingID,
             nftType: nftType.identifier,
             nftID: nftID,
             paymentVaultType: paymentVaultType.identifier,
             price: price,
-            payments: payments,
+            payments: instructions.payments,
             asset: token.getAssetID(),
             metadataLink: metadataLink,
         )
@@ -141,38 +149,38 @@ pub contract SequelMarketplace {
     pub fun payForMintedTokens(
         unitPrice: UFix64,
         numEditions: UInt64,
-        paymentVaultPath: PublicPath,
+        sellerRole: String,
+        sellerVaultPath: PublicPath,
         paymentVault: @FungibleToken.Vault,
+        defaultReceiverPath: PublicPath,
         evergreenProfile: Evergreen.Profile,
     ) {
-        let artistAddress = evergreenProfile.getRole(id: "Artist")!.address
+        let seller = evergreenProfile.getRole(id: sellerRole)!.address
 
-        let payments = self.buildPayments(
+        let instructions = self.buildPayments(
             profile: evergreenProfile,
-            seller: artistAddress,
-            sellerRole: "Artist",
+            seller: seller,
+            sellerRole: sellerRole,
+            sellerVaultPath: sellerVaultPath,
             price: unitPrice * UFix64(numEditions),
+            defaultReceiverPath: defaultReceiverPath,
             initialSale: true,
             extraRoles: [])
 
         // Rather than aborting the transaction if any receiver is absent when we try to pay it,
-        // we send the cut to the first valid receiver.
-        // The first receiver should therefore either be the seller, or an agreed recipient for
-        // any unpaid cuts.
+        // we send the payment to the last valid receiver. buildPayments function always
+        // puts the seller as the last receiver.
         var residualReceiver: &{FungibleToken.Receiver}? = nil
 
-        for payment in payments {
-            let receiverCap = getAccount(payment.receiver).getCapability<&{FungibleToken.Receiver}>(paymentVaultPath)
-            let receiver = receiverCap.borrow() ?? panic("Missing or mis-typed fungible token receiver")
-
-            let paymentCut <- paymentVault.withdraw(amount: payment.amount)
-            receiver.deposit(from: <-paymentCut)
-            if (residualReceiver == nil) {
+        for cut in instructions.saleCuts {
+            if let receiver = cut.receiver.borrow() {
+                let paymentCut <- paymentVault.withdraw(amount: cut.amount)
+                receiver.deposit(from: <- paymentCut)
                 residualReceiver = receiver
             }
         }
 
-        // At this point, if all recievers were active and availabile, then the payment Vault will have
+        // At this point, if all receivers were active and available, then the payment Vault will have
         // zero tokens left.
         if paymentVault.balance > 0.0 {
             assert(residualReceiver != nil, message: "No valid residual payment receivers")
@@ -205,43 +213,59 @@ pub contract SequelMarketplace {
         storefront.removeListing(listingResourceID: listingID)
     }
 
+    // buildPayments constructs a list of payments based on the given Evengreen profile.
+    // Any residual amount goes to the given seller's address.
     pub fun buildPayments(
         profile: Evergreen.Profile,
         seller: Address,
         sellerRole: String,
+        sellerVaultPath: PublicPath,
         price: UFix64,
+        defaultReceiverPath: PublicPath,
         initialSale: Bool,
         extraRoles: [Evergreen.Role]
-    ): [Payment] {
+    ): PaymentInstructions {
 
         let payments: [Payment] = []
+        let saleCuts: [NFTStorefront.SaleCut] = []
+
         var residualRate = 1.0
 
-        let addPayment = fun (roleID: String, address: Address, rate: UFix64) {
-            assert(rate >= 0.0 && rate < 1.0, message: "Rate must be in range [0..1)")
+        let addPayment = fun (roleID: String, address: Address, receiverPath: PublicPath?, rate: UFix64, mustSucceed: Bool) {
+            assert(rate >= 0.0 && rate <= 1.0, message: "Rate must be in range [0..1]")
 
             if rate != 0.0 {
                 let amount = price * rate
 
-                payments.append(Payment(role: roleID, receiver: address, amount: amount, rate: rate))
+                var path = defaultReceiverPath
+                if receiverPath != nil {
+                    path = receiverPath!
+                }
 
-                residualRate = residualRate - rate
-                assert(residualRate >= 0.0 && residualRate <= 1.0, message: "Residual rate must be in range [0..1)")
+                let receiverCap = getAccount(address).getCapability<&{FungibleToken.Receiver}>(path)
+                if receiverCap.check() {
+                    payments.append(Payment(role: roleID, receiver: address, amount: amount, rate: rate))
+                    saleCuts.append(NFTStorefront.SaleCut(receiver: receiverCap, amount: amount))
+                    residualRate = residualRate - rate
+                    assert(residualRate >= 0.0 && residualRate <= 1.0, message: "Residual rate must be in range [0..1]")
+                } else if mustSucceed {
+                    panic("missing fungible token receiver capability for mandatory payment recipient")
+                }
             }
         }
 
         for role in profile.roles {
-            addPayment(role.id, role.address, role.commissionRate(initialSale: initialSale))
+            addPayment(role.id, role.address, receiverPath: role.receiverPath, role.commissionRate(initialSale: initialSale), false)
         }
 
         for role in extraRoles {
-            addPayment(role.id, role.address, role.commissionRate(initialSale: initialSale))
+            addPayment(role.id, role.address, receiverPath: role.receiverPath, role.commissionRate(initialSale: initialSale), false)
         }
 
         if residualRate > 0.0 {
-            addPayment(sellerRole, seller, residualRate)
+            addPayment(sellerRole, seller, receiverPath: sellerVaultPath, residualRate, true)
         }
 
-        return payments
+        return PaymentInstructions(payments: payments, saleCuts: saleCuts)
     }
 }

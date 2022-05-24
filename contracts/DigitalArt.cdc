@@ -161,6 +161,7 @@ pub contract DigitalArt: NonFungibleToken {
         pub fun getViews(): [Type] {
             return [
                 Type<MetadataViews.Display>(),
+                Type<MetadataViews.Royalties>(),
                 Type<DigitalArt.Metadata>()
             ]
         }
@@ -187,6 +188,10 @@ pub contract DigitalArt: NonFungibleToken {
                             )
                         )
                     }
+                case Type<MetadataViews.Royalties>():
+                    return MetadataViews.Royalties(
+                        self.evergreenProfile.buildRoyalties(defaultReceiverPath: MetadataViews.getRoyaltyReceiverPublicPath())
+                    )
                 case Type<DigitalArt.Metadata>():
                     return self.metadata
             }
@@ -295,8 +300,7 @@ pub contract DigitalArt: NonFungibleToken {
 
         pub fun borrowViewResolver(id: UInt64): &AnyResource{MetadataViews.Resolver} {
             let nft = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
-            let digitalArtNFT = nft as! &DigitalArt.NFT
-            return digitalArtNFT as &AnyResource{MetadataViews.Resolver}
+            return nft as! &DigitalArt.NFT
         }
 
         pub fun borrowEvergreenToken(id: UInt64): &AnyResource{Evergreen.Token}? {

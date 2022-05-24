@@ -43,7 +43,10 @@ func TestDigitalArt_Master(t *testing.T) {
 	artistAcct := client.Account(user1AccountName)
 
 	metadata := SampleMetadata(2)
-	profile := BasicEvergreenProfile(artistAcct.Address())
+	profile, err := evergreen.ProfileToCadence(
+		BasicEvergreenProfile(artistAcct.Address()), flow.HexToAddress(se.WellKnownAddresses()["Evergreen"]),
+	)
+	require.NoError(t, err)
 
 	t.Run("Should be able to seal new digital art master", func(t *testing.T) {
 
@@ -92,9 +95,7 @@ pub fun main(metadata: DigitalArt.Metadata, evergreenProfile: Evergreen.Profile)
 			Argument(iinft.DigitalArtMetadataToCadence(
 				metadata, flow.HexToAddress(se.WellKnownAddresses()["DigitalArt"])),
 			).
-			Argument(
-				evergreen.ProfileToCadence(profile, flow.HexToAddress(se.WellKnownAddresses()["Evergreen"])),
-			).RunReturns()
+			Argument(profile).RunReturns()
 		require.NoError(t, err)
 	})
 }
@@ -116,7 +117,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 
 		metadata := SampleMetadata(4)
 
-		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
@@ -129,13 +130,13 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 
 		// Seal the master
 
-		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
 
 		// try again, should fail
-		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("Master already sealed")
@@ -146,7 +147,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 		metadata := SampleMetadata(4)
 		metadata.Asset = ""
 
-		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("Empty asset ID")
@@ -157,7 +158,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 		metadata := SampleMetadata(4)
 		metadata.MaxEdition = 0
 
-		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("MaxEdition should be positive")
@@ -168,7 +169,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 		metadata := SampleMetadata(4)
 		metadata.Edition = 2
 
-		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("Edition should be zero")
@@ -189,7 +190,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 
 		// seal a master with 1 edition
 
-		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
@@ -217,7 +218,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 			RunReturns()
 		require.NoError(t, err)
 
-		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("Master already sealed")
@@ -248,7 +249,7 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 	metadata := SampleMetadata(2)
 	profile := BasicEvergreenProfile(userAcct.Address())
 
-	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -380,7 +381,7 @@ func TestDigitalArt_isClosed(t *testing.T) {
 	t.Run("isClosed() should return false, if master isn't closed", func(t *testing.T) {
 		metadata := SampleMetadata(1)
 
-		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
@@ -425,7 +426,7 @@ func TestDigitalArt_isClosed(t *testing.T) {
 
 		// seal a master with 1 edition
 
-		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
@@ -475,8 +476,10 @@ func TestDigitalArt_NFT(t *testing.T) {
 
 	metadata := SampleMetadata(4)
 	profile := BasicEvergreenProfile(userAcct.Address())
+	profile.Roles[0].ReceiverPath = "/public/flowTokenReceiver"
+	profile.Roles[0].Description = "artist's royalty"
 
-	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -532,9 +535,10 @@ pub fun main(address:Address, tokenID:UInt64) : [Type] {
 
 		viewsArray, ok := viewsVal.(cadence.Array)
 		require.True(t, ok)
-		require.Equal(t, 2, len(viewsArray.Values))
+		require.Equal(t, 3, len(viewsArray.Values))
 		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.Display>()", viewsArray.Values[0].String())
-		assert.Equal(t, "Type<A.01cf0e2f2f715450.DigitalArt.Metadata>()", viewsArray.Values[1].String())
+		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.Royalties>()", viewsArray.Values[1].String())
+		assert.Equal(t, "Type<A.01cf0e2f2f715450.DigitalArt.Metadata>()", viewsArray.Values[2].String())
 	})
 
 	t.Run("resolveView(Type<MetadataViews.Display>()) should return MetadataViews.Display view", func(t *testing.T) {
@@ -568,6 +572,36 @@ pub fun main(address:Address, tokenID:UInt64) : MetadataViews.Display? {
 		require.True(t, ok)
 		assert.Equal(t, "MetadataViews.IPFSFile", thumbnailStruct.StructType.QualifiedIdentifier)
 		assert.Equal(t, "QmPreview", thumbnailStruct.Fields[0].ToGoValue().(string))
+	})
+
+	t.Run("resolveView(Type<MetadataViews.Royalties>()) should return MetadataViews.Royalties view", func(t *testing.T) {
+
+		_, err = client.Script(`
+import MetadataViews from 0xf8d6e0586b0a20c7
+import DigitalArt from 0x01cf0e2f2f715450
+
+pub fun main(address:Address, tokenID:UInt64) {
+    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+
+	var royalties: [MetadataViews.Royalty] = []
+	if let item = collection.borrowDigitalArt(id: tokenID) {
+        if let view = item.resolveView(Type<MetadataViews.Royalties>()) {
+            royalties = (view as! MetadataViews.Royalties).getRoyalties()
+        }
+    }
+
+	assert(royalties != nil, message: "royalties == nil")
+	assert(royalties.length == 1, message: "incorrect number of royalties")
+
+	assert(royalties[0].receiver.check(), message: "bad royalty receiver")
+	assert(royalties[0].cut == 0.05, message: "incorrect royalty cut")
+	assert(royalties[0].description == "artist's royalty", message: "incorrect royalty description")
+}
+`).
+			Argument(cadence.Address(userAcct.Address())).
+			UInt64Argument(0).
+			RunReturns()
+		require.NoError(t, err)
 	})
 
 	t.Run("resolveView(Type<DigitalArt.Metadata>()) should return DigitalArt.Metadata view", func(t *testing.T) {
@@ -669,7 +703,7 @@ func TestDigitalArt_Collection(t *testing.T) {
 	metadata := SampleMetadata(4)
 	profile := BasicEvergreenProfile(userAcct.Address())
 
-	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()

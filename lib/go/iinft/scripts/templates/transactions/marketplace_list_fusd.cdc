@@ -34,9 +34,10 @@ transaction(tokenID: UInt64, price: UFix64, metadataLink: String?) {
         nftProviderCapability: self.nftProviderCapability,
         nftType: Type<@DigitalArt.NFT>(),
         nftID: tokenID,
-        paymentVaultPath: /public/fusdReceiver,
+        sellerVaultPath: /public/fusdReceiver,
         paymentVaultType: Type<@FUSD.Vault>(),
         price: price,
+        defaultReceiverPath: /public/fusdReceiver,
         extraRoles: [],
         metadataLink: metadataLink
     )

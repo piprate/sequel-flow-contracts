@@ -32,9 +32,11 @@ pub fun main(addr: Address) {
 
 	var role = Evergreen.Role(
 		id: "test",
+		description: "Test Role",
 		initialSaleCommission: UFix64(0.8),
 		secondaryMarketCommission: UFix64(0.05),
-		address: addr
+		address: addr,
+		receiverPath: nil
 	)
 
 	assert(role.commissionRate(initialSale: true) == 0.8, message: "wrong commissionRate(true) value")
@@ -61,12 +63,15 @@ pub fun main(addr: Address) {
 
 	var profile = Evergreen.Profile(
 		id: 1,
+		description: "Test Profile",
 		roles: [
 			Evergreen.Role(
 				id: "test",
+				description: "Test Role",
 				initialSaleCommission: UFix64(0.8),
 				secondaryMarketCommission: UFix64(0.05),
-				address: addr
+				address: addr,
+				receiverPath: nil
 			)
 		]
 	)

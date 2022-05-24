@@ -128,7 +128,7 @@ func TestEngine_GetCustomScript_MOD_FUSD(t *testing.T) {
 			ID: 0,
 			Roles: []*evergreen.Role{
 				{
-					Role:                      evergreen.RoleArtist,
+					ID:                        evergreen.RoleArtist,
 					InitialSaleCommission:     0.8,
 					SecondaryMarketCommission: 0.2,
 					Address:                   flow.HexToAddress("0xf669cb8d41ce0c74"),

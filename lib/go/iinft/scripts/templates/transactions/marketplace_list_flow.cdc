@@ -34,9 +34,10 @@ transaction(tokenID: UInt64, price: UFix64, metadataLink: String?) {
         nftProviderCapability: self.nftProviderCapability,
         nftType: Type<@DigitalArt.NFT>(),
         nftID: tokenID,
-        paymentVaultPath: /public/flowTokenReceiver,
+        sellerVaultPath: /public/flowTokenReceiver,
         paymentVaultType: Type<@FlowToken.Vault>(),
         price: price,
+        defaultReceiverPath: /public/flowTokenReceiver,
         extraRoles: [],
         metadataLink: metadataLink
     )

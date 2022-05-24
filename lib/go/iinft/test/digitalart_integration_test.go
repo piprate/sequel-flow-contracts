@@ -68,19 +68,19 @@ func TestDigitalArt_Integration_MintOnDemand_FUSD(t *testing.T) {
 		ID: 1,
 		Roles: []*evergreen.Role{
 			{
-				Role:                      evergreen.RoleArtist,
+				ID:                        evergreen.RoleArtist,
 				InitialSaleCommission:     0.9,
 				SecondaryMarketCommission: 0.025,
 				Address:                   artistAcct.Address(),
 			},
 			{
-				Role:                      evergreen.RolePlatform,
+				ID:                        evergreen.RolePlatform,
 				InitialSaleCommission:     0.05,
 				SecondaryMarketCommission: 0.025,
 				Address:                   platformAcct.Address(),
 			},
 			{
-				Role:                      "ClimateActionFund",
+				ID:                        "ClimateActionFund",
 				InitialSaleCommission:     0.05,
 				SecondaryMarketCommission: 0.025,
 				Address:                   greenAcct.Address(),
@@ -235,19 +235,19 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 		ID: 1,
 		Roles: []*evergreen.Role{
 			{
-				Role:                      evergreen.RoleArtist,
+				ID:                        evergreen.RoleArtist,
 				InitialSaleCommission:     0.9,
 				SecondaryMarketCommission: 0.025,
 				Address:                   artistAcct.Address(),
 			},
 			{
-				Role:                      evergreen.RolePlatform,
+				ID:                        evergreen.RolePlatform,
 				InitialSaleCommission:     0.05,
 				SecondaryMarketCommission: 0.025,
 				Address:                   platformAcct.Address(),
 			},
 			{
-				Role:                      "ClimateActionFund",
+				ID:                        "ClimateActionFund",
 				InitialSaleCommission:     0.05,
 				SecondaryMarketCommission: 0.025,
 				Address:                   greenAcct.Address(),
@@ -398,7 +398,7 @@ func TestDigitalArt_Integration_Transfer(t *testing.T) {
 	metadata := SampleMetadata(4)
 	profile := BasicEvergreenProfile(senderAcct.Address())
 
-	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
+	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()

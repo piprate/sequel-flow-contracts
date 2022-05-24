@@ -1,6 +1,8 @@
 package evergreen
 
-import "github.com/onflow/flow-go-sdk"
+import (
+	"github.com/onflow/flow-go-sdk"
+)
 
 const (
 	RoleArtist    = "Artist"
@@ -11,14 +13,17 @@ const (
 
 type (
 	Role struct {
-		Role                      string       `json:"role"`
+		ID                        string       `json:"id"`
+		Description               string       `json:"description"`
 		InitialSaleCommission     float64      `json:"initialSaleCommission,omitempty"`
 		SecondaryMarketCommission float64      `json:"secondaryMarketCommission,omitempty"`
 		Address                   flow.Address `json:"addr,omitempty"`
+		ReceiverPath              string       `json:"receiverPath,omitempty"`
 	}
 
 	Profile struct {
-		ID    uint32  `json:"id"`
-		Roles []*Role `json:"roles"`
+		ID          uint32  `json:"id"`
+		Description string  `json:"description"`
+		Roles       []*Role `json:"roles"`
 	}
 )

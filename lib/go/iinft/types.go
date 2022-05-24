@@ -137,6 +137,20 @@ func UFix64FromFloat64(v float64) cadence.Value {
 	return cv
 }
 
+func StringToPath(path string) (cadence.Path, error) {
+	var val cadence.Path
+	parts := strings.Split(path, "/")
+	if len(parts) != 3 || (len(parts) > 0 && len(parts[0]) > 0) {
+		return val, errors.New("bad Cadence path")
+	}
+	if parts[1] != "private" && parts[1] != "public" && parts[1] != "storage" {
+		return val, errors.New("bad domain in Cadence path")
+	}
+	val.Domain = parts[1]
+	val.Identifier = parts[2]
+	return val, nil
+}
+
 var metadataCadenceFields = []cadence.Field{
 	{
 		Identifier: "name",
