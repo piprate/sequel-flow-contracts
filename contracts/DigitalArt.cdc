@@ -161,6 +161,7 @@ pub contract DigitalArt: NonFungibleToken {
         pub fun getViews(): [Type] {
             return [
                 Type<MetadataViews.Display>(),
+                Type<MetadataViews.Royalties>(),
                 Type<DigitalArt.Metadata>()
             ]
         }
@@ -187,6 +188,10 @@ pub contract DigitalArt: NonFungibleToken {
                             )
                         )
                     }
+                case Type<MetadataViews.Royalties>():
+                    return MetadataViews.Royalties(
+                        self.evergreenProfile.buildRoyalties(defaultReceiverPath: MetadataViews.getRoyaltyReceiverPublicPath())
+                    )
                 case Type<DigitalArt.Metadata>():
                     return self.metadata
             }
@@ -295,8 +300,7 @@ pub contract DigitalArt: NonFungibleToken {
 
         pub fun borrowViewResolver(id: UInt64): &AnyResource{MetadataViews.Resolver} {
             let nft = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
-            let digitalArtNFT = nft as! &DigitalArt.NFT
-            return digitalArtNFT as &AnyResource{MetadataViews.Resolver}
+            return nft as! &DigitalArt.NFT
         }
 
         pub fun borrowEvergreenToken(id: UInt64): &AnyResource{Evergreen.Token}? {
@@ -330,6 +334,15 @@ pub contract DigitalArt: NonFungibleToken {
         return collectionRef.borrowDigitalArt(id: tokenId)!.metadata
     }
 
+    pub fun isClosed(masterId: String): Bool {
+        if DigitalArt.masters.containsKey(masterId) {
+            let master = &DigitalArt.masters[masterId] as &Master
+            return master.closed
+        } else {
+            return false
+        }
+    }
+
     // Admin
     // Resource that an admin or something similar would own to be
     // able to mint new NFTs
@@ -343,7 +356,7 @@ pub contract DigitalArt: NonFungibleToken {
                metadata.asset != "" : "Empty asset ID"
                metadata.edition == UInt64(0) : "Edition should be zero"
                metadata.maxEdition >= UInt64(1) : "MaxEdition should be positive"
-               !DigitalArt.masters.containsKey(metadata.asset) : "master already sealed"
+               !DigitalArt.masters.containsKey(metadata.asset) : "Master already sealed"
             }
             DigitalArt.masters[metadata.asset] = Master(
                 metadata: metadata,
@@ -357,7 +370,7 @@ pub contract DigitalArt: NonFungibleToken {
 
         pub fun availableEditions(masterId: String) : UInt64 {
             pre {
-               DigitalArt.masters.containsKey(masterId) : "master not found"
+               DigitalArt.masters.containsKey(masterId) : "Master not found"
             }
 
             let master = &DigitalArt.masters[masterId] as &Master
@@ -367,7 +380,7 @@ pub contract DigitalArt: NonFungibleToken {
 
         pub fun evergreenProfile(masterId: String) : Evergreen.Profile {
             pre {
-               DigitalArt.masters.containsKey(masterId) : "master not found"
+               DigitalArt.masters.containsKey(masterId) : "Master not found"
             }
 
             let master = &DigitalArt.masters[masterId] as &Master
@@ -375,14 +388,17 @@ pub contract DigitalArt: NonFungibleToken {
             return master.evergreenProfile!
         }
 
+        // mintEditionNFT mints a token from master with the given ID.
+        // If it's a mint-on-demand, provide MOD ID to link it with the Marketplace database.
+        // Otherwise, set modID to 0.
         pub fun mintEditionNFT(masterId: String, modID: UInt64) : @DigitalArt.NFT {
             pre {
-               DigitalArt.masters.containsKey(masterId) : "master not found"
+               DigitalArt.masters.containsKey(masterId) : "Master not found"
             }
 
             let master = &DigitalArt.masters[masterId] as &Master
 
-            assert(master.availableEditions() > 0, message: "no more tokens to mint")
+            assert(master.availableEditions() > 0, message: "No more tokens to mint")
 
             let metadata = master.metadata!
             let edition = master.newEditionID()

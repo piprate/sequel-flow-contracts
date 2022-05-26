@@ -9,6 +9,7 @@ import (
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
 	"github.com/stretchr/testify/require"
 )
@@ -99,4 +100,20 @@ func GetFUSDBalance(t *testing.T, se *Engine, address flow.Address) float64 {
 	require.NoError(t, err)
 
 	return iinft.ToFloat64(v)
+}
+
+func CreateSealDigitalArtTx(t *testing.T, se *Engine, client *gwtf.GoWithTheFlow, metadata *iinft.DigitalArtMetadata,
+	profile *evergreen.Profile) gwtf.FlowTransactionBuilder {
+	t.Helper()
+
+	profileVal, err := evergreen.ProfileToCadence(profile, flow.HexToAddress(se.WellKnownAddresses()["Evergreen"]))
+	require.NoError(t, err)
+
+	tx := client.Transaction(se.GetStandardScript("master_seal")).
+		Argument(
+			iinft.DigitalArtMetadataToCadence(metadata, flow.HexToAddress(se.WellKnownAddresses()["DigitalArt"])),
+		).
+		Argument(profileVal)
+
+	return tx
 }

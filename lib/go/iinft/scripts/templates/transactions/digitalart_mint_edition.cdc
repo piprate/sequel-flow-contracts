@@ -1,5 +1,4 @@
 {{ define "digitalart_mint_edition" }}
-import NonFungibleToken from {{.NonFungibleToken}}
 import DigitalArt from {{.DigitalArt}}
 
 transaction(masterId: String, amount: UInt64, recipientAddr: Address) {

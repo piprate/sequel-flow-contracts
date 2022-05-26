@@ -67,7 +67,13 @@ pub contract NFTStorefront {
     // ListingCompleted
     // The listing has been resolved. It has either been purchased, or removed and destroyed.
     //
-    pub event ListingCompleted(listingResourceID: UInt64, storefrontResourceID: UInt64, purchased: Bool)
+    pub event ListingCompleted(
+        listingResourceID: UInt64,
+        storefrontResourceID: UInt64,
+        purchased: Bool,
+        nftType: Type,
+        nftID: UInt64
+    )
 
     // StorefrontStoragePath
     // The location in storage that a Storefront resource should be located.
@@ -146,7 +152,6 @@ pub contract NFTStorefront {
             self.nftType = nftType
             self.nftID = nftID
             self.salePaymentVaultType = salePaymentVaultType
-
             // Store the cuts
             assert(saleCuts.length > 0, message: "Listing must have at least one payment cut recipient")
             self.saleCuts = saleCuts
@@ -189,13 +194,14 @@ pub contract NFTStorefront {
         // getDetails
         //
         pub fun getDetails(): ListingDetails
+
     }
 
 
     // Listing
     // A resource that allows an NFT to be sold for an amount of a given FungibleToken,
     // and for the proceeds of that sale to be split between several recipients.
-    // 
+    //
     pub resource Listing: ListingPublic {
         // The simple (non-Capability, non-complex) details of the sale
         access(self) let details: ListingDetails
@@ -242,6 +248,7 @@ pub contract NFTStorefront {
             // Make sure the listing cannot be purchased again.
             self.details.setToPurchased()
 
+
             // Fetch the token to return to the purchaser.
             let nft <-self.nftProviderCapability.borrow()!.withdraw(withdrawID: self.details.nftID)
             // Neither receivers nor providers are trustworthy, they must implement the correct
@@ -277,10 +284,13 @@ pub contract NFTStorefront {
 
             // If the listing is purchased, we regard it as completed here.
             // Otherwise we regard it as completed in the destructor.
+
             emit ListingCompleted(
                 listingResourceID: self.uuid,
                 storefrontResourceID: self.details.storefrontID,
-                purchased: self.details.purchased
+                purchased: self.details.purchased,
+                nftType: self.details.nftType,
+                nftID: self.details.nftID
             )
 
             return <-nft
@@ -298,7 +308,9 @@ pub contract NFTStorefront {
                 emit ListingCompleted(
                     listingResourceID: self.uuid,
                     storefrontResourceID: self.details.storefrontID,
-                    purchased: self.details.purchased
+                    purchased: self.details.purchased,
+                    nftType: self.details.nftType,
+                    nftID: self.details.nftID
                 )
             }
         }
@@ -402,6 +414,7 @@ pub contract NFTStorefront {
             // Add the new listing to the dictionary.
             let oldListing <- self.listings[listingResourceID] <- listing
             // Note that oldListing will always be nil, but we have to handle it.
+
             destroy oldListing
 
             emit ListingAvailable(
@@ -416,13 +429,14 @@ pub contract NFTStorefront {
             return listingResourceID
         }
 
+
         // removeListing
         // Remove a Listing that has not yet been purchased from the collection and destroy it.
         //
         pub fun removeListing(listingResourceID: UInt64) {
             let listing <- self.listings.remove(key: listingResourceID)
                 ?? panic("missing Listing")
-    
+
             // This will emit a ListingCompleted event.
             destroy listing
         }

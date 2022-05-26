@@ -116,15 +116,28 @@ func (t TransactionResult) AssertPartialEvent(expected *FormatedEvent) Transacti
 
 	return t
 }
+
 func (t TransactionResult) AssertEmitEvent(event ...*FormatedEvent) TransactionResult {
+	printEvents := false
 	for _, ev := range event {
-		assert.Contains(t.Testing, t.Events, ev)
+		if !assert.Contains(t.Testing, t.Events, ev) {
+			printEvents = true
+		}
 	}
 
+	if printEvents {
+		for _, ev := range t.Events {
+			t.Testing.Log(ev.String())
+		}
+	}
+
+	return t
+}
+
+func (t TransactionResult) PrintEvents() TransactionResult {
 	for _, ev := range t.Events {
 		t.Testing.Log(ev.String())
 	}
-
 	return t
 }
 
