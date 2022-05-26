@@ -154,7 +154,7 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 
 	// set up seller account
 
-	sellerAcctName := "emulator-user1"
+	sellerAcctName := user1AccountName
 	sellerAcct := client.Account(sellerAcctName)
 
 	scripts.FundAccountWithFlow(t, client, sellerAcct.Address(), "10.0")
