@@ -2,6 +2,13 @@ import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 import MetadataViews from "./standard/MetadataViews.cdc"
 import Evergreen from "./Evergreen.cdc"
 
+// DigitalArt defines NFTs that represent digital art in Sequel.
+// See https://sequel.space for more details.
+//
+// DigitalArt tokens support Evergreen token standard.
+//
+// Source: https://github.com/piprate/sequel-flow-contracts
+//
 pub contract DigitalArt: NonFungibleToken {
 
     // Events
