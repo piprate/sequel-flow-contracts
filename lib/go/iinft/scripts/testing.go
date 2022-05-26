@@ -104,6 +104,7 @@ func GetFUSDBalance(t *testing.T, se *Engine, address flow.Address) float64 {
 
 func CreateSealDigitalArtTx(t *testing.T, se *Engine, client *gwtf.GoWithTheFlow, metadata *iinft.DigitalArtMetadata,
 	profile *evergreen.Profile) gwtf.FlowTransactionBuilder {
+	t.Helper()
 
 	profileVal, err := evergreen.ProfileToCadence(profile, flow.HexToAddress(se.WellKnownAddresses()["Evergreen"]))
 	require.NoError(t, err)

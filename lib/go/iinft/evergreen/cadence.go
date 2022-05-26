@@ -42,7 +42,6 @@ func RoleFromCadence(val cadence.Value) (*Role, error) {
 func RoleToCadence(role *Role, evergreenAddr flow.Address) (cadence.Value, error) {
 	var receiverPath cadence.Value
 	if role.ReceiverPath != "" {
-		receiverPath = cadence.String(role.ReceiverPath)
 		path, err := iinft.StringToPath(role.ReceiverPath)
 		if err != nil {
 			return nil, err

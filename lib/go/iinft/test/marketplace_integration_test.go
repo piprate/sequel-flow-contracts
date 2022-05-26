@@ -23,7 +23,7 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 
 	// set up seller account
 
-	sellerAcctName := "emulator-user1"
+	sellerAcctName := user1AccountName
 	sellerAcct := client.Account(sellerAcctName)
 
 	scripts.FundAccountWithFlow(t, client, sellerAcct.Address(), "10.0")
@@ -33,7 +33,7 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 
 	// set up buyer account
 
-	buyerAcctName := "emulator-user2"
+	buyerAcctName := user2AccountName
 	buyerAcct := client.Account(buyerAcctName)
 
 	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "10.0")

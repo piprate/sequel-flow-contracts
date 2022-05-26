@@ -493,14 +493,15 @@ func TestDigitalArt_NFT(t *testing.T) {
 		AssertSuccess()
 
 	t.Run("DigitalArt.getMetadata(...) should return NFT metadata", func(t *testing.T) {
-		val, err := se.NewScript("digitalart_get_metadata").
+		var val cadence.Value
+		val, err = se.NewScript("digitalart_get_metadata").
 			Argument(cadence.NewAddress(userAcct.Address())).
 			UInt64Argument(0).
 			RunReturns()
 		require.NoError(t, err)
 
-		meta, err := iinft.DigitalArtMetadataFromCadence(val)
-		require.NoError(t, err)
+		meta, metaErr := iinft.DigitalArtMetadataFromCadence(val)
+		require.NoError(t, metaErr)
 
 		assert.Equal(t, metadata.Asset, meta.Asset)
 		assert.Equal(t, uint64(1), meta.Edition)
@@ -515,8 +516,8 @@ func TestDigitalArt_NFT(t *testing.T) {
 	})
 
 	t.Run("getViews() should return a list of view types", func(t *testing.T) {
-
-		viewsVal, err := client.Script(`
+		var viewsVal cadence.Value
+		viewsVal, err = client.Script(`
 import DigitalArt from 0x01cf0e2f2f715450
 
 pub fun main(address:Address, tokenID:UInt64) : [Type] {
@@ -542,8 +543,8 @@ pub fun main(address:Address, tokenID:UInt64) : [Type] {
 	})
 
 	t.Run("resolveView(Type<MetadataViews.Display>()) should return MetadataViews.Display view", func(t *testing.T) {
-
-		val, err := client.Script(`
+		var val cadence.Value
+		val, err = client.Script(`
 import MetadataViews from 0xf8d6e0586b0a20c7
 import DigitalArt from 0x01cf0e2f2f715450
 
@@ -605,8 +606,8 @@ pub fun main(address:Address, tokenID:UInt64) {
 	})
 
 	t.Run("resolveView(Type<DigitalArt.Metadata>()) should return DigitalArt.Metadata view", func(t *testing.T) {
-
-		val, err := client.Script(`
+		var val cadence.Value
+		val, err = client.Script(`
 import MetadataViews from 0xf8d6e0586b0a20c7
 import DigitalArt from 0x01cf0e2f2f715450
 
@@ -626,8 +627,8 @@ pub fun main(address:Address, tokenID:UInt64) : DigitalArt.Metadata? {
 			RunReturns()
 		require.NoError(t, err)
 
-		meta, err := iinft.DigitalArtMetadataFromCadence(val)
-		require.NoError(t, err)
+		meta, metaErr := iinft.DigitalArtMetadataFromCadence(val)
+		require.NoError(t, metaErr)
 
 		assert.Equal(t, "Pure Art", meta.Name)
 		assert.Equal(t, "Digital art in its purest form", meta.Description)
@@ -635,8 +636,8 @@ pub fun main(address:Address, tokenID:UInt64) : DigitalArt.Metadata? {
 	})
 
 	t.Run("getAssetID() should return DigitalArt's master ID", func(t *testing.T) {
-
-		val, err := client.Script(`
+		var val cadence.Value
+		val, err = client.Script(`
 import DigitalArt from 0x01cf0e2f2f715450
 
 pub fun main(address:Address, tokenID:UInt64) : String {
@@ -657,8 +658,8 @@ pub fun main(address:Address, tokenID:UInt64) : String {
 	})
 
 	t.Run("getEvergreenProfile() should return DigitalArt's Evergreen profile", func(t *testing.T) {
-
-		val, err := client.Script(`
+		var val cadence.Value
+		val, err = client.Script(`
 import DigitalArt from 0x01cf0e2f2f715450
 import Evergreen from 0x01cf0e2f2f715450
 
@@ -719,8 +720,8 @@ func TestDigitalArt_Collection(t *testing.T) {
 		AssertSuccess()
 
 	t.Run("getIDs() should return a list of token IDs", func(t *testing.T) {
-
-		viewsVal, err := client.Script(`
+		var viewsVal cadence.Value
+		viewsVal, err = client.Script(`
 import DigitalArt from 0x01cf0e2f2f715450
 
 pub fun main(address:Address, tokenID:UInt64) : [UInt64] {
@@ -746,8 +747,8 @@ pub fun main(address:Address, tokenID:UInt64) : [UInt64] {
 	})
 
 	t.Run("borrowNFT(...) should return NonFungibleToken.NFT", func(t *testing.T) {
-
-		val, err := client.Script(`
+		var val cadence.Value
+		val, err = client.Script(`
 import NonFungibleToken from 0xf8d6e0586b0a20c7
 import DigitalArt from 0x01cf0e2f2f715450
 
@@ -786,8 +787,8 @@ pub fun main(address:Address, tokenID:UInt64) : UInt64 {
 	})
 
 	t.Run("borrowDigitalArt(...) should return DigitalArt.NFT", func(t *testing.T) {
-
-		val, err := client.Script(`
+		var val cadence.Value
+		val, err = client.Script(`
 import DigitalArt from 0x01cf0e2f2f715450
 
 pub fun main(address:Address, tokenID:UInt64) : String {
@@ -805,8 +806,8 @@ pub fun main(address:Address, tokenID:UInt64) : String {
 	})
 
 	t.Run("borrowDigitalArt(...) should return nil if token isn't found", func(t *testing.T) {
-
-		val, err := client.Script(`
+		var val cadence.Value
+		val, err = client.Script(`
 import DigitalArt from 0x01cf0e2f2f715450
 
 pub fun main(address:Address, tokenID:UInt64) : String {
