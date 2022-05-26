@@ -453,32 +453,13 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 			AssertFailure("missing fungible token receiver capability")
 	})
 
-	t.Run("Fail if there are no valid receivers", func(t *testing.T) {
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcct.Name()).Test(t).AssertSuccess()
-		//_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcct.Name()).Test(t).AssertSuccess()
+	t.Run("If some receivers are invalid, send the remainder to last good receiver", func(t *testing.T) {
+		// RoleOne's FUSD receiver is missing. RoleOne's cut will go to the seller (the artist).
 
-		//scripts.FundAccountWithFUSD(t, se, buyerAcct.Address(), "1000.0")
-		//
-		//_ = client.Transaction(scriptWithFUSD).
-		//	PayloadSigner(buyerAcct.Name()).
-		//	SignProposeAndPayAs(adminAccountName).
-		//	UInt64Argument(1).
-		//	UFix64Argument("100.0").
-		//	Argument(
-		//		evergreen.ProfileToCadence(happyPathProfile, evergreenAddr),
-		//	).
-		//	Test(t).
-		//	AssertFailure("No valid residual payment receivers")
-	})
-
-	t.Run("Succeed, if some receivers are invalid", func(t *testing.T) {
 		// Fund with Flow for FUSD setup fees
 		scripts.FundAccountWithFlow(t, client, artistAcct.Address(), "10.0")
 
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcct.Name()).Test(t).AssertSuccess()
-		//_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcct.Name()).Test(t).AssertSuccess()
-
-		scripts.FundAccountWithFUSD(t, se, buyerAcct.Address(), "1000.0")
+		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcct.Name()).Test(t).AssertSuccess()
 
 		_ = client.Transaction(scriptWithFUSD).
 			PayloadSigner(buyerAcct.Name()).
@@ -549,7 +530,103 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 }
 
 func TestMarketplace_withdrawToken(t *testing.T) {
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	require.NoError(t, err)
 
+	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+
+	se, err := scripts.NewEngine(client, false)
+	require.NoError(t, err)
+
+	platformAcct := client.Account(platformAccountName)
+
+	// set up seller account
+
+	sellerAcctName := "emulator-user1"
+	sellerAcct := client.Account(sellerAcctName)
+
+	scripts.FundAccountWithFlow(t, client, sellerAcct.Address(), "10.0")
+
+	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
+
+	metadata := SampleMetadata(1)
+	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address(), platformAcct.Address())
+
+	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		SignProposeAndPayAs(adminAccountName).
+		Test(t).
+		AssertSuccess()
+
+	_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
+		SignProposeAndPayAs(adminAccountName).
+		StringArgument(metadata.Asset).
+		UInt64Argument(1).
+		Argument(cadence.Address(sellerAcct.Address())).
+		Test(t).
+		AssertSuccess()
+
+	var nftID uint64
+
+	// Assert that the account's collection is correct
+	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)
+
+	_ = se.NewTransaction("marketplace_list_flow").
+		SignProposeAndPayAs(sellerAcctName).
+		UInt64Argument(nftID).
+		UFix64Argument("200.0").
+		Argument(cadence.NewOptional(cadence.String("link"))).
+		Test(t).
+		AssertSuccess()
+
+	t.Run("Fail, if listing doesn't exist", func(t *testing.T) {
+		_ = se.NewTransaction("marketplace_withdraw").
+			SignProposeAndPayAs(sellerAcctName).
+			UInt64Argument(12345).
+			Test(t).
+			AssertFailure("listing not found in Storefront")
+	})
+
+	t.Run("Happy path", func(t *testing.T) {
+		_ = se.NewTransaction("marketplace_withdraw").
+			SignProposeAndPayAs(sellerAcctName).
+			UInt64Argument(73).
+			Test(t).
+			AssertSuccess().
+			AssertEmitEvent(gwtf.NewTestEvent(
+				"A.01cf0e2f2f715450.SequelMarketplace.TokenWithdrawn",
+				map[string]interface{}{
+					"listingID":         "73",
+					"nftID":             "0",
+					"nftType":           "A.01cf0e2f2f715450.DigitalArt.NFT",
+					"price":             "200.00000000",
+					"storefrontAddress": "0xf3fcd2c1a78f5eee",
+					"vaultType":         "A.0ae53cb6e3f42a79.FlowToken.Vault",
+				}))
+
+		// ensure the listing doesn't exist
+		_, err = client.Script(`
+import NFTStorefront from 0xf8d6e0586b0a20c7
+import SequelMarketplace from 0x01cf0e2f2f715450
+
+pub fun main(listingID:UInt64, storefrontAddress: Address) {
+	let storefront = getAccount(storefrontAddress)
+		.getCapability(NFTStorefront.StorefrontPublicPath)!
+		.borrow<&NFTStorefront.Storefront{NFTStorefront.StorefrontPublic}>()
+		?? panic("Could not borrow Storefront from provided address")
+
+    if let listing = storefront.borrowListing(listingResourceID: listingID) {
+		panic("listing still exists")
+	}
+}
+`).
+			UInt64Argument(73).
+			Argument(cadence.Address(sellerAcct.Address())).
+			RunReturns()
+		require.NoError(t, err)
+
+		// ensure that the seller's collection still has the token
+		checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)
+	})
 }
 
 func TestMarketplace_buildPayments(t *testing.T) {

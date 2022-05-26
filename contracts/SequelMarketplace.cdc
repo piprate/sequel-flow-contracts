@@ -197,8 +197,10 @@ pub contract SequelMarketplace {
         storefrontAddress: Address,
         storefront: &NFTStorefront.Storefront,
         listingID: UInt64,
-        listing: &NFTStorefront.Listing{NFTStorefront.ListingPublic},
     ) {
+        let listing = storefront.borrowListing(listingResourceID: listingID)
+            ?? panic("listing not found in Storefront")
+
         let details = listing.getDetails()
 
         emit TokenWithdrawn(
