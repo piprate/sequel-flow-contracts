@@ -281,7 +281,7 @@ pub contract DigitalArt: NonFungibleToken {
         // so that the caller can read its metadata and call its methods
         //
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
-            return &self.ownedNFTs[id] as &NonFungibleToken.NFT
+            return (&self.ownedNFTs[id] as &NonFungibleToken.NFT?)!
         }
 
         // borrowDigitalArt
@@ -291,7 +291,7 @@ pub contract DigitalArt: NonFungibleToken {
         //
         pub fun borrowDigitalArt(id: UInt64): &DigitalArt.NFT? {
             if self.ownedNFTs[id] != nil {
-                let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+                let ref = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
                 return ref as! &DigitalArt.NFT
             } else {
                 return nil
@@ -299,7 +299,7 @@ pub contract DigitalArt: NonFungibleToken {
         }
 
         pub fun borrowViewResolver(id: UInt64): &AnyResource{MetadataViews.Resolver} {
-            let nft = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+            let nft = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
             return nft as! &DigitalArt.NFT
         }
 
