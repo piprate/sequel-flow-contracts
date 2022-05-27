@@ -81,19 +81,22 @@
     "Evergreen": {
       "source": "./contracts/Evergreen.cdc",
       "aliases": {
-        "testnet": "0x433b485ac39a557e"
+        "testnet": "0x433b485ac39a557e",
+        "mainnet": "0x433b485ac39a557e"
       }
     },
     "DigitalArt": {
       "source": "./contracts/DigitalArt.cdc",
       "aliases": {
-        "testnet": "0x433b485ac39a557e"
+        "testnet": "0x433b485ac39a557e",
+        "mainnet": "0x433b485ac39a557e"
       }
     },
     "SequelMarketplace": {
       "source": "./contracts/SequelMarketplace.cdc",
       "aliases": {
-        "testnet": "0x433b485ac39a557e"
+        "testnet": "0x433b485ac39a557e",
+        "mainnet": "0x433b485ac39a557e"
       }
     }
   },
