@@ -873,7 +873,7 @@ pub fun main(address:Address, tokenID:UInt64) {
 
 	let profile = token!.getEvergreenProfile()
 
-	assert(profile.id == 1, message: "bad value of evergreen profile ID")
+	assert(profile.id == "did:sequel:evergreen1", message: "bad value of evergreen profile ID")
 }
 `).
 			Argument(cadence.Address(userAcct.Address())).

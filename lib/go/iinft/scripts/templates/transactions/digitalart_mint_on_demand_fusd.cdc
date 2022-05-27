@@ -34,7 +34,7 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
                 assetHead: {{safe .Parameters.Metadata.AssetHead}}
             )
             let evergreenProfile = Evergreen.Profile(
-                id: {{.Parameters.Profile.ID}},
+                id: {{safe .Parameters.Profile.ID}},
                 description: {{safe .Parameters.Profile.Description}},
                 roles: [
                 {{- $last := dec (len .Parameters.Profile.Roles)}}

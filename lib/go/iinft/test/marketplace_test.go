@@ -333,7 +333,7 @@ func TestMarketplace_payForMintedTokens(t *testing.T) {
 	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "1000.0")
 
 	happyPathProfile, err := evergreen.ProfileToCadence(&evergreen.Profile{
-		ID: 3,
+		ID: "did:sequel:evergreen3",
 		Roles: []*evergreen.Role{
 			{
 				ID:                        "Artist",
@@ -645,7 +645,7 @@ func TestMarketplace_buildPayments(t *testing.T) {
 	sellerAcct := client.Account(user3AccountName)
 
 	happyPathProfile, err := evergreen.ProfileToCadence(&evergreen.Profile{
-		ID: 3,
+		ID: "did:sequel:evergreen3",
 		Roles: []*evergreen.Role{
 			{
 				ID:                        "Role1",
@@ -779,7 +779,7 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 
 	t.Run("Should fail if sum of rates is greater than 1.0", func(t *testing.T) {
 		profile, err := evergreen.ProfileToCadence(&evergreen.Profile{
-			ID: 3,
+			ID: "did:sequel:evergreen3",
 			Roles: []*evergreen.Role{
 				{
 					ID:                        "Role1",
@@ -821,7 +821,7 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 
 	t.Run("Roles with zero rate should not produce payments", func(t *testing.T) {
 		profile, err := evergreen.ProfileToCadence(&evergreen.Profile{
-			ID: 3,
+			ID: "did:sequel:evergreen3",
 			Roles: []*evergreen.Role{
 				{
 					ID:                        "Role1",
@@ -879,7 +879,7 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 
 	t.Run("Profile with no roles should allocate full amount to seller", func(t *testing.T) {
 		profile, err := evergreen.ProfileToCadence(&evergreen.Profile{
-			ID:    3,
+			ID:    "did:sequel:evergreen3",
 			Roles: []*evergreen.Role{},
 		}, evergreenAddr)
 		require.NoError(t, err)
@@ -921,7 +921,7 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 		extraTwoAcct := client.Account(platformAccountName)
 
 		profile, err := evergreen.ProfileToCadence(&evergreen.Profile{
-			ID: 3,
+			ID: "did:sequel:evergreen3",
 			Roles: []*evergreen.Role{
 				{
 					ID:                        "Role1",

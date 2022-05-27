@@ -22,7 +22,7 @@ type (
 	}
 
 	Profile struct {
-		ID          uint32  `json:"id"`
+		ID          string  `json:"id"`
 		Description string  `json:"description"`
 		Roles       []*Role `json:"roles"`
 	}

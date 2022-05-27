@@ -25,7 +25,7 @@ func SampleMetadata(maxEdition uint64) *iinft.DigitalArtMetadata {
 
 func BasicEvergreenProfile(artist flow.Address) *evergreen.Profile {
 	return &evergreen.Profile{
-		ID: 1,
+		ID: "did:sequel:evergreen1",
 		Roles: []*evergreen.Role{
 			{
 				ID:                        evergreen.RoleArtist,
@@ -39,7 +39,7 @@ func BasicEvergreenProfile(artist flow.Address) *evergreen.Profile {
 
 func PrimaryOnlyEvergreenProfile(artist, platform flow.Address) *evergreen.Profile {
 	return &evergreen.Profile{
-		ID: 2,
+		ID: "did:sequel:evergreen2",
 		Roles: []*evergreen.Role{
 			{
 				ID:                        evergreen.RoleArtist,

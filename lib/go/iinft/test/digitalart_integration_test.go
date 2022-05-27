@@ -65,7 +65,7 @@ func TestDigitalArt_Integration_MintOnDemand_FUSD(t *testing.T) {
 
 	metadata := SampleMetadata(4)
 	profile := &evergreen.Profile{
-		ID: 1,
+		ID: "did:sequel:evergreen1",
 		Roles: []*evergreen.Role{
 			{
 				ID:                        evergreen.RoleArtist,
@@ -232,7 +232,7 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 
 	metadata := SampleMetadata(4)
 	profile := &evergreen.Profile{
-		ID: 1,
+		ID: "did:sequel:evergreen1",
 		Roles: []*evergreen.Role{
 			{
 				ID:                        evergreen.RoleArtist,

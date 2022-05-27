@@ -59,12 +59,14 @@ pub contract Evergreen {
     // Each role may receive a commission fee at every sale.
     // The structure of this commission is defined in each role structure.
     pub struct Profile {
-        pub let id: UInt32
-        pub let description: String  // consider using URI instead
+        // id is the profile DID, i.e. did:sequel:xyz
+        pub let id: String
+        // description is an optional field that described the purpose of this profile
+        pub let description: String
         pub let roles: [Role]
 
         init(
-            id: UInt32,
+            id: String,
             description: String,
             roles: [Role]
         ) {
