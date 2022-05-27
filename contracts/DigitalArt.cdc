@@ -434,8 +434,8 @@ pub contract DigitalArt: NonFungibleToken {
     //
     init() {
         // Set our named paths
-        self.CollectionStoragePath = /storage/digitalArtCollection
-        self.CollectionPublicPath = /public/digitalArtCollection
+        self.CollectionStoragePath = /storage/sequelDigitalArtCollection
+        self.CollectionPublicPath = /public/sequelDigitalArtCollection
         self.AdminStoragePath = /storage/digitalArtAdmin
         self.AdminPrivatePath = /private/digitalArtAdmin
 
