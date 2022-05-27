@@ -5,14 +5,19 @@ import Evergreen from "./Evergreen.cdc"
 
 // SequelMarketplace provides convenience functions to create listings for Sequel NFTs in NFTStorefront.
 //
+// Source: https://github.com/piprate/sequel-flow-contracts
+//
 pub contract SequelMarketplace {
     // Payment
     //
     pub struct Payment {
+        // role is the Evenrgreen role of the party that receives this payment
         pub let role: String
+        // receiver is the receiving party's address
         pub let receiver: Address
-        // The amount of the payment FungibleToken that will be paid to the role's receiver.
+        // amount is the quantity of the fungible token that will be paid to the receiver.
         pub let amount: UFix64
+        // rate is the percentage of the overall sale this payment represents.
         pub let rate: UFix64
 
         init(role: String, receiver: Address, amount: UFix64, rate: UFix64) {
@@ -36,7 +41,7 @@ pub contract SequelMarketplace {
     }
 
     // TokenListed
-    // Token available for purchase
+    // Token available for purchase.
     //
     pub event TokenListed(
         storefrontAddress: Address,
@@ -50,6 +55,9 @@ pub contract SequelMarketplace {
         metadataLink: String?,
     )
 
+    // TokenSold
+    // Token was sold.
+    //
     pub event TokenSold(
         storefrontAddress: Address,
         listingID: UInt64,
@@ -61,6 +69,9 @@ pub contract SequelMarketplace {
         metadataLink: String?,
     )
 
+    // TokenWithdrawn
+    // Token listing was withdrawn.
+    //
     pub event TokenWithdrawn(
         storefrontAddress: Address,
         listingID: UInt64,

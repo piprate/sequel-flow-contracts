@@ -17,6 +17,7 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
     prepare(buyer: AuthAccount, platform: AuthAccount) {
         self.admin = platform.borrow<&DigitalArt.Admin>(from: DigitalArt.AdminStoragePath)!
 
+        {{- if .Parameters.Metadata }}
         if !self.admin.isSealed(masterId: masterId) {
             let metadata = DigitalArt.Metadata(
                 name: {{safe .Parameters.Metadata.Name}},
@@ -34,7 +35,7 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
                 assetHead: {{safe .Parameters.Metadata.AssetHead}}
             )
             let evergreenProfile = Evergreen.Profile(
-                id: {{.Parameters.Profile.ID}},
+                id: {{safe .Parameters.Profile.ID}},
                 description: {{safe .Parameters.Profile.Description}},
                 roles: [
                 {{- $last := dec (len .Parameters.Profile.Roles)}}
@@ -51,6 +52,7 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
             )
             self.admin.sealMaster(metadata: metadata, evergreenProfile: evergreenProfile)
         }
+        {{- end}}
 
         self.availableEditions = self.admin.availableEditions(masterId: masterId)
         self.evergreenProfile = self.admin.evergreenProfile(masterId: masterId)
