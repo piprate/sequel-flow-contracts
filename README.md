@@ -11,9 +11,9 @@ The smart contracts are written in [Cadence](https://docs.onflow.org/cadence).
 
 | Contract          | Mainnet              | Testnet              |
 |-------------------|----------------------|----------------------|
-| Evergreen         | `<not yet released>` | `0x433b485ac39a557e` |
-| DigitalArt        | `<not yet released>` | `0x433b485ac39a557e` |
-| SequelMarketplace | `<not yet released>` | `0x433b485ac39a557e` |
+| Evergreen         | `<not yet released>` | `0x745b085dafdd4fc0` |
+| DigitalArt        | `<not yet released>` | `0x745b085dafdd4fc0` |
+| SequelMarketplace | `<not yet released>` | `0x745b085dafdd4fc0` |
 
 ## Contents
 
