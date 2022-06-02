@@ -25,7 +25,8 @@ func TestNewEngine_emulator(t *testing.T) {
 	_, err = client.CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
-	client.InitializeContracts()
+	err = client.InitializeContractsE()
+	require.NoError(t, err)
 
 	_, err = scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -41,7 +42,8 @@ func TestNewEngine_emulatorWithFees(t *testing.T) {
 	adminAcct := client.Account("emulator-sequel-admin")
 	scripts.FundAccountWithFlow(t, client, adminAcct.Address(), "1000.0")
 
-	client.InitializeContracts()
+	err = client.InitializeContractsE()
+	require.NoError(t, err)
 
 	_, err = scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -70,7 +72,8 @@ func TestEngine_GetStandardScript(t *testing.T) {
 	_, err = client.CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
-	client.InitializeContracts()
+	err = client.InitializeContractsE()
+	require.NoError(t, err)
 
 	e, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -87,7 +90,8 @@ func TestEngine_GetStandardScript_Versus(t *testing.T) {
 	_, err = client.CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
-	client.InitializeContracts()
+	err = client.InitializeContractsE()
+	require.NoError(t, err)
 
 	e, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
@@ -104,7 +108,8 @@ func TestEngine_GetCustomScript_MOD_FUSD(t *testing.T) {
 	_, err = client.CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
-	client.InitializeContracts()
+	err = client.InitializeContractsE()
+	require.NoError(t, err)
 
 	e, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)

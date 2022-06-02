@@ -64,10 +64,20 @@ func (f *GoWithTheFlow) CreateAccountsE(saAccountName string) (*GoWithTheFlow, e
 
 // InitializeContracts installs all contracts in the deployment block for the configured network
 func (f *GoWithTheFlow) InitializeContracts() *GoWithTheFlow {
-	f.Logger.Info("Deploying contracts")
-	if _, err := f.Services.Project.Deploy(f.Network, false); err != nil {
+	if err := f.InitializeContractsE(); err != nil {
 		log.Fatal(err)
 	}
 
 	return f
+}
+
+// InitializeContractsE installs all contracts in the deployment block for the configured network
+// and returns an error if it fails.
+func (f *GoWithTheFlow) InitializeContractsE() error {
+	f.Logger.Info("Deploying contracts")
+	if _, err := f.Services.Project.Deploy(f.Network, false); err != nil {
+		return err
+	}
+
+	return nil
 }

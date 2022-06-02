@@ -25,7 +25,8 @@ func ConfigureInMemoryEmulator(t *testing.T, client *gwtf.GoWithTheFlow, adminFl
 		FundAccountWithFlow(t, client, adminAcct.Address(), adminFlowDeposit)
 	}
 
-	client.InitializeContracts()
+	err = client.InitializeContractsE()
+	require.NoError(t, err)
 }
 
 func FundAccountWithFlow(t *testing.T, client *gwtf.GoWithTheFlow, receiverAddress flow.Address, amount string) {

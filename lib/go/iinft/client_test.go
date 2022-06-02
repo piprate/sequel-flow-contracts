@@ -21,7 +21,8 @@ func TestNewGoWithTheFlowFS(t *testing.T) {
 	_, err = client.CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
-	client.InitializeContracts()
+	err = client.InitializeContractsE()
+	require.NoError(t, err)
 }
 
 func TestNewGoWithTheFlowEmbedded(t *testing.T) {
@@ -31,7 +32,8 @@ func TestNewGoWithTheFlowEmbedded(t *testing.T) {
 	_, err = client.CreateAccountsE("emulator-account")
 	require.NoError(t, err)
 
-	client.InitializeContracts()
+	err = client.InitializeContractsE()
+	require.NoError(t, err)
 }
 
 func TestNewGoWithTheFlowEmbedded_WithTxFees(t *testing.T) {
