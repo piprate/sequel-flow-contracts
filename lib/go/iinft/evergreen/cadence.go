@@ -79,7 +79,7 @@ func ProfileFromCadence(val cadence.Value) (*Profile, error) {
 	}
 
 	res := Profile{
-		ID:          uint32(valStruct.Fields[0].(cadence.UInt32)),
+		ID:          valStruct.Fields[0].ToGoValue().(string),
 		Description: valStruct.Fields[1].ToGoValue().(string),
 		Roles:       []*Role{},
 	}
@@ -113,7 +113,7 @@ func ProfileToCadence(profile *Profile, evergreenAddr flow.Address) (cadence.Val
 	}
 
 	return cadence.NewStruct([]cadence.Value{
-		cadence.UInt32(profile.ID),
+		cadence.String(profile.ID),
 		cadence.String(profile.Description),
 		cadence.NewArray(roles),
 	}).WithType(&cadence.StructType{

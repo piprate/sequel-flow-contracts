@@ -52,7 +52,7 @@
   },
   "accounts": {
     "testnet-sequel-admin": {
-      "address": "0x553d434d41d6941c",
+      "address": "0x745b085dafdd4fc0",
       "key": "${TESTNET_SEQUEL_ADMIN}"
     },
     "testnet-sequel-platform" : {

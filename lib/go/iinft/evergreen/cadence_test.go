@@ -64,7 +64,7 @@ func TestRoleToCadence_RoleFromCadence(t *testing.T) {
 
 func TestProfileToCadence_ProfileFromCadence(t *testing.T) {
 	sourceProfile := &Profile{
-		ID:          1,
+		ID:          "did:sequel:evergreen1",
 		Description: "Test Profile",
 		Roles: []*Role{
 			{

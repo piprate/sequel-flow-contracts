@@ -64,7 +64,7 @@ import Evergreen from 0x01cf0e2f2f715450
 pub fun main(addr: Address) {
 
 	var profile = Evergreen.Profile(
-		id: 1,
+		id: "did:sequel:evergreen1",
 		description: "Test Profile",
 		roles: [
 			Evergreen.Role(
@@ -108,7 +108,7 @@ func TestEvergreen_Profile_buildRoyalties(t *testing.T) {
 	user2Acct := client.Account(user2AccountName)
 
 	profile := &evergreen.Profile{
-		ID:          1,
+		ID:          "did:sequel:evergreen1",
 		Description: "Test Profile",
 		Roles: []*evergreen.Role{
 			{

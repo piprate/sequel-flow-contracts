@@ -125,7 +125,7 @@ func TestEngine_GetCustomScript_MOD_FUSD(t *testing.T) {
 			AssetHead:         "asset-head-id",
 		},
 		Profile: &evergreen.Profile{
-			ID: 0,
+			ID: "did:sequel:evergreen1",
 			Roles: []*evergreen.Role{
 				{
 					ID:                        evergreen.RoleArtist,
