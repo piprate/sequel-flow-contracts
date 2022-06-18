@@ -58,7 +58,12 @@ func NewGoWithTheFlowError(baseLoader flowkit.ReaderWriter, network string, inMe
 	if inMemory {
 		// YAY, we can run it inline in memory!
 		acc, _ := state.EmulatorServiceAccount()
-		gw := emulator.NewGateway(acc, enableTxFees)
+		var gw *emulator.Gateway
+		if enableTxFees {
+			gw = emulator.NewGatewayWithOpts(acc, emulator.WithTransactionFees())
+		} else {
+			gw = emulator.NewGatewayWithOpts(acc)
+		}
 		service = services.NewServices(gw, state, logger)
 	} else {
 		network, err := state.Networks().ByName(network)

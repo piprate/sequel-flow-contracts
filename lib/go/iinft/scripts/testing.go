@@ -2,8 +2,8 @@ package scripts
 
 import (
 	"bytes"
-	"path"
-	"strings"
+	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/onflow/cadence"
@@ -25,7 +25,8 @@ func ConfigureInMemoryEmulator(t *testing.T, client *gwtf.GoWithTheFlow, adminFl
 		FundAccountWithFlow(t, client, adminAcct.Address(), adminFlowDeposit)
 	}
 
-	client.InitializeContracts()
+	err = client.InitializeContractsE()
+	require.NoError(t, err)
 }
 
 func FundAccountWithFlow(t *testing.T, client *gwtf.GoWithTheFlow, receiverAddress flow.Address, amount string) {
@@ -35,7 +36,7 @@ func FundAccountWithFlow(t *testing.T, client *gwtf.GoWithTheFlow, receiverAddre
 	addrMap := make(map[string]string)
 	for _, contract := range contracts {
 		if contract.Alias != "" {
-			addrMap[strings.Split(path.Base(contract.Source), ".")[0]] = contract.Alias
+			addrMap[contract.Name] = contract.Alias
 		}
 	}
 
@@ -52,6 +53,30 @@ func FundAccountWithFlow(t *testing.T, client *gwtf.GoWithTheFlow, receiverAddre
 		SignProposeAndPayAsService().
 		Test(t).
 		AssertSuccess()
+}
+
+func FundAccountWithFlowE(client *gwtf.GoWithTheFlow, receiverAddress flow.Address, amount string) error {
+	contracts := client.State.Contracts().ByNetwork(client.Network)
+	addrMap := make(map[string]string)
+	for _, contract := range contracts {
+		if contract.Alias != "" {
+			addrMap[contract.Name] = contract.Alias
+		}
+	}
+
+	buf := &bytes.Buffer{}
+	if err := goTemplates.ExecuteTemplate(buf, "account_fund_flow", addrMap); err != nil {
+		panic(err)
+	}
+
+	script := buf.String()
+
+	_, err := client.Transaction(script).
+		Argument(cadence.NewAddress(receiverAddress)).
+		UFix64Argument(amount).
+		SignProposeAndPayAsService().RunE()
+
+	return err
 }
 
 func GetFlowBalance(t *testing.T, se *Engine, address flow.Address) float64 {
@@ -116,4 +141,48 @@ func CreateSealDigitalArtTx(t *testing.T, se *Engine, client *gwtf.GoWithTheFlow
 		Argument(profileVal)
 
 	return tx
+}
+
+func ExtractStringValueFromEvent(txResult gwtf.TransactionResult, eventName, key string) string {
+	for _, e := range txResult.Events {
+		if e.Name == eventName {
+			v := e.Fields[key]
+			if v == nil {
+				panic(fmt.Sprintf("key %s not found in %s", key, eventName))
+			}
+			switch val := v.(type) {
+			case string:
+				return val
+			default:
+				panic(fmt.Sprintf("unexpected value type for %s in %s: %T", key, eventName, v))
+			}
+		}
+	}
+
+	return ""
+}
+
+func ExtractUInt64ValueFromEvent(txResult gwtf.TransactionResult, eventName, key string) uint64 {
+	for _, e := range txResult.Events {
+		if e.Name == eventName {
+			v := e.Fields[key]
+			if v == nil {
+				panic(fmt.Sprintf("key %s not found in %s", key, eventName))
+			}
+			switch val := v.(type) {
+			case string:
+				res, err := strconv.ParseUint(val, 10, 64)
+				if err != nil {
+					panic(err)
+				}
+				return res
+			case uint64:
+				return val
+			default:
+				panic(fmt.Sprintf("unexpected value type for %s in %s: %T", key, eventName, v))
+			}
+		}
+	}
+
+	panic(fmt.Sprintf("value not found for %s in %s", key, eventName))
 }

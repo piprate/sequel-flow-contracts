@@ -95,6 +95,8 @@ func (t TransactionResult) AssertEmitEventJSON(event ...string) TransactionResul
 
 func (t TransactionResult) AssertPartialEvent(expected *FormatedEvent) TransactionResult {
 
+	expectedCpy := *expected
+
 	events := t.Events
 	for index, ev := range events {
 		// TODO do we need more then just name here?
@@ -102,13 +104,13 @@ func (t TransactionResult) AssertPartialEvent(expected *FormatedEvent) Transacti
 			for key := range ev.Fields {
 				_, exist := expected.Fields[key]
 				if !exist {
-					delete(events[index].Fields, key)
+					expectedCpy.Fields[key] = events[index].Fields[key]
 				}
 			}
 		}
 	}
 
-	assert.Contains(t.Testing, events, expected)
+	assert.Contains(t.Testing, events, &expectedCpy)
 
 	for _, ev := range events {
 		t.Testing.Log(ev.String())

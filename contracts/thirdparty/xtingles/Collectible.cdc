@@ -2,9 +2,9 @@ import NonFungibleToken from "../../standard/NonFungibleToken.cdc"
 import Edition from "./Edition.cdc"
 
 pub contract Collectible: NonFungibleToken {
-    // Named Paths   
+    // Named Paths
     pub let CollectionStoragePath: StoragePath
-    pub let CollectionPublicPath: PublicPath     
+    pub let CollectionPublicPath: PublicPath
     pub let MinterStoragePath: StoragePath
     pub let MinterPrivatePath: PrivatePath
 
@@ -28,32 +28,32 @@ pub contract Collectible: NonFungibleToken {
 
     pub struct Metadata {
         // Link to IPFS file
-        pub let link: String   
-        // Name  
+        pub let link: String
+        // Name
         pub let name: String
         // Author name
         pub let author: String
         // Description
         pub let description: String
         // Number of copy
-        pub let edition: UInt64  
+        pub let edition: UInt64
         // Additional properties to use in future
-        pub let properties: AnyStruct    
+        pub let properties: AnyStruct
 
         init(
-            link:String,          
-            name: String, 
-            author: String,      
-            description: String,        
-            edition: UInt64, 
+            link:String,
+            name: String,
+            author: String,
+            description: String,
+            edition: UInt64,
             properties: AnyStruct
     )  {
-            self.link = link             
+            self.link = link
             self.name = name
-            self.author = author            
-            self.description = description  
-            self.edition = edition 
-            self.properties = properties             
+            self.author = author
+            self.description = description
+            self.edition = edition
+            self.properties = properties
         }
     }
 
@@ -61,7 +61,7 @@ pub contract Collectible: NonFungibleToken {
     // Collectible as an NFT
     pub resource NFT: NonFungibleToken.INFT, Public {
         // The token's ID
-        pub let id: UInt64      
+        pub let id: UInt64
 
         pub let metadata: Metadata
 
@@ -71,18 +71,17 @@ pub contract Collectible: NonFungibleToken {
         // initializer
         //
         init(initID: UInt64, metadata: Metadata, editionNumber: UInt64) {
-            self.id = initID   
-            self.metadata = metadata     
+            self.id = initID
+            self.metadata = metadata
             self.editionNumber = editionNumber
         }
     }
 
     //Standard NFT collectionPublic interface that can also borrowArt as the correct type
     pub resource interface CollectionPublic {
-        pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT 
         pub fun deposit(token: @NonFungibleToken.NFT)
         pub fun getIDs(): [UInt64]
-        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT  
+        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
         pub fun borrowCollectible(id: UInt64): &Collectible.NFT? {
             // If the result isn't nil, the id of the returned reference
             // should be the same as the argument to the function
@@ -112,7 +111,7 @@ pub contract Collectible: NonFungibleToken {
 
             emit Withdraw(id: token.id, from: self.owner?.address)
 
-            return <-token 
+            return <-token
         }
 
         // deposit
@@ -139,14 +138,14 @@ pub contract Collectible: NonFungibleToken {
             return self.ownedNFTs.keys
         }
 
-        pub fun getNFT(id: UInt64): &Collectible.NFT {        
+        pub fun getNFT(id: UInt64): &Collectible.NFT {
             let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
-            return ref as! &Collectible.NFT     
+            return ref as! &Collectible.NFT
         }
-  
+
         // Common number for all copies of the item
         pub fun getEditionNumber(id: UInt64): UInt64? {
-            if self.ownedNFTs[id] == nil { 
+            if self.ownedNFTs[id] == nil {
                 return nil
             }
 
@@ -171,7 +170,7 @@ pub contract Collectible: NonFungibleToken {
                 return nil
             }
         }
-        
+
         // destructor
         destroy() {
             destroy self.ownedNFTs
@@ -192,22 +191,22 @@ pub contract Collectible: NonFungibleToken {
     }
 
     pub resource NFTMinter {
-  
+
         pub fun mintNFT(metadata: Metadata, editionNumber: UInt64): @NFT {
-            let editionRef = Collectible.account.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath).borrow()! 
+            let editionRef = Collectible.account.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath).borrow()!
 
             // Check edition info in contract Edition in order to manage commission and all amount of copies of the same item
             assert(editionRef.getEdition(editionNumber) != nil, message: "Edition does not exist")
-        
+
             var newNFT <- create NFT(
                 initID: Collectible.totalSupply,
                 metadata: Metadata(
-                    link: metadata.link,          
-                    name: metadata.name, 
-                    author: metadata.author,      
-                    description: metadata.description,        
-                    edition: metadata.edition, 
-                    properties: metadata.properties           
+                    link: metadata.link,
+                    name: metadata.name,
+                    author: metadata.author,
+                    description: metadata.description,
+                    edition: metadata.edition,
+                    properties: metadata.properties
                 ),
                 editionNumber: editionNumber
             )
@@ -237,9 +236,9 @@ pub contract Collectible: NonFungibleToken {
         var collectibleData: [CollectibleData] = []
         let account = getAccount(address)
 
-        if let CollectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&Collectible.Collection{Collectible.CollectionPublic}>()  {
+        if let CollectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&{Collectible.CollectionPublic}>()  {
             for id in CollectibleCollection.getIDs() {
-                var collectible = CollectibleCollection.borrowCollectible(id: id) 
+                var collectible = CollectibleCollection.borrowCollectible(id: id)
                 collectibleData.append(CollectibleData(
                     metadata: collectible!.metadata,
                     id: id,
@@ -248,18 +247,18 @@ pub contract Collectible: NonFungibleToken {
             }
         }
         return collectibleData
-    } 
+    }
 
     init() {
         // Initialize the total supply
         self.totalSupply = 1
-        self.CollectionPublicPath = /public/NFTxtinglesCollectibleCollection
-        self.CollectionStoragePath = /storage/NFTxtinglesCollectibleCollection
-        self.MinterStoragePath = /storage/NFTxtinglesCollectibleMinter
-        self.MinterPrivatePath = /private/NFTxtinglesCollectibleMinter
+        self.CollectionPublicPath = /public/bloctoXtinglesCollectibleCollection
+        self.CollectionStoragePath = /storage/bloctoXtinglesCollectibleCollection
+        self.MinterStoragePath = /storage/bloctoXtinglesCollectibleMinter
+        self.MinterPrivatePath = /private/bloctoXtinglesCollectibleMinter
 
         self.account.save<@NonFungibleToken.Collection>(<- Collectible.createEmptyCollection(), to: Collectible.CollectionStoragePath)
-        self.account.link<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
+        self.account.link<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
         
         let minter <- create NFTMinter()         
         self.account.save(<-minter, to: self.MinterStoragePath)
