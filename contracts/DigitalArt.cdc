@@ -343,7 +343,7 @@ pub contract DigitalArt: NonFungibleToken {
 
     pub fun isClosed(masterId: String): Bool {
         if DigitalArt.masters.containsKey(masterId) {
-            let master = &DigitalArt.masters[masterId] as &Master
+            let master = &DigitalArt.masters[masterId]! as &Master
             return master.closed
         } else {
             return false
@@ -380,7 +380,7 @@ pub contract DigitalArt: NonFungibleToken {
                DigitalArt.masters.containsKey(masterId) : "Master not found"
             }
 
-            let master = &DigitalArt.masters[masterId] as &Master
+            let master = &DigitalArt.masters[masterId]! as &Master
 
             return master.availableEditions()
         }
@@ -390,7 +390,7 @@ pub contract DigitalArt: NonFungibleToken {
                DigitalArt.masters.containsKey(masterId) : "Master not found"
             }
 
-            let master = &DigitalArt.masters[masterId] as &Master
+            let master = &DigitalArt.masters[masterId]! as &Master
 
             return master.evergreenProfile!
         }
@@ -403,7 +403,7 @@ pub contract DigitalArt: NonFungibleToken {
                DigitalArt.masters.containsKey(masterId) : "Master not found"
             }
 
-            let master = &DigitalArt.masters[masterId] as &Master
+            let master = &DigitalArt.masters[masterId]! as &Master
 
             assert(master.availableEditions() > 0, message: "No more tokens to mint")
 

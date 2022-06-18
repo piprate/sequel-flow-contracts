@@ -1,12 +1,14 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/onflow/cadence"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/scripts"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -50,7 +52,7 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 		Test(t).
 		AssertSuccess()
 
-	_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
+	res := client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
 		SignProposeAndPayAs(adminAccountName).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
@@ -58,28 +60,30 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 		Test(t).
 		AssertSuccess()
 
-	var nftID uint64
+	nftID := scripts.ExtractUInt64ValueFromEvent(res,
+		"A.01cf0e2f2f715450.DigitalArt.Minted", "id")
 
 	// Assert that the account's collection is correct
 	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)
 	checkDigitalArtCollectionLen(t, se, sellerAcct.Address().String(), 1)
 	checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 0)
 
+	var listingID uint64
+
 	t.Run("Should be able to list an NFT in seller's Storefront", func(t *testing.T) {
-		_ = se.NewTransaction("marketplace_list_flow").
+		res := se.NewTransaction("marketplace_list_flow").
 			SignProposeAndPayAs(sellerAcctName).
 			UInt64Argument(nftID).
 			UFix64Argument("200.0").
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
-			AssertEmitEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(gwtf.NewTestEvent(
 				"A.01cf0e2f2f715450.SequelMarketplace.TokenListed",
 				map[string]interface{}{
-					"listingID":        "83",
 					"metadataLink":     "link",
 					"asset":            "did:sequel:asset-id",
-					"nftID":            "0",
+					"nftID":            fmt.Sprintf("%d", nftID),
 					"nftType":          "A.01cf0e2f2f715450.DigitalArt.NFT",
 					"paymentVaultType": "A.0ae53cb6e3f42a79.FlowToken.Vault",
 					"payments": []interface{}{
@@ -99,22 +103,29 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 					"price":             "200.00000000",
 					"storefrontAddress": "0xf3fcd2c1a78f5eee",
 				})).
-			AssertEmitEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
 					"ftVaultType":       "Type\u003cA.0ae53cb6e3f42a79.FlowToken.Vault\u003e()",
-					"listingResourceID": "83",
-					"nftID":             "0",
+					"nftID":             fmt.Sprintf("%d", nftID),
 					"nftType":           "Type\u003cA.01cf0e2f2f715450.DigitalArt.NFT\u003e()",
 					"price":             "200.00000000",
 					"storefrontAddress": "0xf3fcd2c1a78f5eee",
 				}))
+
+		listingID = scripts.ExtractUInt64ValueFromEvent(res,
+			"A.01cf0e2f2f715450.SequelMarketplace.TokenListed", "listingID")
+
+		// test listing IDs separately, as they aren't stable
+		assert.NotZero(t, listingID)
+		assert.Equal(t, listingID, scripts.ExtractUInt64ValueFromEvent(res,
+			"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable", "listingResourceID"))
 	})
 
 	t.Run("Should be able to buy an NFT from seller's Storefront", func(t *testing.T) {
 		_ = se.NewTransaction("marketplace_buy_flow").
 			SignProposeAndPayAs(buyerAcctName).
-			UInt64Argument(83).
+			UInt64Argument(listingID).
 			Argument(cadence.NewAddress(sellerAcct.Address())).
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
@@ -122,8 +133,8 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.01cf0e2f2f715450.SequelMarketplace.TokenSold",
 				map[string]interface{}{
-					"listingID":         "83",
-					"nftID":             "0",
+					"listingID":         fmt.Sprintf("%d", listingID),
+					"nftID":             fmt.Sprintf("%d", nftID),
 					"nftType":           "A.01cf0e2f2f715450.DigitalArt.NFT",
 					"paymentVaultType":  "A.0ae53cb6e3f42a79.FlowToken.Vault",
 					"price":             "200.00000000",
@@ -182,7 +193,7 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 		Test(t).
 		AssertSuccess()
 
-	_ = client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
+	res := client.Transaction(se.GetStandardScript("digitalart_mint_edition")).
 		SignProposeAndPayAs(adminAccountName).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
@@ -190,33 +201,30 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 		Test(t).
 		AssertSuccess()
 
-	var nftID uint64
+	nftID := scripts.ExtractUInt64ValueFromEvent(res,
+		"A.01cf0e2f2f715450.DigitalArt.Minted", "id")
 
 	// Assert that the account's collection is correct
 	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)
 	checkDigitalArtCollectionLen(t, se, sellerAcct.Address().String(), 1)
 	checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 0)
 
+	var listingID uint64
+
 	t.Run("Should be able to list an NFT in seller's Storefront", func(t *testing.T) {
-		_ = se.NewTransaction("marketplace_list_fusd").
+		res := se.NewTransaction("marketplace_list_fusd").
 			SignProposeAndPayAs(sellerAcctName).
 			UInt64Argument(nftID).
 			UFix64Argument("200.0").
 			Argument(cadence.NewOptional(nil)).
 			Test(t).
 			AssertSuccess().
-			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.NFTStorefront.StorefrontInitialized",
-				map[string]interface{}{
-					"storefrontResourceID": "87",
-				})).
-			AssertEmitEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(gwtf.NewTestEvent(
 				"A.01cf0e2f2f715450.SequelMarketplace.TokenListed",
 				map[string]interface{}{
-					"listingID":        "88",
 					"asset":            "did:sequel:asset-id",
 					"metadataLink":     "",
-					"nftID":            "0",
+					"nftID":            fmt.Sprintf("%d", nftID),
 					"nftType":          "A.01cf0e2f2f715450.DigitalArt.NFT",
 					"paymentVaultType": "A.f8d6e0586b0a20c7.FUSD.Vault",
 					"payments": []interface{}{
@@ -237,22 +245,29 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 					"price":             "200.00000000",
 					"storefrontAddress": "0xf3fcd2c1a78f5eee",
 				})).
-			AssertEmitEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
 					"ftVaultType":       "Type\u003cA.f8d6e0586b0a20c7.FUSD.Vault\u003e()",
-					"listingResourceID": "88",
-					"nftID":             "0",
+					"nftID":             fmt.Sprintf("%d", nftID),
 					"nftType":           "Type\u003cA.01cf0e2f2f715450.DigitalArt.NFT\u003e()",
 					"price":             "200.00000000",
 					"storefrontAddress": "0xf3fcd2c1a78f5eee",
 				}))
+
+		listingID = scripts.ExtractUInt64ValueFromEvent(res,
+			"A.01cf0e2f2f715450.SequelMarketplace.TokenListed", "listingID")
+
+		// test listing IDs separately, as they aren't stable
+		assert.NotZero(t, listingID)
+		assert.Equal(t, listingID, scripts.ExtractUInt64ValueFromEvent(res,
+			"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable", "listingResourceID"))
 	})
 
 	t.Run("Should be able to buy an NFT from seller's Storefront", func(t *testing.T) {
 		_ = se.NewTransaction("marketplace_buy_fusd").
 			SignProposeAndPayAs(buyerAcctName).
-			UInt64Argument(88).
+			UInt64Argument(listingID).
 			Argument(cadence.NewAddress(sellerAcct.Address())).
 			Argument(cadence.NewOptional(nil)).
 			Test(t).
@@ -260,8 +275,8 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.01cf0e2f2f715450.SequelMarketplace.TokenSold",
 				map[string]interface{}{
-					"listingID":         "88",
-					"nftID":             "0",
+					"listingID":         fmt.Sprintf("%d", listingID),
+					"nftID":             fmt.Sprintf("%d", nftID),
 					"nftType":           "A.01cf0e2f2f715450.DigitalArt.NFT",
 					"paymentVaultType":  "A.f8d6e0586b0a20c7.FUSD.Vault",
 					"price":             "200.00000000",

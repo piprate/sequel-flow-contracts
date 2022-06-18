@@ -80,11 +80,11 @@ func (e *Engine) loadContractAddresses() error {
 	}
 	for _, contract := range contracts {
 		if contract.Alias != "" {
-			e.wellKnownAddresses[strings.Split(path.Base(contract.Source), ".")[0]] = contract.Alias
+			e.wellKnownAddresses[contract.Name] = contract.Alias
 		}
 	}
 	for _, contract := range deployedContracts {
-		e.wellKnownAddresses[strings.Split(path.Base(contract.Source), ".")[0]] = "0x" + contract.Target.String()
+		e.wellKnownAddresses[strings.Split(path.Base(contract.Source), ".")[0]] = "0x" + contract.AccountAddress.String()
 	}
 
 	for _, requiredAddress := range requiredWellKnownAddresses {

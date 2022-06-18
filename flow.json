@@ -51,15 +51,15 @@
       }
     },
     "Collectible": {
-      "source": "./contracts/thirdparty/xtingles/Collectible.cdc",
       "aliases": {
+        "emulator": "0xf5b0eb433389ac3f",
         "testnet": "0xefb501878aa34730",
         "mainnet": "0xf5b0eb433389ac3f"
       }
     },
     "Edition": {
-      "source": "./contracts/thirdparty/xtingles/Edition.cdc",
       "aliases": {
+        "emulator": "0xf5b0eb433389ac3f",
         "testnet": "0xefb501878aa34730",
         "mainnet": "0xf5b0eb433389ac3f"
       }
@@ -138,8 +138,6 @@
         "NonFungibleToken",
         "FUSD",
         "NFTStorefront",
-        "Edition",
-        "Collectible",
         "Art",
         "Content"
       ],
