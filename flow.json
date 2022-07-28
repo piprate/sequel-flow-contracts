@@ -50,6 +50,13 @@
         "mainnet": "0x1d7e57aa55817448"
       }
     },
+    "FungibleTokenSwitchboard": {
+      "source": "./contracts/standard/FungibleTokenSwitchboard.cdc",
+      "aliases": {
+        "testnet": "0x745b085dafdd4fc0",
+        "mainnet": "0x3cb7ceeb625a600a"
+      }
+    },
     "Collectible": {
       "aliases": {
         "emulator": "0xf5b0eb433389ac3f",
@@ -142,6 +149,7 @@
         "Content"
       ],
       "emulator-sequel-admin": [
+        "FungibleTokenSwitchboard",
         "Evergreen",
         "DigitalArt",
         "SequelMarketplace"

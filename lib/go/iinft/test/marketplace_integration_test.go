@@ -31,7 +31,7 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 	scripts.FundAccountWithFlow(t, client, sellerAcct.Address(), "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
-	_ = se.NewTransaction("account_setup_flow_token").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
+	_ = se.NewTransaction("account_royalty_receiver_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
 	// set up buyer account
 
@@ -163,7 +163,7 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 
 	platformAcct := client.Account(platformAccountName)
 
-	// set up seller account
+	// set up seller account (seller is the artist)
 
 	sellerAcctName := user1AccountName
 	sellerAcct := client.Account(sellerAcctName)
@@ -171,7 +171,7 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 	scripts.FundAccountWithFlow(t, client, sellerAcct.Address(), "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
-	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
+	_ = se.NewTransaction("account_royalty_receiver_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
 	// set up buyer account
 
