@@ -536,10 +536,13 @@ pub fun main(address:Address, tokenID:UInt64) : [Type] {
 
 		viewsArray, ok := viewsVal.(cadence.Array)
 		require.True(t, ok)
-		require.Equal(t, 3, len(viewsArray.Values))
+		require.Equal(t, 6, len(viewsArray.Values))
 		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.Display>()", viewsArray.Values[0].String())
 		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.Royalties>()", viewsArray.Values[1].String())
-		assert.Equal(t, "Type<A.01cf0e2f2f715450.DigitalArt.Metadata>()", viewsArray.Values[2].String())
+		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.ExternalURL>()", viewsArray.Values[2].String())
+		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.NFTCollectionData>()", viewsArray.Values[3].String())
+		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.NFTCollectionDisplay>()", viewsArray.Values[4].String())
+		assert.Equal(t, "Type<A.01cf0e2f2f715450.DigitalArt.Metadata>()", viewsArray.Values[5].String())
 	})
 
 	t.Run("resolveView(Type<MetadataViews.Display>()) should return MetadataViews.Display view", func(t *testing.T) {
@@ -571,8 +574,8 @@ pub fun main(address:Address, tokenID:UInt64) : MetadataViews.Display? {
 		assert.Equal(t, "Digital art in its purest form", displayStruct.Fields[1].ToGoValue().(string))
 		thumbnailStruct, ok := displayStruct.Fields[2].(cadence.Struct)
 		require.True(t, ok)
-		assert.Equal(t, "MetadataViews.IPFSFile", thumbnailStruct.StructType.QualifiedIdentifier)
-		assert.Equal(t, "QmPreview", thumbnailStruct.Fields[0].ToGoValue().(string))
+		assert.Equal(t, "MetadataViews.HTTPFile", thumbnailStruct.StructType.QualifiedIdentifier)
+		assert.Equal(t, "https://sequel.mypinata.cloud/ipfs/QmPreview", thumbnailStruct.Fields[0].ToGoValue().(string))
 	})
 
 	t.Run("resolveView(Type<MetadataViews.Royalties>()) should return MetadataViews.Royalties view", func(t *testing.T) {

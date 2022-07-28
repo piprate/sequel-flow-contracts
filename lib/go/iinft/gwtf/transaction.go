@@ -54,6 +54,13 @@ func (tb FlowTransactionBuilder) PayAs(payer string) FlowTransactionBuilder {
 	return tb
 }
 
+// SignAndProposeAs set the proposer and envelope signer
+func (tb FlowTransactionBuilder) SignAndProposeAs(signer string) FlowTransactionBuilder {
+	tb.Proposer = tb.GoWithTheFlow.Account(signer)
+	tb.MainSigner = tb.Proposer
+	return tb
+}
+
 // SignProposeAndPayAs set the payer, proposer and envelope signer
 func (tb FlowTransactionBuilder) SignProposeAndPayAs(signer string) FlowTransactionBuilder {
 	tb.Proposer = tb.GoWithTheFlow.Account(signer)

@@ -37,7 +37,6 @@ transaction(tokenID: UInt64, price: UFix64, metadataLink: String?) {
         sellerVaultPath: /public/fusdReceiver,
         paymentVaultType: Type<@FUSD.Vault>(),
         price: price,
-        defaultReceiverPath: /public/fusdReceiver,
         extraRoles: [],
         metadataLink: metadataLink
     )

@@ -1,7 +1,7 @@
 // This transaction configures the signer's account with an empty FUSD vault.
 
-import "../contracts/standard/FungibleToken.cdc"
-import "../contracts/standard/FUSD.cdc"
+import FungibleToken from "../contracts/standard/FungibleToken.cdc"
+import FUSD from "../contracts/standard/FUSD.cdc"
 
 transaction {
 

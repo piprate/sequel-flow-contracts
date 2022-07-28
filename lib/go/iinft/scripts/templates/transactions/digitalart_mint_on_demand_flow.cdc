@@ -45,7 +45,7 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
                        initialSaleCommission: {{$role.InitialSaleCommission}},
                        secondaryMarketCommission: {{$role.SecondaryMarketCommission}},
                        address: 0x{{$role.Address}},
-                       receiverPath: {{if $role.ReceiverPath}}{{safe $role.ReceiverPath}}{{else}}nil{{end}}
+                       receiverPath: {{if $role.ReceiverPath}}{{$role.ReceiverPath}}{{else}}nil{{end}}
                     ){{ if ne $i $last}},{{ end }}
                 {{end}}
                 ]
@@ -99,7 +99,6 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
             sellerRole: "Artist",
             sellerVaultPath: /public/flowTokenReceiver,
             paymentVault: <-self.paymentVault,
-            defaultReceiverPath: /public/flowTokenReceiver,
             evergreenProfile: self.evergreenProfile,
         )
     }

@@ -27,27 +27,21 @@ func TestDigitalArt_Integration_MintOnDemand_FUSD(t *testing.T) {
 
 	platformAcct := client.Account(platformAccountName)
 
-	scripts.FundAccountWithFlow(t, client, platformAcct.Address(), "10.0")
-
-	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(platformAccountName).Test(t).AssertSuccess()
+	_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(platformAccountName).PayAs(adminAccountName).Test(t).AssertSuccess()
 
 	// set up green account
 
 	greenAcctName := user3AccountName
 	greenAcct := client.Account(greenAcctName)
 
-	scripts.FundAccountWithFlow(t, client, greenAcct.Address(), "10.0")
-
-	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(greenAcctName).Test(t).AssertSuccess()
+	_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(greenAcctName).PayAs(adminAccountName).Test(t).AssertSuccess()
 
 	// set up artist account
 
 	artistAcctName := user1AccountName
 	artistAcct := client.Account(artistAcctName)
 
-	scripts.FundAccountWithFlow(t, client, artistAcct.Address(), "10.0")
-
-	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcctName).Test(t).AssertSuccess()
+	_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(artistAcctName).PayAs(adminAccountName).Test(t).AssertSuccess()
 
 	// set up buyer account
 
@@ -258,15 +252,21 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 
 	platformAcct := client.Account(platformAccountName)
 
+	_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(platformAccountName).PayAs(adminAccountName).Test(t).AssertSuccess()
+
 	// set up green account
 
 	greenAcctName := user3AccountName
 	greenAcct := client.Account(greenAcctName)
 
+	_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(greenAcctName).PayAs(adminAccountName).Test(t).AssertSuccess()
+
 	// set up artist account
 
 	artistAcctName := user1AccountName
 	artistAcct := client.Account(artistAcctName)
+
+	_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(artistAcctName).PayAs(adminAccountName).Test(t).AssertSuccess()
 
 	// set up buyer account
 

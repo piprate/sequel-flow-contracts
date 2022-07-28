@@ -1,5 +1,5 @@
-import "../contracts/standard/FungibleToken.cdc"
-import "../contracts/standard/FlowToken.cdc"
+import FungibleToken from "../contracts/standard/FungibleToken.cdc"
+import FlowToken from "../contracts/standard/FlowToken.cdc"
 
 pub fun main(address: Address): UFix64 {
   let account = getAccount(address)

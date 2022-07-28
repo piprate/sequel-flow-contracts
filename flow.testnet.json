@@ -35,6 +35,13 @@
         "mainnet": "0x1d7e57aa55817448"
       }
     },
+    "FungibleTokenSwitchboard": {
+      "source": "./contracts/standard/FungibleTokenSwitchboard.cdc",
+      "aliases": {
+        "testnet": "0x745b085dafdd4fc0",
+        "mainnet": "0x3cb7ceeb625a600a"
+      }
+    },
     "FUSD": {
       "source": "./contracts/standard/FUSD.cdc",
       "aliases": {
@@ -65,7 +72,8 @@
       "testnet-sequel-admin": [
         "Evergreen",
         "DigitalArt",
-        "SequelMarketplace"
+        "SequelMarketplace",
+        "FungibleTokenSwitchboard"
       ]
     }
   }

@@ -38,6 +38,8 @@ func TestMarketplace_listToken(t *testing.T) {
 
 	artistAcct := client.Account(user2AccountName)
 
+	_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(user2AccountName).PayAs(adminAccountName).Test(t).AssertSuccess()
+
 	metadata := SampleMetadata(1)
 	profile := PrimaryOnlyEvergreenProfile(artistAcct.Address(), platformAcct.Address())
 
@@ -370,7 +372,84 @@ func TestMarketplace_payForMintedTokens(t *testing.T) {
 	}, evergreenAddr)
 	require.NoError(t, err)
 
+	scriptWithFUSD := `
+import FungibleToken from 0xee82856bf20e2aa6
+import FUSD from 0xf8d6e0586b0a20c7
+import Evergreen from 0x01cf0e2f2f715450
+import SequelMarketplace from 0x01cf0e2f2f715450
+
+transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) {
+    let paymentVault: @FungibleToken.Vault
+
+    prepare(buyer: AuthAccount, platform: AuthAccount) {
+        let mainVault = buyer.borrow<&FUSD.Vault>(from: /storage/fusdVault)
+            ?? panic("Cannot borrow FUSD vault from acct storage")
+        let price = unitPrice * UFix64(numEditions)
+        self.paymentVault <- mainVault.withdraw(amount: price)
+    }
+
+    execute {
+		SequelMarketplace.payForMintedTokens(
+			unitPrice: unitPrice,
+			numEditions: numEditions,
+			sellerRole: "Artist",
+			sellerVaultPath: /public/fusdReceiver,
+			paymentVault: <-self.paymentVault,
+			evergreenProfile: profile,
+		)
+   }
+}`
+
+	t.Run("Fail if seller's receiver is invalid", func(t *testing.T) {
+		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcct.Name()).Test(t).AssertSuccess()
+
+		scripts.FundAccountWithFUSD(t, se, buyerAcct.Address(), "1000.0")
+
+		_ = client.Transaction(scriptWithFUSD).
+			PayloadSigner(buyerAcct.Name()).
+			SignProposeAndPayAs(adminAccountName).
+			UInt64Argument(1).
+			UFix64Argument("100.0").
+			Argument(happyPathProfile).
+			Test(t).
+			AssertFailure("missing fungible token receiver capability")
+	})
+
+	t.Run("If some receivers are invalid, send the remainder to last good receiver", func(t *testing.T) {
+		// RoleOne's FUSD receiver is missing. RoleOne's cut will go to the seller (the artist).
+
+		_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(artistAcct.Name()).PayAs(adminAccountName).Test(t).AssertSuccess()
+
+		_ = client.Transaction(scriptWithFUSD).
+			PayloadSigner(buyerAcct.Name()).
+			SignProposeAndPayAs(adminAccountName).
+			UInt64Argument(1).
+			UFix64Argument("100.0").
+			Argument(happyPathProfile).
+			Test(t).
+			AssertSuccess().
+			AssertEmitEvent(gwtf.NewTestEvent(
+				"A.f8d6e0586b0a20c7.FUSD.TokensWithdrawn",
+				map[string]interface{}{
+					"amount": "100.00000000",
+					"from":   "0x" + buyerAcct.Address().String(),
+				})).
+			AssertEmitEvent(gwtf.NewTestEvent(
+				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited",
+				map[string]interface{}{
+					"amount": "80.00000000",
+					"to":     "0x045a1763c93006ca",
+				})).
+			AssertEmitEvent(gwtf.NewTestEvent(
+				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited",
+				map[string]interface{}{
+					"amount": "20.00000000",
+					"to":     "0x045a1763c93006ca",
+				}))
+	})
+
 	t.Run("Happy path (Flow)", func(t *testing.T) {
+		_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(roleOneAcct.Name()).PayAs(adminAccountName).Test(t).AssertSuccess()
 
 		_ = client.Transaction(`
 import FungibleToken from 0xee82856bf20e2aa6
@@ -395,7 +474,6 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 			sellerRole: "Artist",
 			sellerVaultPath: /public/flowTokenReceiver,
 			paymentVault: <-self.paymentVault,
-			defaultReceiverPath: /public/flowTokenReceiver,
 			evergreenProfile: profile,
 		)
    }
@@ -428,97 +506,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 		require.NoError(t, err)
 	})
 
-	scriptWithFUSD := `
-import FungibleToken from 0xee82856bf20e2aa6
-import FUSD from 0xf8d6e0586b0a20c7
-import Evergreen from 0x01cf0e2f2f715450
-import SequelMarketplace from 0x01cf0e2f2f715450
-
-transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) {
-    let paymentVault: @FungibleToken.Vault
-
-    prepare(buyer: AuthAccount, platform: AuthAccount) {
-        let mainVault = buyer.borrow<&FUSD.Vault>(from: /storage/fusdVault)
-            ?? panic("Cannot borrow FUSD vault from acct storage")
-        let price = unitPrice * UFix64(numEditions)
-        self.paymentVault <- mainVault.withdraw(amount: price)
-    }
-
-    execute {
-		SequelMarketplace.payForMintedTokens(
-			unitPrice: unitPrice,
-			numEditions: numEditions,
-			sellerRole: "Artist",
-			sellerVaultPath: /public/fusdReceiver,
-			paymentVault: <-self.paymentVault,
-			defaultReceiverPath: /public/fusdReceiver,
-			evergreenProfile: profile,
-		)
-   }
-}`
-
-	t.Run("Fail if seller's receiver is invalid", func(t *testing.T) {
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcct.Name()).Test(t).AssertSuccess()
-
-		scripts.FundAccountWithFUSD(t, se, buyerAcct.Address(), "1000.0")
-
-		_ = client.Transaction(scriptWithFUSD).
-			PayloadSigner(buyerAcct.Name()).
-			SignProposeAndPayAs(adminAccountName).
-			UInt64Argument(1).
-			UFix64Argument("100.0").
-			Argument(happyPathProfile).
-			Test(t).
-			AssertFailure("missing fungible token receiver capability")
-	})
-
-	t.Run("If some receivers are invalid, send the remainder to last good receiver", func(t *testing.T) {
-		// RoleOne's FUSD receiver is missing. RoleOne's cut will go to the seller (the artist).
-
-		// Fund with Flow for FUSD setup fees
-		scripts.FundAccountWithFlow(t, client, artistAcct.Address(), "10.0")
-
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcct.Name()).Test(t).AssertSuccess()
-
-		_ = client.Transaction(scriptWithFUSD).
-			PayloadSigner(buyerAcct.Name()).
-			SignProposeAndPayAs(adminAccountName).
-			UInt64Argument(1).
-			UFix64Argument("100.0").
-			Argument(happyPathProfile).
-			Test(t).
-			AssertSuccess().
-			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.FUSD.TokensWithdrawn",
-				map[string]interface{}{
-					"amount": "100.00000000",
-					"from":   "0x" + buyerAcct.Address().String(),
-				})).
-			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited",
-				map[string]interface{}{
-					"amount": "80.00000000",
-					"to":     "0x045a1763c93006ca",
-				})).
-			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited",
-				map[string]interface{}{
-					"amount": "20.00000000",
-					"to":     "0x045a1763c93006ca",
-				}))
-	})
-
 	t.Run("Happy path (FUSD)", func(t *testing.T) {
-		// Fund with Flow for FUSD setup fees
-		scripts.FundAccountWithFlow(t, client, artistAcct.Address(), "10.0")
-		scripts.FundAccountWithFlow(t, client, roleOneAcct.Address(), "10.0")
-
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcct.Name()).Test(t).AssertSuccess()
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcct.Name()).Test(t).AssertSuccess()
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(roleOneAcct.Name()).Test(t).AssertSuccess()
-
-		scripts.FundAccountWithFUSD(t, se, buyerAcct.Address(), "1000.0")
-
 		_ = client.Transaction(scriptWithFUSD).
 			PayloadSigner(buyerAcct.Name()).
 			SignProposeAndPayAs(adminAccountName).

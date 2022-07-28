@@ -1,5 +1,6 @@
 import FungibleToken from "./standard/FungibleToken.cdc"
 import NFTStorefront from "./standard/NFTStorefront.cdc"
+import MetadataViews from "./standard/MetadataViews.cdc"
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 import Evergreen from "./Evergreen.cdc"
 
@@ -90,7 +91,6 @@ pub contract SequelMarketplace {
         sellerVaultPath: PublicPath,
         paymentVaultType: Type,
         price: UFix64,
-        defaultReceiverPath: PublicPath,
         extraRoles: [Evergreen.Role],
         metadataLink: String?,
     ): UInt64 {
@@ -103,7 +103,7 @@ pub contract SequelMarketplace {
             sellerRole: "Owner",
             sellerVaultPath: sellerVaultPath,
             price: price,
-            defaultReceiverPath: defaultReceiverPath,
+            defaultReceiverPath: MetadataViews.getRoyaltyReceiverPublicPath(),
             initialSale: false,
             extraRoles: extraRoles)
 
@@ -163,7 +163,6 @@ pub contract SequelMarketplace {
         sellerRole: String,
         sellerVaultPath: PublicPath,
         paymentVault: @FungibleToken.Vault,
-        defaultReceiverPath: PublicPath,
         evergreenProfile: Evergreen.Profile,
     ) {
         let seller = evergreenProfile.getRole(id: sellerRole)!.address
@@ -174,7 +173,7 @@ pub contract SequelMarketplace {
             sellerRole: sellerRole,
             sellerVaultPath: sellerVaultPath,
             price: unitPrice * UFix64(numEditions),
-            defaultReceiverPath: defaultReceiverPath,
+            defaultReceiverPath: MetadataViews.getRoyaltyReceiverPublicPath(),
             initialSale: true,
             extraRoles: [])
 

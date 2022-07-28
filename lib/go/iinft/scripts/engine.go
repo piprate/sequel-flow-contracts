@@ -54,7 +54,7 @@ var (
 	requiredWellKnownAddresses = []string{
 		"FungibleToken", "FlowToken", "NonFungibleToken", "NFTStorefront", "FUSD",
 		"Collectible", "Edition", "Art", "Content", "Evergreen",
-		"DigitalArt", "SequelMarketplace",
+		"DigitalArt", "SequelMarketplace", "FungibleTokenSwitchboard",
 	}
 )
 

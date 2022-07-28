@@ -37,7 +37,6 @@ transaction(tokenID: UInt64, price: UFix64, metadataLink: String?) {
         sellerVaultPath: /public/flowTokenReceiver,
         paymentVaultType: Type<@FlowToken.Vault>(),
         price: price,
-        defaultReceiverPath: /public/flowTokenReceiver,
         extraRoles: [],
         metadataLink: metadataLink
     )
