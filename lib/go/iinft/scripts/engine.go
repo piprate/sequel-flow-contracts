@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/onflow/cadence/runtime/format"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
 	"github.com/rs/zerolog/log"
 )
@@ -32,6 +33,7 @@ func init() {
 		"safe": func(v string) string {
 			return format.String(v)
 		},
+		"ufix64": iinft.UFix64ToString,
 	}).ParseFS(templateFS, "templates/transactions/*.cdc", "templates/scripts/*.cdc", "templates/scripts/**/*.cdc")
 	if err != nil {
 		panic(err)
