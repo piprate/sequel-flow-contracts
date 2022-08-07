@@ -42,8 +42,8 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
                 {{- range $i, $role := .Parameters.Profile.Roles}}
                     Evergreen.Role(id: {{safe $role.ID}},
                        description: {{safe $role.Description}},
-                       initialSaleCommission: {{$role.InitialSaleCommission}},
-                       secondaryMarketCommission: {{$role.SecondaryMarketCommission}},
+                       initialSaleCommission: {{ufix64 $role.InitialSaleCommission}},
+                       secondaryMarketCommission: {{ufix64 $role.SecondaryMarketCommission}},
                        address: 0x{{$role.Address}},
                        receiverPath: {{if $role.ReceiverPath}}{{$role.ReceiverPath}}{{else}}nil{{end}}
                     ){{ if ne $i $last}},{{ end }}
