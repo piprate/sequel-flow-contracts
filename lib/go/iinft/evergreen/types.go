@@ -15,8 +15,8 @@ type (
 	Role struct {
 		ID                        string       `json:"id"`
 		Description               string       `json:"description"`
-		InitialSaleCommission     float64      `json:"initialSaleCommission,omitempty"`
-		SecondaryMarketCommission float64      `json:"secondaryMarketCommission,omitempty"`
+		InitialSaleCommission     float64      `json:"initialSaleCommission"`
+		SecondaryMarketCommission float64      `json:"secondaryMarketCommission"`
 		Address                   flow.Address `json:"addr,omitempty"`
 		ReceiverPath              string       `json:"receiverPath,omitempty"`
 	}
