@@ -38,8 +38,8 @@ import (
 )
 
 /*
-	Gateway is a copy of github.com/onflow/flow-cli/pkg/flowkit/gateway/EmulatorGateway
-	with an added option to enable transaction fees
+Gateway is a copy of github.com/onflow/flow-cli/pkg/flowkit/gateway/EmulatorGateway
+with an added option to enable transaction fees
 */
 type Gateway struct {
 	emulator     *emulator.Blockchain

@@ -537,26 +537,26 @@ type bintree struct {
 
 var _bintree = &bintree{nil, map[string]*bintree{
 	"contracts": {nil, map[string]*bintree{
-		"DigitalArt.cdc": {contractsDigitalartCdc, map[string]*bintree{}},
-		"Evergreen.cdc": {contractsEvergreenCdc, map[string]*bintree{}},
+		"DigitalArt.cdc":        {contractsDigitalartCdc, map[string]*bintree{}},
+		"Evergreen.cdc":         {contractsEvergreenCdc, map[string]*bintree{}},
 		"SequelMarketplace.cdc": {contractsSequelmarketplaceCdc, map[string]*bintree{}},
 		"standard": {nil, map[string]*bintree{
-			"FUSD.cdc": {contractsStandardFusdCdc, map[string]*bintree{}},
-			"FlowToken.cdc": {contractsStandardFlowtokenCdc, map[string]*bintree{}},
-			"FungibleToken.cdc": {contractsStandardFungibletokenCdc, map[string]*bintree{}},
+			"FUSD.cdc":                     {contractsStandardFusdCdc, map[string]*bintree{}},
+			"FlowToken.cdc":                {contractsStandardFlowtokenCdc, map[string]*bintree{}},
+			"FungibleToken.cdc":            {contractsStandardFungibletokenCdc, map[string]*bintree{}},
 			"FungibleTokenSwitchboard.cdc": {contractsStandardFungibletokenswitchboardCdc, map[string]*bintree{}},
-			"MetadataViews.cdc": {contractsStandardMetadataviewsCdc, map[string]*bintree{}},
-			"NFTStorefront.cdc": {contractsStandardNftstorefrontCdc, map[string]*bintree{}},
-			"NonFungibleToken.cdc": {contractsStandardNonfungibletokenCdc, map[string]*bintree{}},
+			"MetadataViews.cdc":            {contractsStandardMetadataviewsCdc, map[string]*bintree{}},
+			"NFTStorefront.cdc":            {contractsStandardNftstorefrontCdc, map[string]*bintree{}},
+			"NonFungibleToken.cdc":         {contractsStandardNonfungibletokenCdc, map[string]*bintree{}},
 		}},
 		"thirdparty": {nil, map[string]*bintree{
 			"versus": {nil, map[string]*bintree{
-				"Art.cdc": {contractsThirdpartyVersusArtCdc, map[string]*bintree{}},
+				"Art.cdc":     {contractsThirdpartyVersusArtCdc, map[string]*bintree{}},
 				"Content.cdc": {contractsThirdpartyVersusContentCdc, map[string]*bintree{}},
 			}},
 			"xtingles": {nil, map[string]*bintree{
 				"Collectible.cdc": {contractsThirdpartyXtinglesCollectibleCdc, map[string]*bintree{}},
-				"Edition.cdc": {contractsThirdpartyXtinglesEditionCdc, map[string]*bintree{}},
+				"Edition.cdc":     {contractsThirdpartyXtinglesEditionCdc, map[string]*bintree{}},
 			}},
 		}},
 	}},
