@@ -608,6 +608,32 @@ pub fun main(address:Address, tokenID:UInt64) {
 		require.NoError(t, err)
 	})
 
+	t.Run("resolveView(Type<MetadataViews.ExternalURL>()) should return MetadataViews.ExternalURL view", func(t *testing.T) {
+
+		_, err = client.Script(`
+import MetadataViews from 0xf8d6e0586b0a20c7
+import DigitalArt from 0x01cf0e2f2f715450
+
+pub fun main(address:Address, tokenID:UInt64) {
+    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+
+	var externalURL: MetadataViews.ExternalURL? = nil
+	if let item = collection.borrowDigitalArt(id: tokenID) {
+        if let view = item.resolveView(Type<MetadataViews.ExternalURL>()) {
+            externalURL = (view as! MetadataViews.ExternalURL)
+        }
+    }
+
+	assert(externalURL != nil, message: "externalURL == nil")
+	assert(externalURL!.url == "https://app.sequel.space/tokens/digital-art/0", message: "incorrect external URL")
+}
+`).
+			Argument(cadence.Address(userAcct.Address())).
+			UInt64Argument(0).
+			RunReturns()
+		require.NoError(t, err)
+	})
+
 	t.Run("resolveView(Type<DigitalArt.Metadata>()) should return DigitalArt.Metadata view", func(t *testing.T) {
 		var val cadence.Value
 		val, err = client.Script(`
