@@ -8,13 +8,16 @@ import SequelMarketplace from {{.SequelMarketplace}}
 
 transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UInt64) {
     let admin: &DigitalArt.Admin
-    let availableEditions: UInt64
     let evergreenProfile: Evergreen.Profile
     let paymentVault: @FungibleToken.Vault
     let tokenReceiver: &{NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver}
     let buyerAddress: Address
 
     prepare(buyer: AuthAccount, platform: AuthAccount) {
+        if numEditions == 0 {
+            panic("no editions requested")
+        }
+
         self.admin = platform.borrow<&DigitalArt.Admin>(from: DigitalArt.AdminStoragePath)!
 
         {{- if .Parameters.Metadata }}
@@ -54,7 +57,10 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
         }
         {{- end}}
 
-        self.availableEditions = self.admin.availableEditions(masterId: masterId)
+        if numEditions > self.admin.availableEditions(masterId: masterId) {
+            panic("too many editions requested")
+        }
+
         self.evergreenProfile = self.admin.evergreenProfile(masterId: masterId)
 
         let mainVault = buyer.borrow<&FUSD.Vault>(from: /storage/fusdVault)
@@ -79,14 +85,6 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
     }
 
     execute {
-        if numEditions > self.availableEditions {
-            panic("too many editions requested")
-        }
-
-        if numEditions == 0 {
-            return
-        }
-
         var i = UInt64(0)
         while i < numEditions {
             self.tokenReceiver.deposit(token:<- self.admin.mintEditionNFT(masterId: masterId, modID: modID))

@@ -4,16 +4,20 @@ go 1.16
 
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
-	github.com/onflow/cadence v0.24.6
-	github.com/onflow/flow v0.3.2 // indirect
-	github.com/onflow/flow-cli v0.36.2
-	github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20220620142725-49b5accb2a84 // indirect
-	github.com/onflow/flow-emulator v0.33.3
-	github.com/onflow/flow-go v0.26.12
-	github.com/onflow/flow-go-sdk v0.26.5
+	github.com/ethereum/go-ethereum v1.10.21 // indirect
+	github.com/klauspost/cpuid v1.2.1 // indirect
+	github.com/onflow/cadence v0.28.0
+	github.com/onflow/cadence-tools/test v0.2.1-0.20221012182900-f46efb551c55 // indirect
+	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20221012181819-8d43a4be0028
+	github.com/onflow/flow-emulator v0.38.1
+	github.com/onflow/flow-go v0.28.1-0.20221021192700-74146556857a
+	github.com/onflow/flow-go-sdk v0.29.0
 	github.com/rs/zerolog v1.26.1
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/afero v1.8.2
-	github.com/stretchr/testify v1.7.5
-	google.golang.org/grpc v1.45.0
+	github.com/spf13/afero v1.9.0
+	github.com/stretchr/testify v1.8.0
+	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
+	google.golang.org/grpc v1.46.2
 )
+
+replace github.com/onflow/flow-go-sdk v0.29.0 => github.com/piprate/flow-go-sdk v0.0.0-20221023084314-834a334dce58
