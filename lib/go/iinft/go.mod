@@ -21,4 +21,4 @@ require (
 	google.golang.org/grpc v1.46.2
 )
 
-replace github.com/onflow/flow-go-sdk v0.29.0 => github.com/piprate/flow-go-sdk v0.0.0-20221023005443-344f5ca20cea
+replace github.com/onflow/flow-go-sdk v0.29.0 => github.com/piprate/flow-go-sdk v0.0.0-20221023010227-67aa94be7371
