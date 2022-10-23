@@ -20,3 +20,5 @@ require (
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
 	google.golang.org/grpc v1.46.2
 )
+
+replace github.com/onflow/flow-go-sdk v0.29.0 => github.com/piprate/flow-go-sdk v0.0.0-20221023005443-344f5ca20cea
