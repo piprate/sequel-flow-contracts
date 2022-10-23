@@ -16,9 +16,8 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.9.0
 	github.com/stretchr/testify v1.8.0
-	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
 	google.golang.org/grpc v1.46.2
 )
 
-replace github.com/onflow/flow-go-sdk v0.29.0 => github.com/piprate/flow-go-sdk v0.0.0-20221023010227-67aa94be7371
+replace github.com/onflow/flow-go-sdk v0.29.0 => github.com/piprate/flow-go-sdk v0.0.0-20221023084314-834a334dce58
