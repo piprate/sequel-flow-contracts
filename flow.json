@@ -57,18 +57,18 @@
         "mainnet": "0x3cb7ceeb625a600a"
       }
     },
-    "Collectible": {
+    "NFTCatalog": {
+      "source": "./contracts/thirdparty/nft_catalog/NFTCatalog.cdc",
       "aliases": {
-        "emulator": "0xf5b0eb433389ac3f",
-        "testnet": "0xefb501878aa34730",
-        "mainnet": "0xf5b0eb433389ac3f"
+        "mainnet": "0x49a7cda3a1eecc29",
+        "testnet": "0x324c34e1c517e4db"
       }
     },
-    "Edition": {
+    "NFTRetrieval": {
+      "source": "./contracts/thirdparty/nft_catalog/NFTRetrieval.cdc",
       "aliases": {
-        "emulator": "0xf5b0eb433389ac3f",
-        "testnet": "0xefb501878aa34730",
-        "mainnet": "0xf5b0eb433389ac3f"
+        "mainnet": "0x49a7cda3a1eecc29",
+        "testnet": "0x324c34e1c517e4db"
       }
     },
     "Art": {
@@ -145,6 +145,8 @@
         "NonFungibleToken",
         "FUSD",
         "NFTStorefront",
+        "NFTCatalog",
+        "NFTRetrieval",
         "Art",
         "Content"
       ],
