@@ -19,6 +19,10 @@ linters-settings:
   funlen:
     lines: 100
     statements: 40
+  revive:
+    rules:
+      - name: unused-parameter
+        disabled: true
 
 linters:
   disable-all: true
