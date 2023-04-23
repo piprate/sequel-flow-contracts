@@ -29,16 +29,9 @@ pub fun main(ownerAddress: Address, collectionIdentifier: String, id: UInt64): N
     let account = getAccount(ownerAddress)
 
     let value = NFTCatalog.getCatalogEntry(collectionIdentifier: collectionIdentifier)!
-    let keyHash = String.encodeHex(HashAlgorithm.SHA3_256.hash(collectionIdentifier.utf8))
-    let tempPathStr = "catalog".concat(keyHash)
-    let tempPublicPath = PublicPath(identifier: tempPathStr)!
 
-    account.link<&{MetadataViews.ResolverCollection}>(
-        tempPublicPath,
-        target: value.collectionData.storagePath
-    )
-
-    let collectionCap = account.getCapability<&AnyResource{MetadataViews.ResolverCollection}>(tempPublicPath)
+    let collectionCap = account
+        .getCapability<&AnyResource{MetadataViews.ResolverCollection}>(value.collectionData.publicPath)
 
     if !collectionCap.check() {
         return nil
