@@ -78,7 +78,7 @@ func TestEngine_GetStandardScript(t *testing.T) {
 	e, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	res := e.GetStandardScript("xtingles_get_collection")
+	res := e.GetStandardScript("catalog_get_collection_tokens")
 
 	println(res)
 }
