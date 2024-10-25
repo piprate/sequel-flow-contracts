@@ -1,15 +1,18 @@
 package gwtf
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"sort"
 
-	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
 )
 
-func (f *GoWithTheFlow) CreateAccounts(saAccountName string) *GoWithTheFlow {
-	gwtf, err := f.CreateAccountsE(saAccountName)
+func (f *GoWithTheFlow) CreateAccounts(ctx context.Context, saAccountName string) *GoWithTheFlow {
+	gwtf, err := f.CreateAccountsE(ctx, saAccountName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -18,53 +21,56 @@ func (f *GoWithTheFlow) CreateAccounts(saAccountName string) *GoWithTheFlow {
 }
 
 // CreateAccountsE ensures that all accounts present in the deployment block for the given network is present
-func (f *GoWithTheFlow) CreateAccountsE(saAccountName string) (*GoWithTheFlow, error) {
+func (f *GoWithTheFlow) CreateAccountsE(ctx context.Context, saAccountName string) (*GoWithTheFlow, error) {
 	p := f.State
 	signerAccount, err := p.Accounts().ByName(saAccountName)
 	if err != nil {
 		return nil, err
 	}
 
-	accounts := p.AccountNamesForNetwork(f.Network)
-	sort.Strings(accounts)
+	accountList := *p.AccountsForNetwork(f.Services.Network())
+	accountNames := accountList.Names()
+	sort.Strings(accountNames)
 
-	f.Logger.Info(fmt.Sprintf("%v\n", accounts))
+	f.Logger.Info(fmt.Sprintf("%v\n", accountNames))
 
-	for _, accountName := range accounts {
-		f.Logger.Info(fmt.Sprintf("Ensuring account with name '%s' is present", accountName))
+	for _, accountName := range accountNames {
+		f.Logger.Debug(fmt.Sprintf("Ensuring account with name '%s' is present", accountName))
 
 		// this error can never happen here, there is a test for it.
 		account, _ := p.Accounts().ByName(accountName)
 
-		if _, err := f.Services.Accounts.Get(account.Address()); err == nil {
-			f.Logger.Info("Account is present")
+		if _, err := f.Services.GetAccount(ctx, account.Address); err == nil {
+			f.Logger.Debug("Account is present")
 			continue
 		}
 
-		a, err := f.Services.Accounts.Create(
+		a, _, err := f.Services.CreateAccount(
+			ctx,
 			signerAccount,
-			[]crypto.PublicKey{account.Key().ToConfig().PrivateKey.PublicKey()},
-			[]int{1000},
-			[]crypto.SignatureAlgorithm{account.Key().SigAlgo()},
-			[]crypto.HashAlgorithm{account.Key().HashAlgo()},
-			[]string{})
+			[]accounts.PublicKey{{
+				Public:   account.Key.ToConfig().PrivateKey.PublicKey(),
+				Weight:   flow.AccountKeyWeightThreshold,
+				SigAlgo:  account.Key.SigAlgo(),
+				HashAlgo: account.Key.HashAlgo(),
+			}})
 		if err != nil {
 			return nil, err
 		}
 		f.Logger.Info("Account created " + a.Address.String())
-		if a.Address.String() != account.Address().String() {
+		if a.Address.String() != account.Address.String() {
 			// this condition happens when we create accounts defined in flow.json
 			// after some other accounts were created manually.
 			// In this case, account addresses may not match the expected values
-			f.Logger.Error("Account address mismatch. Expected " + account.Address().String() + ", got " + a.Address.String())
+			f.Logger.Error("Account address mismatch. Expected " + account.Address.String() + ", got " + a.Address.String())
 		}
 	}
 	return f, nil
 }
 
 // InitializeContracts installs all contracts in the deployment block for the configured network
-func (f *GoWithTheFlow) InitializeContracts() *GoWithTheFlow {
-	if err := f.InitializeContractsE(); err != nil {
+func (f *GoWithTheFlow) InitializeContracts(ctx context.Context) *GoWithTheFlow {
+	if err := f.InitializeContractsE(ctx); err != nil {
 		log.Fatal(err)
 	}
 
@@ -73,9 +79,9 @@ func (f *GoWithTheFlow) InitializeContracts() *GoWithTheFlow {
 
 // InitializeContractsE installs all contracts in the deployment block for the configured network
 // and returns an error if it fails.
-func (f *GoWithTheFlow) InitializeContractsE() error {
+func (f *GoWithTheFlow) InitializeContractsE(ctx context.Context) error {
 	f.Logger.Info("Deploying contracts")
-	if _, err := f.Services.Project.Deploy(f.Network, false); err != nil {
+	if _, err := f.Services.DeployProject(ctx, flowkit.UpdateExistingContract(true)); err != nil {
 		return err
 	}
 

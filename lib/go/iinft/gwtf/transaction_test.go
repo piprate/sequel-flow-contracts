@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flowkit/v2/output"
 	"github.com/stretchr/testify/assert"
 )
 

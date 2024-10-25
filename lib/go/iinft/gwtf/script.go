@@ -1,7 +1,9 @@
 package gwtf
 
 import (
+	"context"
 	"fmt"
+	"github.com/onflow/flowkit/v2"
 	"log"
 	"os"
 
@@ -42,7 +44,7 @@ func (t FlowScriptBuilder) AccountArgument(key string) FlowScriptBuilder {
 	f := t.GoWithTheFlow
 
 	account := f.Account(key)
-	return t.Argument(cadence.BytesToAddress(account.Address().Bytes()))
+	return t.Argument(cadence.BytesToAddress(account.Address.Bytes()))
 }
 
 // RawAccountArgument add an account from a string as an argument
@@ -194,13 +196,13 @@ func (t FlowScriptBuilder) UFix64Argument(value string) FlowScriptBuilder {
 }
 
 // Run executes a read only script
-func (t FlowScriptBuilder) Run() {
-	result := t.RunFailOnError()
+func (t FlowScriptBuilder) Run(ctx context.Context) {
+	result := t.RunFailOnError(ctx)
 	log.Printf("Script run from result: %v\n", CadenceValueToJSONString(result))
 }
 
 // RunReturns executes a read only script
-func (t FlowScriptBuilder) RunReturns() (cadence.Value, error) {
+func (t FlowScriptBuilder) RunReturns(ctx context.Context) (cadence.Value, error) {
 
 	f := t.GoWithTheFlow
 	scriptFilePath := fmt.Sprintf("./scripts/%s.cdc", t.FileName)
@@ -214,11 +216,15 @@ func (t FlowScriptBuilder) RunReturns() (cadence.Value, error) {
 		}
 	}
 
-	result, err := f.Services.Scripts.Execute(
-		script,
-		t.Arguments,
-		scriptFilePath,
-		f.Network)
+	result, err := f.Services.ExecuteScript(
+		ctx,
+		flowkit.Script{
+			Code:     script,
+			Args:     t.Arguments,
+			Location: scriptFilePath,
+		},
+		flowkit.LatestScriptQuery,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -229,8 +235,8 @@ func (t FlowScriptBuilder) RunReturns() (cadence.Value, error) {
 	return result, nil
 }
 
-func (t FlowScriptBuilder) RunFailOnError() cadence.Value {
-	result, err := t.RunReturns()
+func (t FlowScriptBuilder) RunFailOnError(ctx context.Context) cadence.Value {
+	result, err := t.RunReturns(ctx)
 	if err != nil {
 		t.GoWithTheFlow.Logger.Error(fmt.Sprintf("Error executing script: %s output %v", t.FileName, err))
 		os.Exit(1)
@@ -239,11 +245,11 @@ func (t FlowScriptBuilder) RunFailOnError() cadence.Value {
 }
 
 // RunReturnsJSONString runs the script and returns pretty printed json string
-func (t FlowScriptBuilder) RunReturnsJSONString() string {
-	return CadenceValueToJSONString(t.RunFailOnError())
+func (t FlowScriptBuilder) RunReturnsJSONString(ctx context.Context) string {
+	return CadenceValueToJSONString(t.RunFailOnError(ctx))
 }
 
 // RunReturnsInterface runs the script and returns interface{}
-func (t FlowScriptBuilder) RunReturnsInterface() interface{} {
-	return CadenceValueToInterface(t.RunFailOnError())
+func (t FlowScriptBuilder) RunReturnsInterface(ctx context.Context) interface{} {
+	return CadenceValueToInterface(t.RunFailOnError(ctx))
 }

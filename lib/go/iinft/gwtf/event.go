@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flowkit/v2"
 )
 
 // EventFetcherBuilder builder to hold info about eventhook context.
@@ -22,9 +23,8 @@ type EventFetcherBuilder struct {
 	EndAtCurrentHeight    bool
 	EndIndex              uint64
 	ProgressFile          string
-	context.Context
-	NumberOfWorkers int
-	EventBatchSize  uint64
+	NumberOfWorkers       int
+	EventBatchSize        uint64
 }
 
 // EventFetcher create an event fetcher builder.
@@ -149,7 +149,7 @@ func readProgressFromFile(fileName string) (int64, error) {
 }
 
 // Run runs the eventfetcher returning events or an error
-func (e EventFetcherBuilder) Run() ([]*FormatedEvent, error) {
+func (e EventFetcherBuilder) Run(ctx context.Context) ([]*FormatedEvent, error) {
 
 	// if we have a progress file read the value from it and set it as oldHeight
 	if e.ProgressFile != "" {
@@ -177,11 +177,11 @@ func (e EventFetcherBuilder) Run() ([]*FormatedEvent, error) {
 
 	endIndex := e.EndIndex
 	if e.EndAtCurrentHeight {
-		blockHeight, err := e.GoWithTheFlow.Services.Blocks.GetLatestBlockHeight()
+		block, err := e.GoWithTheFlow.Services.GetBlock(ctx, flowkit.LatestBlockQuery)
 		if err != nil {
 			return nil, err
 		}
-		endIndex = blockHeight
+		endIndex = block.Height
 	}
 
 	fromIndex := e.FromIndex
@@ -201,7 +201,10 @@ func (e EventFetcherBuilder) Run() ([]*FormatedEvent, error) {
 		events = append(events, key)
 	}
 
-	blockEvents, err := e.GoWithTheFlow.Services.Events.Get(events, uint64(fromIndex), endIndex, e.EventBatchSize, e.NumberOfWorkers)
+	blockEvents, err := e.GoWithTheFlow.Services.GetEvents(ctx, events, uint64(fromIndex), endIndex, &flowkit.EventWorker{
+		Count:           e.NumberOfWorkers,
+		BlocksPerWorker: e.EventBatchSize,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -261,17 +264,11 @@ func FormatEvents(blockEvents []flow.BlockEvents, ignoreFields map[string][]stri
 // ParseEvent parses a flow event into a more terse representation
 func ParseEvent(event flow.Event, blockHeight uint64, time time.Time, ignoreFields []string) *FormatedEvent {
 
-	fieldNames := make([]string, len(event.Value.EventType.Fields))
-	for i, eventTypeFields := range event.Value.EventType.Fields {
-		fieldNames[i] = eventTypeFields.Identifier
-	}
-
 	finalFields := map[string]interface{}{}
 
-	for id, field := range event.Value.Fields {
+	for name, field := range event.Value.FieldsMappedByName() {
 
 		skip := false
-		name := fieldNames[id]
 
 		for _, ignoreField := range ignoreFields {
 			if ignoreField == name {

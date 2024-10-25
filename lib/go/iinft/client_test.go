@@ -1,6 +1,7 @@
 package iinft
 
 import (
+	"context"
 	"os"
 	"testing"
 	"time"
@@ -18,10 +19,12 @@ func TestNewGoWithTheFlowFS(t *testing.T) {
 	client, err := NewGoWithTheFlowFS("../../..", "emulator", true, false)
 	require.NoError(t, err)
 
-	_, err = client.CreateAccountsE("emulator-account")
+	ctx := context.Background()
+
+	_, err = client.CreateAccountsE(ctx, "emulator-account")
 	require.NoError(t, err)
 
-	err = client.InitializeContractsE()
+	err = client.InitializeContractsE(ctx)
 	require.NoError(t, err)
 }
 
@@ -29,10 +32,12 @@ func TestNewGoWithTheFlowEmbedded(t *testing.T) {
 	client, err := NewGoWithTheFlowEmbedded("emulator", true, false)
 	require.NoError(t, err)
 
-	_, err = client.CreateAccountsE("emulator-account")
+	ctx := context.Background()
+
+	_, err = client.CreateAccountsE(ctx, "emulator-account")
 	require.NoError(t, err)
 
-	err = client.InitializeContractsE()
+	err = client.InitializeContractsE(ctx)
 	require.NoError(t, err)
 }
 
@@ -40,6 +45,8 @@ func TestNewGoWithTheFlowEmbedded_WithTxFees(t *testing.T) {
 	client, err := NewGoWithTheFlowEmbedded("emulator", true, true)
 	require.NoError(t, err)
 
-	_, err = client.DoNotPrependNetworkToAccountNames().CreateAccountsE("emulator-account")
+	ctx := context.Background()
+
+	_, err = client.DoNotPrependNetworkToAccountNames().CreateAccountsE(ctx, "emulator-account")
 	require.NoError(t, err)
 }

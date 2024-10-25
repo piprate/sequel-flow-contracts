@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/onflow/cadence"
@@ -21,7 +22,7 @@ func TestDigitalArt_Integration_MintOnDemand_FUSD(t *testing.T) {
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address())
+	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address)
 
 	// set up platform account
 
@@ -48,14 +49,14 @@ func TestDigitalArt_Integration_MintOnDemand_FUSD(t *testing.T) {
 	buyerAcctName := user2AccountName
 	buyerAcct := client.Account(buyerAcctName)
 
-	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "10.0")
+	scripts.FundAccountWithFlow(t, client, buyerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
-	scripts.FundAccountWithFUSD(t, se, buyerAcct.Address(), "1000.0")
+	scripts.FundAccountWithFUSD(t, se, buyerAcct.Address, "1000.0")
 
 	checkDigitalArtNFTSupply(t, se, 0)
-	checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 0)
+	checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 0)
 
 	metadata := SampleMetadata(4)
 	profile := &evergreen.Profile{
@@ -65,19 +66,19 @@ func TestDigitalArt_Integration_MintOnDemand_FUSD(t *testing.T) {
 				ID:                        evergreen.RoleArtist,
 				InitialSaleCommission:     0.9,
 				SecondaryMarketCommission: 0.025,
-				Address:                   artistAcct.Address(),
+				Address:                   artistAcct.Address,
 			},
 			{
 				ID:                        evergreen.RolePlatform,
 				InitialSaleCommission:     0.05,
 				SecondaryMarketCommission: 0.025,
-				Address:                   platformAcct.Address(),
+				Address:                   platformAcct.Address,
 			},
 			{
 				ID:                        "ClimateActionFund",
 				InitialSaleCommission:     0.05,
 				SecondaryMarketCommission: 0.025,
-				Address:                   greenAcct.Address(),
+				Address:                   greenAcct.Address,
 			},
 		},
 	}
@@ -114,14 +115,14 @@ func TestDigitalArt_Integration_MintOnDemand_FUSD(t *testing.T) {
 			}))
 
 		// Assert that the account's collection is correct
-		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address().String(), 0)
-		checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 1)
+		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address.String(), 0)
+		checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 1)
 		checkDigitalArtNFTSupply(t, se, 1)
 
 		val, err := se.NewScript("digitalart_get_metadata").
-			Argument(cadence.NewAddress(buyerAcct.Address())).
+			Argument(cadence.NewAddress(buyerAcct.Address)).
 			UInt64Argument(0).
-			RunReturns()
+			RunReturns(context.Background())
 		require.NoError(t, err)
 
 		meta, err := iinft.DigitalArtMetadataFromCadence(val)
@@ -129,10 +130,10 @@ func TestDigitalArt_Integration_MintOnDemand_FUSD(t *testing.T) {
 
 		assert.Equal(t, uint64(1), meta.Edition)
 
-		assert.Equal(t, 90.0, scripts.GetFUSDBalance(t, se, artistAcct.Address()))
-		assert.Equal(t, 900.0, scripts.GetFUSDBalance(t, se, buyerAcct.Address()))
-		assert.Equal(t, 5.0, scripts.GetFUSDBalance(t, se, platformAcct.Address()))
-		assert.Equal(t, 5.0, scripts.GetFUSDBalance(t, se, greenAcct.Address()))
+		assert.Equal(t, 90.0, scripts.GetFUSDBalance(t, se, artistAcct.Address))
+		assert.Equal(t, 900.0, scripts.GetFUSDBalance(t, se, buyerAcct.Address))
+		assert.Equal(t, 5.0, scripts.GetFUSDBalance(t, se, platformAcct.Address))
+		assert.Equal(t, 5.0, scripts.GetFUSDBalance(t, se, greenAcct.Address))
 	})
 
 	t.Run("Should be able to mint a token on demand (master sealed, metadata provided)", func(t *testing.T) {
@@ -167,14 +168,14 @@ func TestDigitalArt_Integration_MintOnDemand_FUSD(t *testing.T) {
 			}))
 
 		// Assert that the account's collection is correct
-		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address().String(), 1)
-		checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 2)
+		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address.String(), 1)
+		checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 2)
 		checkDigitalArtNFTSupply(t, se, 2)
 
 		val, err := se.NewScript("digitalart_get_metadata").
-			Argument(cadence.NewAddress(buyerAcct.Address())).
+			Argument(cadence.NewAddress(buyerAcct.Address)).
 			UInt64Argument(0).
-			RunReturns()
+			RunReturns(context.Background())
 		require.NoError(t, err)
 
 		meta, err := iinft.DigitalArtMetadataFromCadence(val)
@@ -182,10 +183,10 @@ func TestDigitalArt_Integration_MintOnDemand_FUSD(t *testing.T) {
 
 		assert.Equal(t, uint64(1), meta.Edition)
 
-		assert.Equal(t, 180.0, scripts.GetFUSDBalance(t, se, artistAcct.Address()))
-		assert.Equal(t, 800.0, scripts.GetFUSDBalance(t, se, buyerAcct.Address()))
-		assert.Equal(t, 10.0, scripts.GetFUSDBalance(t, se, platformAcct.Address()))
-		assert.Equal(t, 10.0, scripts.GetFUSDBalance(t, se, greenAcct.Address()))
+		assert.Equal(t, 180.0, scripts.GetFUSDBalance(t, se, artistAcct.Address))
+		assert.Equal(t, 800.0, scripts.GetFUSDBalance(t, se, buyerAcct.Address))
+		assert.Equal(t, 10.0, scripts.GetFUSDBalance(t, se, platformAcct.Address))
+		assert.Equal(t, 10.0, scripts.GetFUSDBalance(t, se, greenAcct.Address))
 	})
 
 	t.Run("Should be able to mint a token on demand (master sealed, metadata not provided)", func(t *testing.T) {
@@ -217,14 +218,14 @@ func TestDigitalArt_Integration_MintOnDemand_FUSD(t *testing.T) {
 			}))
 
 		// Assert that the account's collection is correct
-		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address().String(), 2)
-		checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 3)
+		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address.String(), 2)
+		checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 3)
 		checkDigitalArtNFTSupply(t, se, 3)
 
 		val, err := se.NewScript("digitalart_get_metadata").
-			Argument(cadence.NewAddress(buyerAcct.Address())).
+			Argument(cadence.NewAddress(buyerAcct.Address)).
 			UInt64Argument(0).
-			RunReturns()
+			RunReturns(context.Background())
 		require.NoError(t, err)
 
 		meta, err := iinft.DigitalArtMetadataFromCadence(val)
@@ -232,10 +233,10 @@ func TestDigitalArt_Integration_MintOnDemand_FUSD(t *testing.T) {
 
 		assert.Equal(t, uint64(1), meta.Edition)
 
-		assert.Equal(t, 270.0, scripts.GetFUSDBalance(t, se, artistAcct.Address()))
-		assert.Equal(t, 700.0, scripts.GetFUSDBalance(t, se, buyerAcct.Address()))
-		assert.Equal(t, 15.0, scripts.GetFUSDBalance(t, se, platformAcct.Address()))
-		assert.Equal(t, 15.0, scripts.GetFUSDBalance(t, se, greenAcct.Address()))
+		assert.Equal(t, 270.0, scripts.GetFUSDBalance(t, se, artistAcct.Address))
+		assert.Equal(t, 700.0, scripts.GetFUSDBalance(t, se, buyerAcct.Address))
+		assert.Equal(t, 15.0, scripts.GetFUSDBalance(t, se, platformAcct.Address))
+		assert.Equal(t, 15.0, scripts.GetFUSDBalance(t, se, greenAcct.Address))
 	})
 }
 
@@ -273,12 +274,12 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 	buyerAcctName := user2AccountName
 	buyerAcct := client.Account(buyerAcctName)
 
-	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "1000.0")
+	scripts.FundAccountWithFlow(t, client, buyerAcct.Address, "1000.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 
 	checkDigitalArtNFTSupply(t, se, 0)
-	checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 0)
+	checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 0)
 
 	metadata := SampleMetadata(4)
 	profile := &evergreen.Profile{
@@ -288,19 +289,19 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 				ID:                        evergreen.RoleArtist,
 				InitialSaleCommission:     0.9,
 				SecondaryMarketCommission: 0.025,
-				Address:                   artistAcct.Address(),
+				Address:                   artistAcct.Address,
 			},
 			{
 				ID:                        evergreen.RolePlatform,
 				InitialSaleCommission:     0.05,
 				SecondaryMarketCommission: 0.025,
-				Address:                   platformAcct.Address(),
+				Address:                   platformAcct.Address,
 			},
 			{
 				ID:                        "ClimateActionFund",
 				InitialSaleCommission:     0.05,
 				SecondaryMarketCommission: 0.025,
-				Address:                   greenAcct.Address(),
+				Address:                   greenAcct.Address,
 			},
 		},
 	}
@@ -337,14 +338,14 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 			}))
 
 		// Assert that the account's collection is correct
-		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address().String(), 0)
-		checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 1)
+		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address.String(), 0)
+		checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 1)
 		checkDigitalArtNFTSupply(t, se, 1)
 
 		val, err := se.NewScript("digitalart_get_metadata").
-			Argument(cadence.NewAddress(buyerAcct.Address())).
+			Argument(cadence.NewAddress(buyerAcct.Address)).
 			UInt64Argument(0).
-			RunReturns()
+			RunReturns(context.Background())
 		require.NoError(t, err)
 
 		meta, err := iinft.DigitalArtMetadataFromCadence(val)
@@ -352,10 +353,10 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 
 		assert.Equal(t, uint64(1), meta.Edition)
 
-		assert.InDelta(t, initialFlowBalance+1000.0-100.0, scripts.GetFlowBalance(t, se, buyerAcct.Address()), 0.001)
-		assert.Equal(t, initialFlowBalance+90.0, scripts.GetFlowBalance(t, se, artistAcct.Address()))
-		assert.Equal(t, initialFlowBalance+5.0, scripts.GetFlowBalance(t, se, platformAcct.Address()))
-		assert.Equal(t, initialFlowBalance+5.0, scripts.GetFlowBalance(t, se, greenAcct.Address()))
+		assert.InDelta(t, initialFlowBalance+1000.0-100.0, scripts.GetFlowBalance(t, se, buyerAcct.Address), 0.001)
+		assert.Equal(t, initialFlowBalance+90.0, scripts.GetFlowBalance(t, se, artistAcct.Address))
+		assert.Equal(t, initialFlowBalance+5.0, scripts.GetFlowBalance(t, se, platformAcct.Address))
+		assert.Equal(t, initialFlowBalance+5.0, scripts.GetFlowBalance(t, se, greenAcct.Address))
 	})
 
 	t.Run("Should be able to mint a token on demand (master sealed)", func(t *testing.T) {
@@ -390,14 +391,14 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 			}))
 
 		// Assert that the account's collection is correct
-		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address().String(), 1)
-		checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 2)
+		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address.String(), 1)
+		checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 2)
 		checkDigitalArtNFTSupply(t, se, 2)
 
 		val, err := se.NewScript("digitalart_get_metadata").
-			Argument(cadence.NewAddress(buyerAcct.Address())).
+			Argument(cadence.NewAddress(buyerAcct.Address)).
 			UInt64Argument(0).
-			RunReturns()
+			RunReturns(context.Background())
 		require.NoError(t, err)
 
 		meta, err := iinft.DigitalArtMetadataFromCadence(val)
@@ -405,10 +406,10 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 
 		assert.Equal(t, uint64(1), meta.Edition)
 
-		assert.InDelta(t, initialFlowBalance+1000.0-2*100.0, scripts.GetFlowBalance(t, se, buyerAcct.Address()), 0.001)
-		assert.Equal(t, initialFlowBalance+2*90.0, scripts.GetFlowBalance(t, se, artistAcct.Address()))
-		assert.Equal(t, initialFlowBalance+2*5.0, scripts.GetFlowBalance(t, se, platformAcct.Address()))
-		assert.Equal(t, initialFlowBalance+2*5.0, scripts.GetFlowBalance(t, se, greenAcct.Address()))
+		assert.InDelta(t, initialFlowBalance+1000.0-2*100.0, scripts.GetFlowBalance(t, se, buyerAcct.Address), 0.001)
+		assert.Equal(t, initialFlowBalance+2*90.0, scripts.GetFlowBalance(t, se, artistAcct.Address))
+		assert.Equal(t, initialFlowBalance+2*5.0, scripts.GetFlowBalance(t, se, platformAcct.Address))
+		assert.Equal(t, initialFlowBalance+2*5.0, scripts.GetFlowBalance(t, se, greenAcct.Address))
 	})
 }
 
@@ -428,7 +429,7 @@ func TestDigitalArt_Integration_Transfer(t *testing.T) {
 	senderAcctName := user1AccountName
 	senderAcct := client.Account(senderAcctName)
 
-	scripts.FundAccountWithFlow(t, client, senderAcct.Address(), "10.0")
+	scripts.FundAccountWithFlow(t, client, senderAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").
 		SignProposeAndPayAs(senderAcctName).
@@ -438,7 +439,7 @@ func TestDigitalArt_Integration_Transfer(t *testing.T) {
 	receiverAcctName := user2AccountName
 	receiverAcct := client.Account(receiverAcctName)
 
-	scripts.FundAccountWithFlow(t, client, receiverAcct.Address(), "10.0")
+	scripts.FundAccountWithFlow(t, client, receiverAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").
 		SignProposeAndPayAs(receiverAcctName).
@@ -446,7 +447,7 @@ func TestDigitalArt_Integration_Transfer(t *testing.T) {
 		AssertSuccess()
 
 	metadata := SampleMetadata(4)
-	profile := BasicEvergreenProfile(senderAcct.Address())
+	profile := BasicEvergreenProfile(senderAcct.Address)
 
 	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
@@ -457,7 +458,7 @@ func TestDigitalArt_Integration_Transfer(t *testing.T) {
 		SignProposeAndPayAs(adminAccountName).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
-		Argument(cadence.Address(senderAcct.Address())).
+		Argument(cadence.Address(senderAcct.Address)).
 		Test(t).
 		AssertSuccess()
 
@@ -466,26 +467,26 @@ func TestDigitalArt_Integration_Transfer(t *testing.T) {
 		_ = se.NewTransaction("digitalart_transfer").
 			SignProposeAndPayAs(senderAcctName).
 			UInt64Argument(3).
-			Argument(cadence.Address(receiverAcct.Address())).
+			Argument(cadence.Address(receiverAcct.Address)).
 			Test(t).
 			AssertFailure("missing NFT")
 
-		checkDigitalArtCollectionLen(t, se, receiverAcct.Address().String(), 0)
-		checkDigitalArtCollectionLen(t, se, senderAcct.Address().String(), 1)
+		checkDigitalArtCollectionLen(t, se, receiverAcct.Address.String(), 0)
+		checkDigitalArtCollectionLen(t, se, senderAcct.Address.String(), 1)
 	})
 
 	t.Run("Should be able to withdraw an NFT and deposit to another accounts collection", func(t *testing.T) {
 		_ = se.NewTransaction("digitalart_transfer").
 			SignProposeAndPayAs(senderAcctName).
 			UInt64Argument(0).
-			Argument(cadence.Address(receiverAcct.Address())).
+			Argument(cadence.Address(receiverAcct.Address)).
 			Test(t).
 			AssertSuccess()
 
 		// Assert that the account's collection is correct
-		checkTokenInDigitalArtCollection(t, se, receiverAcct.Address().String(), 0)
-		checkDigitalArtCollectionLen(t, se, receiverAcct.Address().String(), 1)
-		checkDigitalArtCollectionLen(t, se, senderAcct.Address().String(), 0)
+		checkTokenInDigitalArtCollection(t, se, receiverAcct.Address.String(), 0)
+		checkDigitalArtCollectionLen(t, se, receiverAcct.Address.String(), 1)
+		checkDigitalArtCollectionLen(t, se, senderAcct.Address.String(), 0)
 	})
 
 	t.Run("Should be able to withdraw an NFT and destroy it, not reducing the supply", func(t *testing.T) {
@@ -496,8 +497,8 @@ func TestDigitalArt_Integration_Transfer(t *testing.T) {
 			Test(t).
 			AssertSuccess()
 
-		checkDigitalArtCollectionLen(t, se, receiverAcct.Address().String(), 0)
-		checkDigitalArtCollectionLen(t, se, senderAcct.Address().String(), 0)
+		checkDigitalArtCollectionLen(t, se, receiverAcct.Address.String(), 0)
+		checkDigitalArtCollectionLen(t, se, senderAcct.Address.String(), 0)
 		checkDigitalArtNFTSupply(t, se, 1)
 	})
 }

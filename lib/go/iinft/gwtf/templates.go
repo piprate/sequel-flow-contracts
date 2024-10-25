@@ -2,6 +2,7 @@ package gwtf
 
 import (
 	"bufio"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -69,13 +70,13 @@ func fileAsBase64(path string) (string, error) {
 }
 
 // UploadFile reads a file, base64 encodes it and chunk upload to /storage/upload
-func (f *GoWithTheFlow) UploadFile(filename, accountName string) error {
+func (f *GoWithTheFlow) UploadFile(ctx context.Context, filename, accountName string) error {
 	content, err := fileAsBase64(filename)
 	if err != nil {
 		return err
 	}
 
-	return f.UploadString(content, accountName)
+	return f.UploadString(ctx, content, accountName)
 }
 
 func getURL(url string) ([]byte, error) {
@@ -90,39 +91,39 @@ func getURL(url string) ([]byte, error) {
 }
 
 // DownloadAndUploadFile reads a file, base64 encodes it and chunk upload to /storage/upload
-func (f *GoWithTheFlow) DownloadAndUploadFile(url, accountName string) error {
+func (f *GoWithTheFlow) DownloadAndUploadFile(ctx context.Context, url, accountName string) error {
 	body, err := getURL(url)
 	if err != nil {
 		return err
 	}
 
 	encoded := base64.StdEncoding.EncodeToString(body)
-	return f.UploadString(encoded, accountName)
+	return f.UploadString(ctx, encoded, accountName)
 }
 
 // DownloadImageAndUploadAsDataURL download an image and upload as data url
-func (f *GoWithTheFlow) DownloadImageAndUploadAsDataURL(url, accountName string) error {
+func (f *GoWithTheFlow) DownloadImageAndUploadAsDataURL(ctx context.Context, url, accountName string) error {
 	body, err := getURL(url)
 	if err != nil {
 		return err
 	}
 	content := contentAsImageDataURL(body)
 
-	return f.UploadString(content, accountName)
+	return f.UploadString(ctx, content, accountName)
 }
 
 // UploadImageAsDataURL will upload a image file from the filesystem into /storage/upload of the given account
-func (f *GoWithTheFlow) UploadImageAsDataURL(filename, accountName string) error {
+func (f *GoWithTheFlow) UploadImageAsDataURL(ctx context.Context, filename, accountName string) error {
 	content, err := fileAsImageData(filename)
 	if err != nil {
 		return err
 	}
 
-	return f.UploadString(content, accountName)
+	return f.UploadString(ctx, content, accountName)
 }
 
-// UploadString will upload the given string data in 1mb chunkts to /storage/upload of the given account
-func (f *GoWithTheFlow) UploadString(content, accountName string) error {
+// UploadString will upload the given string data in 1mb chunks to /storage/upload of the given account
+func (f *GoWithTheFlow) UploadString(ctx context.Context, content, accountName string) error {
 	// unload previous content if any.
 	if _, err := f.Transaction(`
 	transaction {
@@ -132,7 +133,7 @@ func (f *GoWithTheFlow) UploadString(content, accountName string) error {
 			log(existing)
 		}
 	}
-	  `).SignProposeAndPayAs(accountName).RunE(); err != nil {
+	  `).SignProposeAndPayAs(accountName).RunE(ctx); err != nil {
 		return err
 	}
 
@@ -148,7 +149,7 @@ func (f *GoWithTheFlow) UploadString(content, accountName string) error {
 				log(part)
 			}
 		}
-			`).SignProposeAndPayAs(accountName).StringArgument(part).RunE(); err != nil {
+			`).SignProposeAndPayAs(accountName).StringArgument(part).RunE(ctx); err != nil {
 			return err
 		}
 	}

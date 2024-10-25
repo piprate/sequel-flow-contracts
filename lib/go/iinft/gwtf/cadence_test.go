@@ -60,15 +60,11 @@ func TestCadenceValueToJSONString(t *testing.T) {
 	})
 
 	t.Run("Struct", func(t *testing.T) {
-		s := cadence.Struct{
-			Fields: []cadence.Value{NewCadenceString("bar")},
-			StructType: &cadence.StructType{
-				Fields: []cadence.Field{{
-					Identifier: "foo",
-					Type:       cadence.StringType{},
-				}},
-			},
-		}
+		s := cadence.NewStruct([]cadence.Value{NewCadenceString("bar")})
+		s.StructType = cadence.NewStructType(nil, "", []cadence.Field{{
+			Identifier: "foo",
+			Type:       cadence.StringType,
+		}}, nil)
 		value := CadenceValueToJSONString(s)
 		assert.Equal(t, `{
     "foo": "bar"

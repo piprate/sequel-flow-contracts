@@ -1,7 +1,6 @@
 package test
 
 import (
-	"context"
 	"os"
 	"sort"
 	"testing"
@@ -44,10 +43,7 @@ func TestDigitalArt_Master(t *testing.T) {
 	artistAcct := client.Account(user1AccountName)
 
 	metadata := SampleMetadata(2)
-	profile, err := evergreen.ProfileToCadence(
-		BasicEvergreenProfile(artistAcct.Address), flow.HexToAddress(se.WellKnownAddresses()["Evergreen"]),
-	)
-	require.NoError(t, err)
+	profile := BasicEvergreenProfile(artistAcct.Address())
 
 	t.Run("Should be able to seal new digital art master", func(t *testing.T) {
 
@@ -55,9 +51,26 @@ func TestDigitalArt_Master(t *testing.T) {
 import DigitalArt from 0x01cf0e2f2f715450
 import Evergreen from 0x01cf0e2f2f715450
 
-pub fun main(metadata: DigitalArt.Metadata, evergreenProfile: Evergreen.Profile) {
+pub fun main(
+	metadata: DigitalArt.Metadata,
+	id: UInt32,
+    description: String,
+    roleIDs: [String],
+    roleAddresses: [Address],
+    initialSaleCommissions: [UFix64],
+    secondaryMarketCommissions: [UFix64]
+) {
 
 	// test typical master lifecycle
+
+	var evergreenProfile = Evergreen.profileFromFlattenedView(
+		id: id,
+		description: description,
+		roleIDs: roleIDs,
+		roleAddresses: roleAddresses,
+		initialSaleCommissions: initialSaleCommissions,
+		secondaryMarketCommissions: secondaryMarketCommissions
+	)
 
 	var master = DigitalArt.Master(
 		metadata: metadata,
@@ -96,7 +109,9 @@ pub fun main(metadata: DigitalArt.Metadata, evergreenProfile: Evergreen.Profile)
 			Argument(iinft.DigitalArtMetadataToCadence(
 				metadata, flow.HexToAddress(se.WellKnownAddresses()["DigitalArt"])),
 			).
-			Argument(profile).RunReturns(context.Background())
+			Argument(
+				evergreen.ProfileToCadence(profile, flow.HexToAddress(se.WellKnownAddresses()["Evergreen"])),
+			).RunReturns()
 		require.NoError(t, err)
 	})
 }
@@ -112,13 +127,13 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 
 	artistAcct := client.Account(user1AccountName)
 
-	profile := BasicEvergreenProfile(artistAcct.Address)
+	profile := BasicEvergreenProfile(artistAcct.Address())
 
 	t.Run("Should be able to seal new digital art master", func(t *testing.T) {
 
 		metadata := SampleMetadata(4)
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
@@ -131,13 +146,13 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 
 		// Seal the master
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
 
 		// try again, should fail
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("Master already sealed")
@@ -148,7 +163,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 		metadata := SampleMetadata(4)
 		metadata.Asset = ""
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("Empty asset ID")
@@ -159,7 +174,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 		metadata := SampleMetadata(4)
 		metadata.MaxEdition = 0
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("MaxEdition should be positive")
@@ -170,7 +185,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 		metadata := SampleMetadata(4)
 		metadata.Edition = 2
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("Edition should be zero")
@@ -179,7 +194,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 	t.Run("Shouldn't be able to re-seal an already closed master", func(t *testing.T) {
 		userAcct := client.Account(user1AccountName)
 
-		scripts.FundAccountWithFlow(t, client, userAcct.Address, "10.0")
+		scripts.FundAccountWithFlow(t, client, userAcct.Address(), "10.0")
 
 		_ = se.NewTransaction("account_setup").
 			SignProposeAndPayAs(user1AccountName).
@@ -191,7 +206,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 
 		// seal a master with 1 edition
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
@@ -202,7 +217,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 			SignProposeAndPayAs(adminAccountName).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			Test(t).
 			AssertSuccess()
 
@@ -216,10 +231,10 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 		}
 		`).
 			StringArgument(metadata.Asset).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("Master already sealed")
@@ -237,7 +252,7 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 
 	userAcct := client.Account(user1AccountName)
 
-	scripts.FundAccountWithFlow(t, client, userAcct.Address, "10.0")
+	scripts.FundAccountWithFlow(t, client, userAcct.Address(), "10.0")
 
 	_ = se.NewTransaction("account_setup").
 		SignProposeAndPayAs(user1AccountName).
@@ -245,12 +260,12 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 		AssertSuccess()
 
 	checkDigitalArtNFTSupply(t, se, 0)
-	checkDigitalArtCollectionLen(t, se, userAcct.Address.String(), 0)
+	checkDigitalArtCollectionLen(t, se, userAcct.Address().String(), 0)
 
 	metadata := SampleMetadata(2)
-	profile := BasicEvergreenProfile(userAcct.Address)
+	profile := BasicEvergreenProfile(userAcct.Address())
 
-	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -261,7 +276,7 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 			SignProposeAndPayAs(adminAccountName).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			Test(t).
 			AssertSuccess().
 			AssertEventCount(5).
@@ -278,14 +293,14 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 			}))
 
 		// Assert that the account's collection is correct
-		checkTokenInDigitalArtCollection(t, se, userAcct.Address.String(), 0)
-		checkDigitalArtCollectionLen(t, se, userAcct.Address.String(), 1)
+		checkTokenInDigitalArtCollection(t, se, userAcct.Address().String(), 0)
+		checkDigitalArtCollectionLen(t, se, userAcct.Address().String(), 1)
 		checkDigitalArtNFTSupply(t, se, 1)
 
 		val, err := se.NewScript("digitalart_get_metadata").
-			Argument(cadence.NewAddress(userAcct.Address)).
+			Argument(cadence.NewAddress(userAcct.Address())).
 			UInt64Argument(0).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 
 		meta, err := iinft.DigitalArtMetadataFromCadence(val)
@@ -299,7 +314,7 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 			SignProposeAndPayAs(adminAccountName).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			Test(t).
 			AssertSuccess().
 			AssertEventCount(5).
@@ -316,14 +331,14 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 			}))
 
 		// Assert that the account's collection is correct
-		checkTokenInDigitalArtCollection(t, se, userAcct.Address.String(), 1)
-		checkDigitalArtCollectionLen(t, se, userAcct.Address.String(), 2)
+		checkTokenInDigitalArtCollection(t, se, userAcct.Address().String(), 1)
+		checkDigitalArtCollectionLen(t, se, userAcct.Address().String(), 2)
 		checkDigitalArtNFTSupply(t, se, 2)
 
 		val, err := se.NewScript("digitalart_get_metadata").
-			Argument(cadence.NewAddress(userAcct.Address)).
+			Argument(cadence.NewAddress(userAcct.Address())).
 			UInt64Argument(1).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 
 		meta, err := iinft.DigitalArtMetadataFromCadence(val)
@@ -337,7 +352,7 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 			SignProposeAndPayAs(adminAccountName).
 			StringArgument("bad_master_id").
 			UInt64Argument(1).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			Test(t).
 			AssertFailure("Master not found")
 	})
@@ -377,12 +392,12 @@ func TestDigitalArt_isClosed(t *testing.T) {
 
 	artistAcct := client.Account(user1AccountName)
 
-	profile := BasicEvergreenProfile(artistAcct.Address)
+	profile := BasicEvergreenProfile(artistAcct.Address())
 
 	t.Run("isClosed() should return false, if master isn't closed", func(t *testing.T) {
 		metadata := SampleMetadata(1)
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
@@ -395,7 +410,7 @@ func TestDigitalArt_isClosed(t *testing.T) {
 		}
 		`).
 			StringArgument(metadata.Asset).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 	})
 
@@ -408,14 +423,14 @@ func TestDigitalArt_isClosed(t *testing.T) {
 		}
 		`).
 			StringArgument("non-existent-asset").
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 	})
 
 	t.Run("isClosed() should return true, if master is closed", func(t *testing.T) {
 		userAcct := client.Account(user1AccountName)
 
-		scripts.FundAccountWithFlow(t, client, userAcct.Address, "10.0")
+		scripts.FundAccountWithFlow(t, client, userAcct.Address(), "10.0")
 
 		_ = se.NewTransaction("account_setup").
 			SignProposeAndPayAs(user1AccountName).
@@ -427,7 +442,7 @@ func TestDigitalArt_isClosed(t *testing.T) {
 
 		// seal a master with 1 edition
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
@@ -438,7 +453,7 @@ func TestDigitalArt_isClosed(t *testing.T) {
 			SignProposeAndPayAs(adminAccountName).
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			Test(t).
 			AssertSuccess()
 
@@ -452,7 +467,7 @@ func TestDigitalArt_isClosed(t *testing.T) {
 		}
 		`).
 			StringArgument(metadata.Asset).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 	})
 }
@@ -468,7 +483,7 @@ func TestDigitalArt_NFT(t *testing.T) {
 
 	userAcct := client.Account(user1AccountName)
 
-	scripts.FundAccountWithFlow(t, client, userAcct.Address, "10.0")
+	scripts.FundAccountWithFlow(t, client, userAcct.Address(), "10.0")
 
 	_ = se.NewTransaction("account_setup").
 		SignProposeAndPayAs(user1AccountName).
@@ -476,11 +491,9 @@ func TestDigitalArt_NFT(t *testing.T) {
 		AssertSuccess()
 
 	metadata := SampleMetadata(4)
-	profile := BasicEvergreenProfile(userAcct.Address)
-	profile.Roles[0].ReceiverPath = "/public/flowTokenReceiver"
-	profile.Roles[0].Description = "artist's royalty"
+	profile := BasicEvergreenProfile(userAcct.Address())
 
-	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -489,20 +502,19 @@ func TestDigitalArt_NFT(t *testing.T) {
 		SignProposeAndPayAs(adminAccountName).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
-		Argument(cadence.Address(userAcct.Address)).
+		Argument(cadence.Address(userAcct.Address())).
 		Test(t).
 		AssertSuccess()
 
 	t.Run("DigitalArt.getMetadata(...) should return NFT metadata", func(t *testing.T) {
-		var val cadence.Value
-		val, err = se.NewScript("digitalart_get_metadata").
-			Argument(cadence.NewAddress(userAcct.Address)).
+		val, err := se.NewScript("digitalart_get_metadata").
+			Argument(cadence.NewAddress(userAcct.Address())).
 			UInt64Argument(0).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 
-		meta, metaErr := iinft.DigitalArtMetadataFromCadence(val)
-		require.NoError(t, metaErr)
+		meta, err := iinft.DigitalArtMetadataFromCadence(val)
+		require.NoError(t, err)
 
 		assert.Equal(t, metadata.Asset, meta.Asset)
 		assert.Equal(t, uint64(1), meta.Edition)
@@ -510,15 +522,15 @@ func TestDigitalArt_NFT(t *testing.T) {
 
 	t.Run("DigitalArt.getMetadata(...) should fail if token doesn't exist in collection", func(t *testing.T) {
 		_, err = se.NewScript("digitalart_get_metadata").
-			Argument(cadence.NewAddress(userAcct.Address)).
+			Argument(cadence.NewAddress(userAcct.Address())).
 			UInt64Argument(123).
-			RunReturns(context.Background())
+			RunReturns()
 		require.Error(t, err)
 	})
 
 	t.Run("getViews() should return a list of view types", func(t *testing.T) {
-		var viewsVal cadence.Value
-		viewsVal, err = client.Script(`
+
+		viewsVal, err := client.Script(`
 import DigitalArt from 0x01cf0e2f2f715450
 
 pub fun main(address:Address, tokenID:UInt64) : [Type] {
@@ -530,25 +542,21 @@ pub fun main(address:Address, tokenID:UInt64) : [Type] {
     return []
 }
 `).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			UInt64Argument(0).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 
 		viewsArray, ok := viewsVal.(cadence.Array)
 		require.True(t, ok)
-		require.Equal(t, 6, len(viewsArray.Values))
+		require.Equal(t, 2, len(viewsArray.Values))
 		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.Display>()", viewsArray.Values[0].String())
-		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.Royalties>()", viewsArray.Values[1].String())
-		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.ExternalURL>()", viewsArray.Values[2].String())
-		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.NFTCollectionData>()", viewsArray.Values[3].String())
-		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.NFTCollectionDisplay>()", viewsArray.Values[4].String())
-		assert.Equal(t, "Type<A.01cf0e2f2f715450.DigitalArt.Metadata>()", viewsArray.Values[5].String())
+		assert.Equal(t, "Type<A.01cf0e2f2f715450.DigitalArt.Metadata>()", viewsArray.Values[1].String())
 	})
 
 	t.Run("resolveView(Type<MetadataViews.Display>()) should return MetadataViews.Display view", func(t *testing.T) {
-		var val cadence.Value
-		val, err = client.Script(`
+
+		val, err := client.Script(`
 import MetadataViews from 0xf8d6e0586b0a20c7
 import DigitalArt from 0x01cf0e2f2f715450
 
@@ -563,81 +571,25 @@ pub fun main(address:Address, tokenID:UInt64) : MetadataViews.Display? {
     return nil
 }
 `).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			UInt64Argument(0).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 
 		displayStruct, ok := val.(cadence.Optional).Value.(cadence.Struct)
 		require.True(t, ok)
 		assert.Equal(t, "MetadataViews.Display", displayStruct.StructType.QualifiedIdentifier)
-		assert.Equal(t, cadence.String("Pure Art"), displayStruct.SearchFieldByName("name"))
-		assert.Equal(t, cadence.String("Digital art in its purest form"), displayStruct.SearchFieldByName("description"))
-		thumbnailStruct, ok := displayStruct.SearchFieldByName("thumbnail").(cadence.Struct)
+		assert.Equal(t, "Pure Art", displayStruct.Fields[0].ToGoValue().(string))
+		assert.Equal(t, "Digital art in its purest form", displayStruct.Fields[1].ToGoValue().(string))
+		thumbnailStruct, ok := displayStruct.Fields[2].(cadence.Struct)
 		require.True(t, ok)
-		assert.Equal(t, "MetadataViews.HTTPFile", thumbnailStruct.StructType.QualifiedIdentifier)
-		assert.Equal(t, cadence.String("https://sequel.mypinata.cloud/ipfs/QmPreview"), thumbnailStruct.SearchFieldByName("url"))
-	})
-
-	t.Run("resolveView(Type<MetadataViews.Royalties>()) should return MetadataViews.Royalties view", func(t *testing.T) {
-
-		_, err = client.Script(`
-import MetadataViews from 0xf8d6e0586b0a20c7
-import DigitalArt from 0x01cf0e2f2f715450
-
-pub fun main(address:Address, tokenID:UInt64) {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
-
-	var royalties: [MetadataViews.Royalty] = []
-	if let item = collection.borrowDigitalArt(id: tokenID) {
-        if let view = item.resolveView(Type<MetadataViews.Royalties>()) {
-            royalties = (view as! MetadataViews.Royalties).getRoyalties()
-        }
-    }
-
-	assert(royalties != nil, message: "royalties == nil")
-	assert(royalties.length == 1, message: "incorrect number of royalties")
-
-	assert(royalties[0].receiver.check(), message: "bad royalty receiver")
-	assert(royalties[0].cut == 0.05, message: "incorrect royalty cut")
-	assert(royalties[0].description == "artist's royalty", message: "incorrect royalty description")
-}
-`).
-			Argument(cadence.Address(userAcct.Address)).
-			UInt64Argument(0).
-			RunReturns(context.Background())
-		require.NoError(t, err)
-	})
-
-	t.Run("resolveView(Type<MetadataViews.ExternalURL>()) should return MetadataViews.ExternalURL view", func(t *testing.T) {
-
-		_, err = client.Script(`
-import MetadataViews from 0xf8d6e0586b0a20c7
-import DigitalArt from 0x01cf0e2f2f715450
-
-pub fun main(address:Address, tokenID:UInt64) {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
-
-	var externalURL: MetadataViews.ExternalURL? = nil
-	if let item = collection.borrowDigitalArt(id: tokenID) {
-        if let view = item.resolveView(Type<MetadataViews.ExternalURL>()) {
-            externalURL = (view as! MetadataViews.ExternalURL)
-        }
-    }
-
-	assert(externalURL != nil, message: "externalURL == nil")
-	assert(externalURL!.url == "https://app.sequel.space/tokens/digital-art/0", message: "incorrect external URL")
-}
-`).
-			Argument(cadence.Address(userAcct.Address)).
-			UInt64Argument(0).
-			RunReturns(context.Background())
-		require.NoError(t, err)
+		assert.Equal(t, "MetadataViews.IPFSFile", thumbnailStruct.StructType.QualifiedIdentifier)
+		assert.Equal(t, "QmPreview", thumbnailStruct.Fields[0].ToGoValue().(string))
 	})
 
 	t.Run("resolveView(Type<DigitalArt.Metadata>()) should return DigitalArt.Metadata view", func(t *testing.T) {
-		var val cadence.Value
-		val, err = client.Script(`
+
+		val, err := client.Script(`
 import MetadataViews from 0xf8d6e0586b0a20c7
 import DigitalArt from 0x01cf0e2f2f715450
 
@@ -652,13 +604,13 @@ pub fun main(address:Address, tokenID:UInt64) : DigitalArt.Metadata? {
     return nil
 }
 `).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			UInt64Argument(0).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 
-		meta, metaErr := iinft.DigitalArtMetadataFromCadence(val)
-		require.NoError(t, metaErr)
+		meta, err := iinft.DigitalArtMetadataFromCadence(val)
+		require.NoError(t, err)
 
 		assert.Equal(t, "Pure Art", meta.Name)
 		assert.Equal(t, "Digital art in its purest form", meta.Description)
@@ -666,8 +618,8 @@ pub fun main(address:Address, tokenID:UInt64) : DigitalArt.Metadata? {
 	})
 
 	t.Run("getAssetID() should return DigitalArt's master ID", func(t *testing.T) {
-		var val cadence.Value
-		val, err = client.Script(`
+
+		val, err := client.Script(`
 import DigitalArt from 0x01cf0e2f2f715450
 
 pub fun main(address:Address, tokenID:UInt64) : String {
@@ -679,17 +631,17 @@ pub fun main(address:Address, tokenID:UInt64) : String {
     return ""
 }
 `).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			UInt64Argument(0).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 
-		assert.Equal(t, cadence.String(metadata.Asset), val)
+		assert.Equal(t, metadata.Asset, val.(cadence.String).ToGoValue())
 	})
 
 	t.Run("getEvergreenProfile() should return DigitalArt's Evergreen profile", func(t *testing.T) {
-		var val cadence.Value
-		val, err = client.Script(`
+
+		val, err := client.Script(`
 import DigitalArt from 0x01cf0e2f2f715450
 import Evergreen from 0x01cf0e2f2f715450
 
@@ -702,9 +654,9 @@ pub fun main(address:Address, tokenID:UInt64) : Evergreen.Profile? {
     return nil
 }
 `).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			UInt64Argument(0).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 
 		actual, err := evergreen.ProfileFromCadence(val)
@@ -724,7 +676,7 @@ func TestDigitalArt_Collection(t *testing.T) {
 
 	userAcct := client.Account(user1AccountName)
 
-	scripts.FundAccountWithFlow(t, client, userAcct.Address, "10.0")
+	scripts.FundAccountWithFlow(t, client, userAcct.Address(), "10.0")
 
 	_ = se.NewTransaction("account_setup").
 		SignProposeAndPayAs(user1AccountName).
@@ -732,9 +684,9 @@ func TestDigitalArt_Collection(t *testing.T) {
 		AssertSuccess()
 
 	metadata := SampleMetadata(4)
-	profile := BasicEvergreenProfile(userAcct.Address)
+	profile := BasicEvergreenProfile(userAcct.Address())
 
-	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = scripts.CreateSealDigitalArtTx(se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -745,13 +697,13 @@ func TestDigitalArt_Collection(t *testing.T) {
 		SignProposeAndPayAs(adminAccountName).
 		StringArgument(metadata.Asset).
 		UInt64Argument(2).
-		Argument(cadence.Address(userAcct.Address)).
+		Argument(cadence.Address(userAcct.Address())).
 		Test(t).
 		AssertSuccess()
 
 	t.Run("getIDs() should return a list of token IDs", func(t *testing.T) {
-		var viewsVal cadence.Value
-		viewsVal, err = client.Script(`
+
+		viewsVal, err := client.Script(`
 import DigitalArt from 0x01cf0e2f2f715450
 
 pub fun main(address:Address, tokenID:UInt64) : [UInt64] {
@@ -759,17 +711,17 @@ pub fun main(address:Address, tokenID:UInt64) : [UInt64] {
     return collection.getIDs()
 }
 `).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			UInt64Argument(0).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 
 		idArray, ok := viewsVal.(cadence.Array)
 		require.True(t, ok)
 		require.Equal(t, 2, len(idArray.Values))
 		ids := []int{
-			int(idArray.Values[0].(cadence.UInt64)),
-			int(idArray.Values[1].(cadence.UInt64)),
+			int(idArray.Values[0].(cadence.UInt64).ToGoValue().(uint64)),
+			int(idArray.Values[1].(cadence.UInt64).ToGoValue().(uint64)),
 		}
 		sort.Ints(ids)
 		assert.Equal(t, 0, ids[0])
@@ -777,8 +729,8 @@ pub fun main(address:Address, tokenID:UInt64) : [UInt64] {
 	})
 
 	t.Run("borrowNFT(...) should return NonFungibleToken.NFT", func(t *testing.T) {
-		var val cadence.Value
-		val, err = client.Script(`
+
+		val, err := client.Script(`
 import NonFungibleToken from 0xf8d6e0586b0a20c7
 import DigitalArt from 0x01cf0e2f2f715450
 
@@ -789,12 +741,12 @@ pub fun main(address:Address, tokenID:UInt64) : UInt64 {
 	return tokenRef.id
 }
 `).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			UInt64Argument(1).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 
-		assert.Equal(t, uint64(1), val.(cadence.UInt64))
+		assert.Equal(t, uint64(1), val.(cadence.UInt64).ToGoValue().(uint64))
 	})
 
 	t.Run("borrowNFT(...) should fail if NFT isn't found", func(t *testing.T) {
@@ -810,15 +762,15 @@ pub fun main(address:Address, tokenID:UInt64) : UInt64 {
 	return tokenRef.id
 }
 `).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			UInt64Argument(2).
-			RunReturns(context.Background())
+			RunReturns()
 		require.Error(t, err)
 	})
 
 	t.Run("borrowDigitalArt(...) should return DigitalArt.NFT", func(t *testing.T) {
-		var val cadence.Value
-		val, err = client.Script(`
+
+		val, err := client.Script(`
 import DigitalArt from 0x01cf0e2f2f715450
 
 pub fun main(address:Address, tokenID:UInt64) : String {
@@ -827,17 +779,17 @@ pub fun main(address:Address, tokenID:UInt64) : String {
 	return daToken!.metadata.asset
 }
 `).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			UInt64Argument(1).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 
-		assert.Equal(t, cadence.String(metadata.Asset), val)
+		assert.Equal(t, metadata.Asset, val.(cadence.String).ToGoValue())
 	})
 
 	t.Run("borrowDigitalArt(...) should return nil if token isn't found", func(t *testing.T) {
-		var val cadence.Value
-		val, err = client.Script(`
+
+		val, err := client.Script(`
 import DigitalArt from 0x01cf0e2f2f715450
 
 pub fun main(address:Address, tokenID:UInt64) : String {
@@ -848,12 +800,12 @@ pub fun main(address:Address, tokenID:UInt64) : String {
 	return "not found"
 }
 `).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			UInt64Argument(123).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 
-		assert.Equal(t, cadence.String("not found"), val)
+		assert.Equal(t, "not found", val.(cadence.String).ToGoValue())
 	})
 
 	t.Run("borrowViewResolver(...) should return MetadataViews.Display view", func(t *testing.T) {
@@ -883,9 +835,9 @@ pub fun main(address:Address, tokenID:UInt64) {
 
 }
 `).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			UInt64Argument(0).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 	})
 
@@ -903,12 +855,12 @@ pub fun main(address:Address, tokenID:UInt64) {
 
 	let profile = token!.getEvergreenProfile()
 
-	assert(profile.id == "did:sequel:evergreen1", message: "bad value of evergreen profile ID")
+	assert(profile.id == 1, message: "bad value of evergreen profile ID")
 }
 `).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			UInt64Argument(0).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 	})
 
@@ -927,9 +879,9 @@ pub fun main(address:Address, tokenID:UInt64) {
 	assert(token == nil, message: "token not nil")
 }
 `).
-			Argument(cadence.Address(userAcct.Address)).
+			Argument(cadence.Address(userAcct.Address())).
 			UInt64Argument(123).
-			RunReturns(context.Background())
+			RunReturns()
 		require.NoError(t, err)
 	})
 }
@@ -946,7 +898,7 @@ func TestDigitalArt_createEmptyCollection(t *testing.T) {
 	receiverAcctName := user2AccountName
 	receiverAcct := client.Account(receiverAcctName)
 
-	scripts.FundAccountWithFlow(t, client, receiverAcct.Address, "10.0")
+	scripts.FundAccountWithFlow(t, client, receiverAcct.Address(), "10.0")
 
 	t.Run("Should be able to create a new empty NFT Collection", func(t *testing.T) {
 
@@ -955,7 +907,7 @@ func TestDigitalArt_createEmptyCollection(t *testing.T) {
 			Test(t).
 			AssertSuccess()
 
-		checkDigitalArtCollectionLen(t, se, receiverAcct.Address.String(), 0)
+		checkDigitalArtCollectionLen(t, se, receiverAcct.Address().String(), 0)
 	})
 }
 
@@ -964,7 +916,7 @@ func checkDigitalArtNFTSupply(t *testing.T, se *scripts.Engine, expectedSupply i
 
 	_, err := se.NewInlineScript(
 		inspectNFTSupplyScript(se.WellKnownAddresses(), "DigitalArt", expectedSupply),
-	).RunReturns(context.Background())
+	).RunReturns()
 	require.NoError(t, err)
 }
 
@@ -973,7 +925,7 @@ func checkTokenInDigitalArtCollection(t *testing.T, se *scripts.Engine, userAddr
 
 	_, err := se.NewInlineScript(
 		inspectCollectionScript(se.WellKnownAddresses(), userAddr, "DigitalArt", "DigitalArt.CollectionPublicPath", nftID),
-	).RunReturns(context.Background())
+	).RunReturns()
 	require.NoError(t, err)
 }
 
@@ -982,6 +934,6 @@ func checkDigitalArtCollectionLen(t *testing.T, se *scripts.Engine, userAddr str
 
 	_, err := se.NewInlineScript(
 		inspectCollectionLenScript(se.WellKnownAddresses(), userAddr, "DigitalArt", "DigitalArt.CollectionPublicPath", length),
-	).RunReturns(context.Background())
+	).RunReturns()
 	require.NoError(t, err)
 }

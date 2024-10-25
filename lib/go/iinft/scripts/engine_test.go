@@ -1,6 +1,7 @@
 package scripts_test
 
 import (
+	"context"
 	"os"
 	"testing"
 	"time"
@@ -22,10 +23,12 @@ func TestNewEngine_emulator(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowEmbedded("emulator", true, false)
 	require.NoError(t, err)
 
-	_, err = client.CreateAccountsE("emulator-account")
+	ctx := context.Background()
+
+	_, err = client.CreateAccountsE(ctx, "emulator-account")
 	require.NoError(t, err)
 
-	err = client.InitializeContractsE()
+	err = client.InitializeContractsE(ctx)
 	require.NoError(t, err)
 
 	_, err = scripts.NewEngine(client, false)
@@ -36,13 +39,15 @@ func TestNewEngine_emulatorWithFees(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowEmbedded("emulator", true, true)
 	require.NoError(t, err)
 
-	_, err = client.DoNotPrependNetworkToAccountNames().CreateAccountsE("emulator-account")
+	ctx := context.Background()
+
+	_, err = client.DoNotPrependNetworkToAccountNames().CreateAccountsE(ctx, "emulator-account")
 	require.NoError(t, err)
 
 	adminAcct := client.Account("emulator-sequel-admin")
-	scripts.FundAccountWithFlow(t, client, adminAcct.Address(), "1000.0")
+	scripts.FundAccountWithFlow(t, client, adminAcct.Address, "1000.0")
 
-	err = client.InitializeContractsE()
+	err = client.InitializeContractsE(ctx)
 	require.NoError(t, err)
 
 	_, err = scripts.NewEngine(client, false)
@@ -69,10 +74,12 @@ func TestEngine_GetStandardScript(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowEmbedded("testnet", false, false)
 	require.NoError(t, err)
 
-	_, err = client.CreateAccountsE("emulator-account")
+	ctx := context.Background()
+
+	_, err = client.CreateAccountsE(ctx, "emulator-account")
 	require.NoError(t, err)
 
-	err = client.InitializeContractsE()
+	err = client.InitializeContractsE(ctx)
 	require.NoError(t, err)
 
 	e, err := scripts.NewEngine(client, false)
@@ -87,10 +94,12 @@ func TestEngine_GetStandardScript_Versus(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false, false)
 	require.NoError(t, err)
 
-	_, err = client.CreateAccountsE("emulator-account")
+	ctx := context.Background()
+
+	_, err = client.CreateAccountsE(ctx, "emulator-account")
 	require.NoError(t, err)
 
-	err = client.InitializeContractsE()
+	err = client.InitializeContractsE(ctx)
 	require.NoError(t, err)
 
 	e, err := scripts.NewEngine(client, false)
@@ -105,10 +114,12 @@ func TestEngine_GetCustomScript_MOD_FUSD(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false, false)
 	require.NoError(t, err)
 
-	_, err = client.CreateAccountsE("emulator-account")
+	ctx := context.Background()
+
+	_, err = client.CreateAccountsE(ctx, "emulator-account")
 	require.NoError(t, err)
 
-	err = client.InitializeContractsE()
+	err = client.InitializeContractsE(ctx)
 	require.NoError(t, err)
 
 	e, err := scripts.NewEngine(client, false)

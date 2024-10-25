@@ -75,18 +75,22 @@ func NewEngine(client *gwtf.GoWithTheFlow, preload bool) (*Engine, error) {
 }
 
 func (e *Engine) loadContractAddresses() error {
-	contracts := e.client.State.Contracts().ByNetwork(e.client.Network)
-	deployedContracts, err := e.client.State.DeploymentContractsByNetwork(e.client.Network)
+	contracts := e.client.State.Contracts()
+	network := e.client.Services.Network()
+	networkName := network.Name
+	deployedContracts, err := e.client.State.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return err
 	}
-	for _, contract := range contracts {
-		if contract.Alias != "" {
-			e.wellKnownAddresses[contract.Name] = contract.Alias
+	for _, contract := range *contracts {
+		for _, alias := range contract.Aliases {
+			if alias.Network == networkName {
+				e.wellKnownAddresses[contract.Name] = alias.Address.HexWithPrefix()
+			}
 		}
 	}
 	for _, contract := range deployedContracts {
-		e.wellKnownAddresses[strings.Split(path.Base(contract.Source), ".")[0]] = "0x" + contract.AccountAddress.String()
+		e.wellKnownAddresses[strings.Split(path.Base(contract.Location()), ".")[0]] = contract.AccountAddress.HexWithPrefix()
 	}
 
 	for _, requiredAddress := range requiredWellKnownAddresses {

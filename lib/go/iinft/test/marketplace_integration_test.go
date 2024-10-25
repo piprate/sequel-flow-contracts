@@ -28,7 +28,7 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 	sellerAcctName := user1AccountName
 	sellerAcct := client.Account(sellerAcctName)
 
-	scripts.FundAccountWithFlow(t, client, sellerAcct.Address(), "10.0")
+	scripts.FundAccountWithFlow(t, client, sellerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 	_ = se.NewTransaction("account_royalty_receiver_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
@@ -38,14 +38,14 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 	buyerAcctName := user2AccountName
 	buyerAcct := client.Account(buyerAcctName)
 
-	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "10.0")
+	scripts.FundAccountWithFlow(t, client, buyerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 	_ = se.NewTransaction("account_setup_flow_token").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
-	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "1000.0")
+	scripts.FundAccountWithFlow(t, client, buyerAcct.Address, "1000.0")
 
 	metadata := SampleMetadata(1)
-	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address(), platformAcct.Address())
+	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address, platformAcct.Address)
 
 	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
@@ -56,7 +56,7 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 		SignProposeAndPayAs(adminAccountName).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
-		Argument(cadence.Address(sellerAcct.Address())).
+		Argument(cadence.Address(sellerAcct.Address)).
 		Test(t).
 		AssertSuccess()
 
@@ -64,9 +64,9 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 		"A.01cf0e2f2f715450.DigitalArt.Minted", "id")
 
 	// Assert that the account's collection is correct
-	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)
-	checkDigitalArtCollectionLen(t, se, sellerAcct.Address().String(), 1)
-	checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 0)
+	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address.String(), nftID)
+	checkDigitalArtCollectionLen(t, se, sellerAcct.Address.String(), 1)
+	checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 0)
 
 	var listingID uint64
 
@@ -126,7 +126,7 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 		_ = se.NewTransaction("marketplace_buy_flow").
 			SignProposeAndPayAs(buyerAcctName).
 			UInt64Argument(listingID).
-			Argument(cadence.NewAddress(sellerAcct.Address())).
+			Argument(cadence.NewAddress(sellerAcct.Address)).
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
@@ -144,9 +144,9 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 				}))
 
 		// Assert that the account's collection is correct
-		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address().String(), 0)
-		checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 1)
-		checkDigitalArtCollectionLen(t, se, sellerAcct.Address().String(), 0)
+		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address.String(), 0)
+		checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 1)
+		checkDigitalArtCollectionLen(t, se, sellerAcct.Address.String(), 0)
 	})
 }
 
@@ -159,7 +159,7 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address())
+	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address)
 
 	platformAcct := client.Account(platformAccountName)
 
@@ -168,7 +168,7 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 	sellerAcctName := user1AccountName
 	sellerAcct := client.Account(sellerAcctName)
 
-	scripts.FundAccountWithFlow(t, client, sellerAcct.Address(), "10.0")
+	scripts.FundAccountWithFlow(t, client, sellerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 	_ = se.NewTransaction("account_royalty_receiver_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
@@ -179,14 +179,14 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 	buyerAcct := client.Account(buyerAcctName)
 	require.NoError(t, err)
 
-	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "10.0")
+	scripts.FundAccountWithFlow(t, client, buyerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
-	scripts.FundAccountWithFUSD(t, se, buyerAcct.Address(), "1000.0")
+	scripts.FundAccountWithFUSD(t, se, buyerAcct.Address, "1000.0")
 
 	metadata := SampleMetadata(1)
-	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address(), platformAcct.Address())
+	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address, platformAcct.Address)
 
 	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
@@ -197,7 +197,7 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 		SignProposeAndPayAs(adminAccountName).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
-		Argument(cadence.Address(sellerAcct.Address())).
+		Argument(cadence.Address(sellerAcct.Address)).
 		Test(t).
 		AssertSuccess()
 
@@ -205,9 +205,9 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 		"A.01cf0e2f2f715450.DigitalArt.Minted", "id")
 
 	// Assert that the account's collection is correct
-	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)
-	checkDigitalArtCollectionLen(t, se, sellerAcct.Address().String(), 1)
-	checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 0)
+	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address.String(), nftID)
+	checkDigitalArtCollectionLen(t, se, sellerAcct.Address.String(), 1)
+	checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 0)
 
 	var listingID uint64
 
@@ -268,7 +268,7 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 		_ = se.NewTransaction("marketplace_buy_fusd").
 			SignProposeAndPayAs(buyerAcctName).
 			UInt64Argument(listingID).
-			Argument(cadence.NewAddress(sellerAcct.Address())).
+			Argument(cadence.NewAddress(sellerAcct.Address)).
 			Argument(cadence.NewOptional(nil)).
 			Test(t).
 			AssertSuccess().
@@ -286,8 +286,8 @@ func TestMarketplace_Integration_ListAndBuyWithFUSD(t *testing.T) {
 				}))
 
 		// Assert that the account's collection is correct
-		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address().String(), 0)
-		checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 1)
-		checkDigitalArtCollectionLen(t, se, sellerAcct.Address().String(), 0)
+		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address.String(), 0)
+		checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 1)
+		checkDigitalArtCollectionLen(t, se, sellerAcct.Address.String(), 0)
 	})
 }

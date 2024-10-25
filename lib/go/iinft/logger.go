@@ -3,7 +3,7 @@ package iinft
 import (
 	"strings"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flowkit/v2/output"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )

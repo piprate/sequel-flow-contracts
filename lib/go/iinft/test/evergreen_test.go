@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"os"
 	"testing"
 	"time"
@@ -45,8 +46,8 @@ pub fun main(addr: Address) {
 	assert(role.commissionRate(initialSale: false) == 0.05, message: "wrong commissionRate(false) value")
 }
 `).
-		Argument(cadence.NewAddress(artistAcct.Address())).
-		RunReturns()
+		Argument(cadence.NewAddress(artistAcct.Address)).
+		RunReturns(context.Background())
 	require.NoError(t, err)
 }
 
@@ -90,8 +91,8 @@ pub fun main(addr: Address) {
 	assert(role == nil, message: "Non-existent role found")
 }
 `).
-		Argument(cadence.NewAddress(artistAcct.Address())).
-		RunReturns()
+		Argument(cadence.NewAddress(artistAcct.Address)).
+		RunReturns(context.Background())
 	require.NoError(t, err)
 }
 
@@ -116,7 +117,7 @@ func TestEvergreen_Profile_buildRoyalties(t *testing.T) {
 				Description:               "Test Role 1",
 				InitialSaleCommission:     0.8,
 				SecondaryMarketCommission: 0.05,
-				Address:                   user1Acct.Address(),
+				Address:                   user1Acct.Address,
 				ReceiverPath:              "/public/fusdReceiver",
 			},
 			{
@@ -124,7 +125,7 @@ func TestEvergreen_Profile_buildRoyalties(t *testing.T) {
 				Description:               "Test Role 2",
 				InitialSaleCommission:     0.2,
 				SecondaryMarketCommission: 0.025,
-				Address:                   user2Acct.Address(),
+				Address:                   user2Acct.Address,
 			},
 		},
 	}
@@ -143,12 +144,12 @@ pub fun main(profile: Evergreen.Profile) {
 }
 `).
 			Argument(profileVal).
-			RunReturns()
+			RunReturns(context.Background())
 		require.NoError(t, err)
 	})
 
-	scripts.FundAccountWithFlow(t, client, user1Acct.Address(), "10.0")
-	scripts.FundAccountWithFlow(t, client, user2Acct.Address(), "10.0")
+	scripts.FundAccountWithFlow(t, client, user1Acct.Address, "10.0")
+	scripts.FundAccountWithFlow(t, client, user2Acct.Address, "10.0")
 
 	t.Run("if defaultReceiverPath is nil, return royalties with a valid receiver", func(t *testing.T) {
 		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(user1AccountName).
@@ -164,12 +165,12 @@ pub fun main(profile: Evergreen.Profile) {
 }
 `).
 			Argument(profileVal).
-			RunReturns()
+			RunReturns(context.Background())
 		require.NoError(t, err)
 	})
 
 	t.Run("if defaultReceiverPath is provided, return royalties with a valid receiver", func(t *testing.T) {
-		scripts.FundAccountWithFlow(t, client, user1Acct.Address(), "10.0")
+		scripts.FundAccountWithFlow(t, client, user1Acct.Address, "10.0")
 
 		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(user1AccountName).
 			Test(t).AssertSuccess()
@@ -187,7 +188,7 @@ pub fun main(profile: Evergreen.Profile) {
 }
 `).
 			Argument(profileVal).
-			RunReturns()
+			RunReturns(context.Background())
 		require.NoError(t, err)
 	})
 }

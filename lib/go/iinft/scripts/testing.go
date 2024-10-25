@@ -2,6 +2,7 @@ package scripts
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -17,26 +18,30 @@ import (
 func ConfigureInMemoryEmulator(t *testing.T, client *gwtf.GoWithTheFlow, adminFlowDeposit string) {
 	t.Helper()
 
-	_, err := client.DoNotPrependNetworkToAccountNames().CreateAccountsE("emulator-account")
+	_, err := client.DoNotPrependNetworkToAccountNames().CreateAccountsE(context.Background(), "emulator-account")
 	require.NoError(t, err)
 
 	if adminFlowDeposit != "" {
 		adminAcct := client.Account("emulator-sequel-admin")
-		FundAccountWithFlow(t, client, adminAcct.Address(), adminFlowDeposit)
+		FundAccountWithFlow(t, client, adminAcct.Address, adminFlowDeposit)
 	}
 
-	err = client.InitializeContractsE()
+	err = client.InitializeContractsE(context.Background())
 	require.NoError(t, err)
 }
 
 func FundAccountWithFlow(t *testing.T, client *gwtf.GoWithTheFlow, receiverAddress flow.Address, amount string) {
 	t.Helper()
 
-	contracts := client.State.Contracts().ByNetwork(client.Network)
+	contracts := client.State.Contracts() //.ByNetwork(client.Network)
 	addrMap := make(map[string]string)
-	for _, contract := range contracts {
-		if contract.Alias != "" {
-			addrMap[contract.Name] = contract.Alias
+	networkName := client.Services.Network().Name
+
+	for _, contract := range *contracts {
+		for _, alias := range contract.Aliases {
+			if alias.Network == networkName {
+				addrMap[contract.Name] = alias.Address.HexWithPrefix()
+			}
 		}
 	}
 
@@ -56,11 +61,15 @@ func FundAccountWithFlow(t *testing.T, client *gwtf.GoWithTheFlow, receiverAddre
 }
 
 func FundAccountWithFlowE(client *gwtf.GoWithTheFlow, receiverAddress flow.Address, amount string) error {
-	contracts := client.State.Contracts().ByNetwork(client.Network)
+	contracts := client.State.Contracts() //.ByNetwork(client.Network)
 	addrMap := make(map[string]string)
-	for _, contract := range contracts {
-		if contract.Alias != "" {
-			addrMap[contract.Name] = contract.Alias
+	networkName := client.Services.Network().Name
+
+	for _, contract := range *contracts {
+		for _, alias := range contract.Aliases {
+			if alias.Network == networkName {
+				addrMap[contract.Name] = alias.Address.HexWithPrefix()
+			}
 		}
 	}
 
@@ -74,7 +83,7 @@ func FundAccountWithFlowE(client *gwtf.GoWithTheFlow, receiverAddress flow.Addre
 	_, err := client.Transaction(script).
 		Argument(cadence.NewAddress(receiverAddress)).
 		UFix64Argument(amount).
-		SignProposeAndPayAsService().RunE()
+		SignProposeAndPayAsService().RunE(context.Background())
 
 	return err
 }
@@ -84,7 +93,7 @@ func GetFlowBalance(t *testing.T, se *Engine, address flow.Address) float64 {
 
 	v, err := se.NewScript("account_balance_flow").
 		Argument(cadence.NewAddress(address)).
-		RunReturns()
+		RunReturns(context.Background())
 	require.NoError(t, err)
 
 	return iinft.ToFloat64(v)
@@ -121,7 +130,7 @@ func GetFUSDBalance(t *testing.T, se *Engine, address flow.Address) float64 {
 
 	v, err := se.NewScript("account_balance_fusd").
 		Argument(cadence.NewAddress(address)).
-		RunReturns()
+		RunReturns(context.Background())
 	require.NoError(t, err)
 
 	return iinft.ToFloat64(v)

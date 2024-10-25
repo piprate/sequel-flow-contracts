@@ -1,6 +1,7 @@
 package gwtf
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -17,7 +18,7 @@ type TransactionResult struct {
 func (tb FlowTransactionBuilder) Test(t *testing.T) TransactionResult {
 	locale, _ := time.LoadLocation("UTC")
 	time.Local = locale
-	events, err := tb.RunE()
+	events, err := tb.RunE(context.Background())
 	formattedEvents := make([]*FormatedEvent, len(events))
 	for i, event := range events {
 		ev := ParseEvent(event, uint64(0), time.Unix(0, 0), []string{})

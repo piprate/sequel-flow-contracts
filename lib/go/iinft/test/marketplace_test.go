@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -23,7 +24,7 @@ func TestMarketplace_listToken(t *testing.T) {
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address())
+	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address)
 
 	platformAcct := client.Account(platformAccountName)
 
@@ -32,7 +33,7 @@ func TestMarketplace_listToken(t *testing.T) {
 	sellerAcctName := user1AccountName
 	sellerAcct := client.Account(sellerAcctName)
 
-	scripts.FundAccountWithFlow(t, client, sellerAcct.Address(), "10.0")
+	scripts.FundAccountWithFlow(t, client, sellerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
@@ -41,7 +42,7 @@ func TestMarketplace_listToken(t *testing.T) {
 	_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(user2AccountName).PayAs(adminAccountName).Test(t).AssertSuccess()
 
 	metadata := SampleMetadata(1)
-	profile := PrimaryOnlyEvergreenProfile(artistAcct.Address(), platformAcct.Address())
+	profile := PrimaryOnlyEvergreenProfile(artistAcct.Address, platformAcct.Address)
 
 	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
@@ -52,7 +53,7 @@ func TestMarketplace_listToken(t *testing.T) {
 		SignProposeAndPayAs(adminAccountName).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
-		Argument(cadence.Address(sellerAcct.Address())).
+		Argument(cadence.Address(sellerAcct.Address)).
 		Test(t).
 		AssertSuccess()
 
@@ -60,8 +61,8 @@ func TestMarketplace_listToken(t *testing.T) {
 		"A.01cf0e2f2f715450.DigitalArt.Minted", "id")
 
 	// Assert that the account's collection is correct
-	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)
-	checkDigitalArtCollectionLen(t, se, sellerAcct.Address().String(), 1)
+	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address.String(), nftID)
+	checkDigitalArtCollectionLen(t, se, sellerAcct.Address.String(), 1)
 
 	t.Run("Happy path (Flow)", func(t *testing.T) {
 		res := se.NewTransaction("marketplace_list_flow").
@@ -115,9 +116,9 @@ func TestMarketplace_listToken(t *testing.T) {
 
 	t.Run("Fail, if seller's receiver is invalid (FUSD)", func(t *testing.T) {
 		// Fund with Flow for FUSD setup fees
-		scripts.FundAccountWithFlow(t, client, artistAcct.Address(), "10.0")
+		scripts.FundAccountWithFlow(t, client, artistAcct.Address, "10.0")
 
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcct.Name()).Test(t).AssertSuccess()
+		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcct.Name).Test(t).AssertSuccess()
 
 		_ = se.NewTransaction("marketplace_list_fusd").
 			SignProposeAndPayAs(sellerAcctName).
@@ -130,10 +131,10 @@ func TestMarketplace_listToken(t *testing.T) {
 
 	t.Run("Succeed, if some receivers are invalid (FUSD)", func(t *testing.T) {
 		// Fund with Flow for FUSD setup fees
-		scripts.FundAccountWithFlow(t, client, artistAcct.Address(), "10.0")
+		scripts.FundAccountWithFlow(t, client, artistAcct.Address, "10.0")
 
 		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcct.Name()).Test(t).AssertSuccess()
+		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcct.Name).Test(t).AssertSuccess()
 
 		res := se.NewTransaction("marketplace_list_fusd").
 			SignProposeAndPayAs(sellerAcctName).
@@ -186,10 +187,10 @@ func TestMarketplace_listToken(t *testing.T) {
 
 	t.Run("Happy path (FUSD)", func(t *testing.T) {
 		// Fund with Flow for FUSD setup fees
-		scripts.FundAccountWithFlow(t, client, platformAcct.Address(), "10.0")
+		scripts.FundAccountWithFlow(t, client, platformAcct.Address, "10.0")
 
 		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(platformAcct.Name()).Test(t).AssertSuccess()
+		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(platformAcct.Name).Test(t).AssertSuccess()
 
 		res := se.NewTransaction("marketplace_list_fusd").
 			SignProposeAndPayAs(sellerAcctName).
@@ -257,7 +258,7 @@ func TestMarketplace_buyToken(t *testing.T) {
 	sellerAcctName := "emulator-user1"
 	sellerAcct := client.Account(sellerAcctName)
 
-	scripts.FundAccountWithFlow(t, client, sellerAcct.Address(), "10.0")
+	scripts.FundAccountWithFlow(t, client, sellerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
@@ -266,13 +267,13 @@ func TestMarketplace_buyToken(t *testing.T) {
 	buyerAcctName := "emulator-user2"
 	buyerAcct := client.Account(buyerAcctName)
 
-	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "10.0")
+	scripts.FundAccountWithFlow(t, client, buyerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
-	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "1000.0")
+	scripts.FundAccountWithFlow(t, client, buyerAcct.Address, "1000.0")
 
 	metadata := SampleMetadata(1)
-	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address(), platformAcct.Address())
+	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address, platformAcct.Address)
 
 	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
@@ -283,7 +284,7 @@ func TestMarketplace_buyToken(t *testing.T) {
 		SignProposeAndPayAs(adminAccountName).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
-		Argument(cadence.Address(sellerAcct.Address())).
+		Argument(cadence.Address(sellerAcct.Address)).
 		Test(t).
 		AssertSuccess()
 
@@ -291,9 +292,9 @@ func TestMarketplace_buyToken(t *testing.T) {
 		"A.01cf0e2f2f715450.DigitalArt.Minted", "id")
 
 	// Assert that the account's collection is correct
-	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)
-	checkDigitalArtCollectionLen(t, se, sellerAcct.Address().String(), 1)
-	checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 0)
+	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address.String(), nftID)
+	checkDigitalArtCollectionLen(t, se, sellerAcct.Address.String(), 1)
+	checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 0)
 
 	res = se.NewTransaction("marketplace_list_flow").
 		SignProposeAndPayAs(sellerAcctName).
@@ -310,7 +311,7 @@ func TestMarketplace_buyToken(t *testing.T) {
 		_ = se.NewTransaction("marketplace_buy_flow").
 			SignProposeAndPayAs(buyerAcctName).
 			UInt64Argument(listingID).
-			Argument(cadence.NewAddress(sellerAcct.Address())).
+			Argument(cadence.NewAddress(sellerAcct.Address)).
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
@@ -328,9 +329,9 @@ func TestMarketplace_buyToken(t *testing.T) {
 				}))
 
 		// Assert that the account's collection is correct
-		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address().String(), 0)
-		checkDigitalArtCollectionLen(t, se, buyerAcct.Address().String(), 1)
-		checkDigitalArtCollectionLen(t, se, sellerAcct.Address().String(), 0)
+		checkTokenInDigitalArtCollection(t, se, buyerAcct.Address.String(), 0)
+		checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 1)
+		checkDigitalArtCollectionLen(t, se, sellerAcct.Address.String(), 0)
 	})
 }
 
@@ -343,7 +344,7 @@ func TestMarketplace_payForMintedTokens(t *testing.T) {
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address())
+	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address)
 
 	evergreenAddr := flow.HexToAddress(se.WellKnownAddresses()["Evergreen"])
 
@@ -351,7 +352,7 @@ func TestMarketplace_payForMintedTokens(t *testing.T) {
 	artistAcct := client.Account(user3AccountName) // the artist is the seller
 	roleOneAcct := client.Account(user1AccountName)
 
-	scripts.FundAccountWithFlow(t, client, buyerAcct.Address(), "1000.0")
+	scripts.FundAccountWithFlow(t, client, buyerAcct.Address, "1000.0")
 
 	happyPathProfile, err := evergreen.ProfileToCadence(&evergreen.Profile{
 		ID: "did:sequel:evergreen3",
@@ -360,13 +361,13 @@ func TestMarketplace_payForMintedTokens(t *testing.T) {
 				ID:                        "Artist",
 				InitialSaleCommission:     0.8,
 				SecondaryMarketCommission: 0.0,
-				Address:                   artistAcct.Address(),
+				Address:                   artistAcct.Address,
 			},
 			{
 				ID:                        "Role1",
 				InitialSaleCommission:     0.2,
 				SecondaryMarketCommission: 0.0,
-				Address:                   roleOneAcct.Address(),
+				Address:                   roleOneAcct.Address,
 			},
 		},
 	}, evergreenAddr)
@@ -401,12 +402,12 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 }`
 
 	t.Run("Fail if seller's receiver is invalid", func(t *testing.T) {
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcct.Name()).Test(t).AssertSuccess()
+		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcct.Name).Test(t).AssertSuccess()
 
-		scripts.FundAccountWithFUSD(t, se, buyerAcct.Address(), "1000.0")
+		scripts.FundAccountWithFUSD(t, se, buyerAcct.Address, "1000.0")
 
 		_ = client.Transaction(scriptWithFUSD).
-			PayloadSigner(buyerAcct.Name()).
+			PayloadSigner(buyerAcct.Name).
 			SignProposeAndPayAs(adminAccountName).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
@@ -418,10 +419,10 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 	t.Run("If some receivers are invalid, send the remainder to last good receiver", func(t *testing.T) {
 		// RoleOne's FUSD receiver is missing. RoleOne's cut will go to the seller (the artist).
 
-		_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(artistAcct.Name()).PayAs(adminAccountName).Test(t).AssertSuccess()
+		_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(artistAcct.Name).PayAs(adminAccountName).Test(t).AssertSuccess()
 
 		_ = client.Transaction(scriptWithFUSD).
-			PayloadSigner(buyerAcct.Name()).
+			PayloadSigner(buyerAcct.Name).
 			SignProposeAndPayAs(adminAccountName).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
@@ -432,7 +433,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 				"A.f8d6e0586b0a20c7.FUSD.TokensWithdrawn",
 				map[string]interface{}{
 					"amount": "100.00000000",
-					"from":   "0x" + buyerAcct.Address().String(),
+					"from":   "0x" + buyerAcct.Address.String(),
 				})).
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited",
@@ -449,7 +450,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 	})
 
 	t.Run("Happy path (Flow)", func(t *testing.T) {
-		_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(roleOneAcct.Name()).PayAs(adminAccountName).Test(t).AssertSuccess()
+		_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(roleOneAcct.Name).PayAs(adminAccountName).Test(t).AssertSuccess()
 
 		_ = client.Transaction(`
 import FungibleToken from 0xee82856bf20e2aa6
@@ -478,7 +479,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 		)
    }
 }`).
-			PayloadSigner(buyerAcct.Name()).
+			PayloadSigner(buyerAcct.Name).
 			SignProposeAndPayAs(adminAccountName).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
@@ -489,7 +490,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 				"A.0ae53cb6e3f42a79.FlowToken.TokensWithdrawn",
 				map[string]interface{}{
 					"amount": "100.00000000",
-					"from":   "0x" + buyerAcct.Address().String(),
+					"from":   "0x" + buyerAcct.Address.String(),
 				})).
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.0ae53cb6e3f42a79.FlowToken.TokensDeposited",
@@ -501,14 +502,14 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 				"A.0ae53cb6e3f42a79.FlowToken.TokensDeposited",
 				map[string]interface{}{
 					"amount": "20.00000000",
-					"to":     "0x" + roleOneAcct.Address().String(),
+					"to":     "0x" + roleOneAcct.Address.String(),
 				}))
 		require.NoError(t, err)
 	})
 
 	t.Run("Happy path (FUSD)", func(t *testing.T) {
 		_ = client.Transaction(scriptWithFUSD).
-			PayloadSigner(buyerAcct.Name()).
+			PayloadSigner(buyerAcct.Name).
 			SignProposeAndPayAs(adminAccountName).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
@@ -519,7 +520,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 				"A.f8d6e0586b0a20c7.FUSD.TokensWithdrawn",
 				map[string]interface{}{
 					"amount": "100.00000000",
-					"from":   "0x" + buyerAcct.Address().String(),
+					"from":   "0x" + buyerAcct.Address.String(),
 				})).
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited",
@@ -531,7 +532,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited",
 				map[string]interface{}{
 					"amount": "20.00000000",
-					"to":     "0x" + roleOneAcct.Address().String(),
+					"to":     "0x" + roleOneAcct.Address.String(),
 				}))
 	})
 }
@@ -552,12 +553,12 @@ func TestMarketplace_withdrawToken(t *testing.T) {
 	sellerAcctName := "emulator-user1"
 	sellerAcct := client.Account(sellerAcctName)
 
-	scripts.FundAccountWithFlow(t, client, sellerAcct.Address(), "10.0")
+	scripts.FundAccountWithFlow(t, client, sellerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
 	metadata := SampleMetadata(1)
-	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address(), platformAcct.Address())
+	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address, platformAcct.Address)
 
 	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
@@ -568,14 +569,14 @@ func TestMarketplace_withdrawToken(t *testing.T) {
 		SignProposeAndPayAs(adminAccountName).
 		StringArgument(metadata.Asset).
 		UInt64Argument(1).
-		Argument(cadence.Address(sellerAcct.Address())).
+		Argument(cadence.Address(sellerAcct.Address)).
 		Test(t).
 		AssertSuccess()
 
 	var nftID uint64
 
 	// Assert that the account's collection is correct
-	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)
+	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address.String(), nftID)
 
 	res := se.NewTransaction("marketplace_list_flow").
 		SignProposeAndPayAs(sellerAcctName).
@@ -630,12 +631,12 @@ pub fun main(listingID:UInt64, storefrontAddress: Address) {
 }
 `).
 			UInt64Argument(listingID).
-			Argument(cadence.Address(sellerAcct.Address())).
-			RunReturns()
+			Argument(cadence.Address(sellerAcct.Address)).
+			RunReturns(context.Background())
 		require.NoError(t, err)
 
 		// ensure that the seller's collection still has the token
-		checkTokenInDigitalArtCollection(t, se, sellerAcct.Address().String(), nftID)
+		checkTokenInDigitalArtCollection(t, se, sellerAcct.Address.String(), nftID)
 	})
 }
 
@@ -661,13 +662,13 @@ func TestMarketplace_buildPayments(t *testing.T) {
 				ID:                        "Role1",
 				InitialSaleCommission:     0.8,
 				SecondaryMarketCommission: 0.05,
-				Address:                   roleOneAcct.Address(),
+				Address:                   roleOneAcct.Address,
 			},
 			{
 				ID:                        "Role2",
 				InitialSaleCommission:     0.2,
 				SecondaryMarketCommission: 0.025,
-				Address:                   roleTwoAcct.Address(),
+				Address:                   roleTwoAcct.Address,
 			},
 		},
 	}, evergreenAddr)
@@ -708,8 +709,8 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 	assert(payments[1].receiver == 0xe03daebed8ca0615, message: "incorrect receiver 2")
 }`).
 			Argument(happyPathProfile).
-			Argument(cadence.NewAddress(sellerAcct.Address())).
-			RunReturns()
+			Argument(cadence.NewAddress(sellerAcct.Address)).
+			RunReturns(context.Background())
 		require.NoError(t, err)
 	})
 
@@ -753,13 +754,13 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 	assert(payments[2].receiver == 0x045a1763c93006ca, message: "incorrect receiver 2")
 }`).
 			Argument(happyPathProfile).
-			Argument(cadence.NewAddress(sellerAcct.Address())).
-			RunReturns()
+			Argument(cadence.NewAddress(sellerAcct.Address)).
+			RunReturns(context.Background())
 		require.NoError(t, err)
 	})
 
 	t.Run("Should fail if any of the rates are out of range", func(t *testing.T) {
-		profile := BasicEvergreenProfile(roleOneAcct.Address())
+		profile := BasicEvergreenProfile(roleOneAcct.Address)
 		profile.Roles[0].InitialSaleCommission = 1.25
 
 		profileVal, err := evergreen.ProfileToCadence(profile, evergreenAddr)
@@ -782,8 +783,8 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
     )
 }`).
 			Argument(profileVal).
-			Argument(cadence.NewAddress(sellerAcct.Address())).
-			RunReturns()
+			Argument(cadence.NewAddress(sellerAcct.Address)).
+			RunReturns(context.Background())
 		require.Error(t, err)
 	})
 
@@ -795,13 +796,13 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 					ID:                        "Role1",
 					InitialSaleCommission:     0.8,
 					SecondaryMarketCommission: 0.0,
-					Address:                   roleOneAcct.Address(),
+					Address:                   roleOneAcct.Address,
 				},
 				{
 					ID:                        "Role2",
 					InitialSaleCommission:     0.8,
 					SecondaryMarketCommission: 0.0,
-					Address:                   roleTwoAcct.Address(),
+					Address:                   roleTwoAcct.Address,
 				},
 			},
 		}, evergreenAddr)
@@ -824,8 +825,8 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
     )
 }`).
 			Argument(profile).
-			Argument(cadence.NewAddress(sellerAcct.Address())).
-			RunReturns()
+			Argument(cadence.NewAddress(sellerAcct.Address)).
+			RunReturns(context.Background())
 		require.Error(t, err)
 	})
 
@@ -837,13 +838,13 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 					ID:                        "Role1",
 					InitialSaleCommission:     0.8,
 					SecondaryMarketCommission: 0.05,
-					Address:                   roleOneAcct.Address(),
+					Address:                   roleOneAcct.Address,
 				},
 				{
 					ID:                        "Role2",
 					InitialSaleCommission:     0.2,
 					SecondaryMarketCommission: 0.0,
-					Address:                   roleTwoAcct.Address(),
+					Address:                   roleTwoAcct.Address,
 				},
 			},
 		}, evergreenAddr)
@@ -882,8 +883,8 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 	assert(payments[1].receiver == 0x045a1763c93006ca, message: "incorrect receiver 2")
 }`).
 			Argument(profile).
-			Argument(cadence.NewAddress(sellerAcct.Address())).
-			RunReturns()
+			Argument(cadence.NewAddress(sellerAcct.Address)).
+			RunReturns(context.Background())
 		require.NoError(t, err)
 	})
 
@@ -922,8 +923,8 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 	assert(payments[0].receiver == 0x045a1763c93006ca, message: "incorrect receiver 1")
 }`).
 			Argument(profile).
-			Argument(cadence.NewAddress(sellerAcct.Address())).
-			RunReturns()
+			Argument(cadence.NewAddress(sellerAcct.Address)).
+			RunReturns(context.Background())
 		require.NoError(t, err)
 	})
 
@@ -937,7 +938,7 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 					ID:                        "Role1",
 					InitialSaleCommission:     1.0,
 					SecondaryMarketCommission: 0.05,
-					Address:                   roleOneAcct.Address(),
+					Address:                   roleOneAcct.Address,
 				},
 			},
 		}, evergreenAddr)
@@ -1003,10 +1004,10 @@ pub fun main(profile: Evergreen.Profile, seller: Address, extra1: Address, extra
 	assert(payments[3].receiver == 0x045a1763c93006ca, message: "incorrect receiver 4")
 }`).
 			Argument(profile).
-			Argument(cadence.NewAddress(sellerAcct.Address())).
-			Argument(cadence.NewAddress(roleTwoAcct.Address())).
-			Argument(cadence.NewAddress(extraTwoAcct.Address())).
-			RunReturns()
+			Argument(cadence.NewAddress(sellerAcct.Address)).
+			Argument(cadence.NewAddress(roleTwoAcct.Address)).
+			Argument(cadence.NewAddress(extraTwoAcct.Address)).
+			RunReturns(context.Background())
 		require.NoError(t, err)
 	})
 }

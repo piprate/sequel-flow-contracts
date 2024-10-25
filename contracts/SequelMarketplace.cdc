@@ -8,18 +8,27 @@ import Evergreen from "./Evergreen.cdc"
 //
 // Source: https://github.com/piprate/sequel-flow-contracts
 //
-pub contract SequelMarketplace {
+access(all)
+contract SequelMarketplace {
     // Payment
     //
-    pub struct Payment {
-        // role is the Evenrgreen role of the party that receives this payment
-        pub let role: String
+    access(all)
+    struct Payment {
+        // role is the Evergreen role of the party that receives this payment
+        access(all)
+        let role: String
+
         // receiver is the receiving party's address
-        pub let receiver: Address
+        access(all)
+        let receiver: Address
+
         // amount is the quantity of the fungible token that will be paid to the receiver.
-        pub let amount: UFix64
+        access(all)
+        let amount: UFix64
+
         // rate is the percentage of the overall sale this payment represents.
-        pub let rate: UFix64
+        access(all)
+        let rate: UFix64
 
         init(role: String, receiver: Address, amount: UFix64, rate: UFix64) {
             self.role = role
@@ -31,9 +40,13 @@ pub contract SequelMarketplace {
 
     // PaymentInstructions
     //
-    pub struct PaymentInstructions {
-        pub let payments: [Payment]
-        pub let saleCuts: [NFTStorefront.SaleCut]
+    access(all)
+    struct PaymentInstructions {
+        access(all)
+        let payments: [Payment]
+
+        access(all)
+        let saleCuts: [NFTStorefront.SaleCut]
 
         init(payments: [Payment], saleCuts: [NFTStorefront.SaleCut]) {
             self.payments = payments
@@ -44,7 +57,8 @@ pub contract SequelMarketplace {
     // TokenListed
     // Token available for purchase.
     //
-    pub event TokenListed(
+    access(all)
+    event TokenListed(
         storefrontAddress: Address,
         listingID: UInt64,
         nftType: String,
@@ -59,7 +73,8 @@ pub contract SequelMarketplace {
     // TokenSold
     // Token was sold.
     //
-    pub event TokenSold(
+    access(all)
+    event TokenSold(
         storefrontAddress: Address,
         listingID: UInt64,
         nftType: String,
@@ -73,7 +88,8 @@ pub contract SequelMarketplace {
     // TokenWithdrawn
     // Token listing was withdrawn.
     //
-    pub event TokenWithdrawn(
+    access(all)
+    event TokenWithdrawn(
         storefrontAddress: Address,
         listingID: UInt64,
         nftType: String,
@@ -83,9 +99,10 @@ pub contract SequelMarketplace {
     )
 
     // listToken
-    pub fun listToken(
-        storefront: &NFTStorefront.Storefront,
-        nftProviderCapability: Capability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic, Evergreen.CollectionPublic}>,
+    access(all)
+    fun listToken(
+        storefront: auth(NFTStorefront.CreateListing) &NFTStorefront.Storefront,
+        nftProviderCapability: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection, Evergreen.CollectionPublic}>,
         nftType: Type,
         nftID: UInt64,
         sellerVaultPath: PublicPath,
@@ -130,15 +147,16 @@ pub contract SequelMarketplace {
         return listingID
     }
 
-    pub fun buyToken(
+    access(all)
+    fun buyToken(
         storefrontAddress: Address,
-        storefront: &NFTStorefront.Storefront{NFTStorefront.StorefrontPublic},
+        storefront: &NFTStorefront.Storefront,
         listingID: UInt64,
-        listing: &NFTStorefront.Listing{NFTStorefront.ListingPublic},
-        paymentVault: @FungibleToken.Vault,
+        listing: &NFTStorefront.Listing,
+        paymentVault: @{FungibleToken.Vault},
         buyerAddress: Address,
         metadataLink: String?,
-    ): @NonFungibleToken.NFT {
+    ): @{NonFungibleToken.NFT} {
         let details = listing.getDetails()
 
         emit TokenSold(
@@ -157,13 +175,14 @@ pub contract SequelMarketplace {
         return <- item
     }
 
-    pub fun payForMintedTokens(
+    access(all)
+    fun payForMintedTokens(
         unitPrice: UFix64,
         numEditions: UInt64,
         sellerRole: String,
         sellerVaultPath: PublicPath,
-        paymentVault: @FungibleToken.Vault,
-        evergreenProfile: Evergreen.Profile,
+        paymentVault: @{FungibleToken.Vault},
+        evergreenProfile: &Evergreen.Profile,
     ) {
         let seller = evergreenProfile.getRole(id: sellerRole)!.address
 
@@ -203,9 +222,10 @@ pub contract SequelMarketplace {
     // withdrawToken
     // Cancel sale
     //
-    pub fun withdrawToken(
+    access(all)
+    fun withdrawToken(
         storefrontAddress: Address,
-        storefront: &NFTStorefront.Storefront,
+        storefront: auth(NFTStorefront.RemoveListing) &NFTStorefront.Storefront,
         listingID: UInt64,
     ) {
         let listing = storefront.borrowListing(listingResourceID: listingID)
@@ -227,8 +247,9 @@ pub contract SequelMarketplace {
 
     // buildPayments constructs a list of payments based on the given Evengreen profile.
     // Any residual amount goes to the given seller's address.
-    pub fun buildPayments(
-        profile: Evergreen.Profile,
+    access(all)
+    fun buildPayments(
+        profile: &Evergreen.Profile,
         seller: Address,
         sellerRole: String,
         sellerVaultPath: PublicPath,
@@ -254,7 +275,7 @@ pub contract SequelMarketplace {
                     path = receiverPath!
                 }
 
-                let receiverCap = getAccount(address).getCapability<&{FungibleToken.Receiver}>(path)
+                let receiverCap = getAccount(address).capabilities.get<&{FungibleToken.Receiver}>(path)
                 if receiverCap.check() {
                     payments.append(Payment(role: roleID, receiver: address, amount: amount, rate: rate))
                     saleCuts.append(NFTStorefront.SaleCut(receiver: receiverCap, amount: amount))
