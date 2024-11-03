@@ -63,10 +63,12 @@ func TestMarketplace_listToken(t *testing.T) {
 	checkDigitalArtCollectionLen(t, se, sellerAcct.Address.String(), 1)
 
 	t.Run("Happy path (Flow)", func(t *testing.T) {
-		res := se.NewTransaction("marketplace_list_flow").
+		res := se.NewTransaction("marketplace_list").
 			SignProposeAndPayAs(sellerAcctName).
 			UInt64Argument(nftID).
 			UFix64Argument("200.0").
+			Argument(cadence.NewAddress(se.ContractAddress("FlowToken"))).
+			StringArgument("FlowToken").
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
@@ -300,10 +302,12 @@ func TestMarketplace_buyToken(t *testing.T) {
 	checkDigitalArtCollectionLen(t, se, sellerAcct.Address.String(), 1)
 	checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 0)
 
-	res = se.NewTransaction("marketplace_list_flow").
+	res = se.NewTransaction("marketplace_list").
 		SignProposeAndPayAs(sellerAcctName).
 		UInt64Argument(nftID).
 		UFix64Argument("200.0").
+		Argument(cadence.NewAddress(se.ContractAddress("FlowToken"))).
+		StringArgument("FlowToken").
 		Argument(cadence.NewOptional(cadence.String("link"))).
 		Test(t).
 		AssertSuccess()
@@ -312,10 +316,12 @@ func TestMarketplace_buyToken(t *testing.T) {
 		"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable", "listingResourceID")
 
 	t.Run("Happy path (Flow)", func(t *testing.T) {
-		_ = se.NewTransaction("marketplace_buy_flow").
+		_ = se.NewTransaction("marketplace_buy").
 			SignProposeAndPayAs(buyerAcctName).
 			UInt64Argument(listingID).
 			Argument(cadence.NewAddress(sellerAcct.Address)).
+			Argument(cadence.NewAddress(se.ContractAddress("FlowToken"))).
+			StringArgument("FlowToken").
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
@@ -583,10 +589,12 @@ func TestMarketplace_withdrawToken(t *testing.T) {
 	// Assert that the account's collection is correct
 	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address.String(), nftID)
 
-	res := se.NewTransaction("marketplace_list_flow").
+	res := se.NewTransaction("marketplace_list").
 		SignProposeAndPayAs(sellerAcctName).
 		UInt64Argument(nftID).
 		UFix64Argument("200.0").
+		Argument(cadence.NewAddress(se.ContractAddress("FlowToken"))).
+		StringArgument("FlowToken").
 		Argument(cadence.NewOptional(cadence.String("link"))).
 		Test(t).
 		AssertSuccess()

@@ -312,7 +312,7 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 
 	t.Run("Should be able to mint a token on demand (master not sealed)", func(t *testing.T) {
 
-		_ = client.Transaction(se.GetCustomScript("digitalart_mint_on_demand_flow", scripts.MintOnDemandParameters{
+		_ = client.Transaction(se.GetCustomScript("digitalart_mint_on_demand", scripts.MintOnDemandParameters{
 			Metadata: metadata,
 			Profile:  profile,
 		})).
@@ -321,6 +321,8 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
+			Argument(cadence.NewAddress(se.ContractAddress("FlowToken"))).
+			StringArgument("FlowToken").
 			UInt64Argument(123).
 			Test(t).
 			AssertSuccess().
@@ -365,7 +367,7 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 
 	t.Run("Should be able to mint a token on demand (master sealed)", func(t *testing.T) {
 
-		_ = client.Transaction(se.GetCustomScript("digitalart_mint_on_demand_flow", scripts.MintOnDemandParameters{
+		_ = client.Transaction(se.GetCustomScript("digitalart_mint_on_demand", scripts.MintOnDemandParameters{
 			Metadata: metadata,
 			Profile:  profile,
 		})).
@@ -374,6 +376,8 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 			StringArgument(metadata.Asset).
 			UInt64Argument(1).
 			UFix64Argument("100.0").
+			Argument(cadence.NewAddress(se.ContractAddress("FlowToken"))).
+			StringArgument("FlowToken").
 			UInt64Argument(123).
 			Test(t).
 			AssertSuccess().

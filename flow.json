@@ -63,7 +63,7 @@
 		"FungibleTokenMetadataViews": {
 			"source": "./contracts/standard/FungibleTokenMetadataViews.cdc",
 			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
+				"emulator": "ee82856bf20e2aa6",
 				"mainnet": "f233dcee88fe0abe",
 				"testing": "0000000000000007",
 				"testnet": "9a0766d93b6608b7"
@@ -72,7 +72,7 @@
 		"FungibleTokenSwitchboard": {
 			"source": "./contracts/standard/FungibleTokenSwitchboard.cdc",
 			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
+				"emulator": "ee82856bf20e2aa6",
 				"mainnet": "f233dcee88fe0abe",
 				"testing": "0000000000000007",
 				"testnet": "9a0766d93b6608b7"
@@ -173,7 +173,6 @@
 				"ViewResolver",
 				"MetadataViews",
 				"NonFungibleToken",
-				"FungibleTokenMetadataViews",
 				"NFTStorefront",
 				"NFTCatalog",
 				"NFTRetrieval",
@@ -182,7 +181,6 @@
 				"ExampleToken"
 			],
 			"emulator-sequel-admin": [
-				"FungibleTokenSwitchboard",
 				"Evergreen",
 				"DigitalArt",
 				"SequelMarketplace"

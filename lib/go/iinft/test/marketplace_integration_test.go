@@ -72,10 +72,12 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 	var listingID uint64
 
 	t.Run("Should be able to list an NFT in seller's Storefront", func(t *testing.T) {
-		res := se.NewTransaction("marketplace_list_flow").
+		res := se.NewTransaction("marketplace_list").
 			SignProposeAndPayAs(sellerAcctName).
 			UInt64Argument(nftID).
 			UFix64Argument("200.0").
+			Argument(cadence.NewAddress(se.ContractAddress("FlowToken"))).
+			StringArgument("FlowToken").
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
@@ -124,10 +126,12 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 	})
 
 	t.Run("Should be able to buy an NFT from seller's Storefront", func(t *testing.T) {
-		_ = se.NewTransaction("marketplace_buy_flow").
+		_ = se.NewTransaction("marketplace_buy").
 			SignProposeAndPayAs(buyerAcctName).
 			UInt64Argument(listingID).
 			Argument(cadence.NewAddress(sellerAcct.Address)).
+			Argument(cadence.NewAddress(se.ContractAddress("FlowToken"))).
+			StringArgument("FlowToken").
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
