@@ -11,6 +11,7 @@
 			"source": "./contracts/standard/Burner.cdc",
 			"aliases": {
 				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "f233dcee88fe0abe",
 				"testing": "0000000000000007",
 				"testnet": "9a0766d93b6608b7"
 			}
@@ -36,11 +37,9 @@
 				"testnet": "745b085dafdd4fc0"
 			}
 		},
-		"FUSD": {
-			"source": "./contracts/standard/FUSD.cdc",
+		"ExampleToken": {
+			"source": "./contracts/testing/ExampleToken.cdc",
 			"aliases": {
-				"mainnet": "3c5959b568896393",
-				"testnet": "e223d8a629e49c68"
 			}
 		},
 		"FlowToken": {
@@ -175,12 +174,12 @@
 				"MetadataViews",
 				"NonFungibleToken",
 				"FungibleTokenMetadataViews",
-				"FUSD",
 				"NFTStorefront",
 				"NFTCatalog",
 				"NFTRetrieval",
 				"Art",
-				"Content"
+				"Content",
+				"ExampleToken"
 			],
 			"emulator-sequel-admin": [
 				"FungibleTokenSwitchboard",

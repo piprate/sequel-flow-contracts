@@ -29,9 +29,9 @@ func TestEvergreen_Role_commissionRate(t *testing.T) {
 	artistAcct := client.Account(user1AccountName)
 
 	_, err = client.Script(`
-import Evergreen from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
 
-pub fun main(addr: Address) {
+access(all) fun main(addr: Address) {
 
 	var role = Evergreen.Role(
 		id: "test",
@@ -60,9 +60,9 @@ func TestEvergreen_Profile_getRole(t *testing.T) {
 	artistAcct := client.Account(user1AccountName)
 
 	_, err = client.Script(`
-import Evergreen from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
 
-pub fun main(addr: Address) {
+access(all) fun main(addr: Address) {
 
 	var profile = Evergreen.Profile(
 		id: "did:sequel:evergreen1",
@@ -118,7 +118,7 @@ func TestEvergreen_Profile_buildRoyalties(t *testing.T) {
 				InitialSaleCommission:     0.8,
 				SecondaryMarketCommission: 0.05,
 				Address:                   user1Acct.Address,
-				ReceiverPath:              "/public/fusdReceiver",
+				ReceiverPath:              "/public/exampleTokenReceiver",
 			},
 			{
 				ID:                        "test2",
@@ -130,14 +130,14 @@ func TestEvergreen_Profile_buildRoyalties(t *testing.T) {
 		},
 	}
 
-	profileVal, err := evergreen.ProfileToCadence(profile, flow.HexToAddress("0x01cf0e2f2f715450"))
+	profileVal, err := evergreen.ProfileToCadence(profile, flow.HexToAddress("0x179b6b1cb6755e31"))
 	require.NoError(t, err)
 
 	t.Run("Should return no royalties, if no valid receivers", func(t *testing.T) {
 		_, err = client.Script(`
-import Evergreen from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
 
-pub fun main(profile: Evergreen.Profile) {
+access(all) fun main(profile: Evergreen.Profile) {
 	var royalties = profile.buildRoyalties(defaultReceiverPath: nil)
 
 	assert(royalties.length == 0, message: "Incorrect number of royalties")
@@ -152,13 +152,13 @@ pub fun main(profile: Evergreen.Profile) {
 	scripts.FundAccountWithFlow(t, client, user2Acct.Address, "10.0")
 
 	t.Run("if defaultReceiverPath is nil, return royalties with a valid receiver", func(t *testing.T) {
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(user1AccountName).
+		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(user1AccountName).
 			Test(t).AssertSuccess()
 
 		_, err = client.Script(`
-import Evergreen from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
 
-pub fun main(profile: Evergreen.Profile) {
+access(all) fun main(profile: Evergreen.Profile) {
 	var royalties = profile.buildRoyalties(defaultReceiverPath: nil)
 
 	assert(royalties.length == 1, message: "Incorrect number of royalties")
@@ -172,17 +172,17 @@ pub fun main(profile: Evergreen.Profile) {
 	t.Run("if defaultReceiverPath is provided, return royalties with a valid receiver", func(t *testing.T) {
 		scripts.FundAccountWithFlow(t, client, user1Acct.Address, "10.0")
 
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(user1AccountName).
+		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(user1AccountName).
 			Test(t).AssertSuccess()
 
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(user2AccountName).
+		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(user2AccountName).
 			Test(t).AssertSuccess()
 
 		_, err = client.Script(`
-import Evergreen from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
 
-pub fun main(profile: Evergreen.Profile) {
-	var royalties = profile.buildRoyalties(defaultReceiverPath: /public/fusdReceiver)
+access(all) fun main(profile: Evergreen.Profile) {
+	var royalties = profile.buildRoyalties(defaultReceiverPath: /public/exampleTokenReceiver)
 
 	assert(royalties.length == 2, message: "Incorrect number of royalties")
 }

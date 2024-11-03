@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/maps"
 )
 
 type TransactionResult struct {
@@ -96,18 +97,32 @@ func (t TransactionResult) AssertEmitEventJSON(event ...string) TransactionResul
 
 func (t TransactionResult) AssertPartialEvent(expected *FormatedEvent) TransactionResult {
 
-	expectedCpy := *expected
+	copyEvent := func(e *FormatedEvent) FormatedEvent {
+		cpy := *e
+		cpy.Fields = map[string]interface{}{}
+		maps.Copy(cpy.Fields, e.Fields)
+		return cpy
+	}
+
+	expectedCpy := copyEvent(expected)
 
 	events := t.Events
-	for index, ev := range events {
-		// TODO do we need more then just name here?
+NextEvent:
+	for _, ev := range events {
 		if ev.Name == expected.Name {
 			for key := range ev.Fields {
-				_, exist := expected.Fields[key]
+				_, exist := expectedCpy.Fields[key]
 				if !exist {
-					expectedCpy.Fields[key] = events[index].Fields[key]
+					expectedCpy.Fields[key] = ev.Fields[key]
+				} else {
+					_, isArrayExpected := expectedCpy.Fields[key].([]any)
+					if !isArrayExpected && expectedCpy.Fields[key] != ev.Fields[key] {
+						expectedCpy = copyEvent(expected)
+						continue NextEvent
+					}
 				}
 			}
+			break
 		}
 	}
 

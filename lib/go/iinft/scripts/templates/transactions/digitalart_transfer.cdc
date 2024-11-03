@@ -3,10 +3,10 @@ import NonFungibleToken from {{.NonFungibleToken}}
 import DigitalArt from {{.DigitalArt}}
 
 transaction(tokenId: UInt64, recipientAddr: Address) {
-  prepare(acct: AuthAccount) {
+  prepare(acct: auth(BorrowValue) &Account) {
     let recipient = getAccount(recipientAddr)
-    let collectionRef = acct.borrow<&DigitalArt.Collection>(from: DigitalArt.CollectionStoragePath)!
-    let depositRef = recipient.getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{NonFungibleToken.CollectionPublic}>()!
+    let collectionRef = acct.storage.borrow<auth(NonFungibleToken.Withdraw) &DigitalArt.Collection>(from: DigitalArt.CollectionStoragePath)!
+    let depositRef = recipient.capabilities.borrow<&{NonFungibleToken.Receiver}>(DigitalArt.CollectionPublicPath)!
     let nft <- collectionRef.withdraw(withdrawID: tokenId)
     depositRef.deposit(token: <-nft)
   }

@@ -1,17 +1,18 @@
-{{ define "marketplace_buy_flow" }}
+{{ define "marketplace_buy" }}
 import NonFungibleToken from {{.NonFungibleToken}}
 import FungibleToken from {{.FungibleToken}}
+import FungibleTokenMetadataViews from {{.FungibleTokenMetadataViews}}
 import NFTStorefront from {{.NFTStorefront}}
-import FlowToken from {{.FlowToken}}
 import DigitalArt from {{.DigitalArt}}
 import SequelMarketplace from {{.SequelMarketplace}}
 
-transaction(listingID: UInt64, storefrontAddress: Address, metadataLink: String?) {
+transaction(listingID: UInt64, storefrontAddress: Address, ftContractAddress: Address, ftContractName: String, metadataLink: String?) {
     let listing: &{NFTStorefront.ListingPublic}
     let paymentVault: @{FungibleToken.Vault}
     let storefront: &NFTStorefront.Storefront
     let tokenReceiver: &{NonFungibleToken.Receiver}
     let buyerAddress: Address
+    let vaultData: FungibleTokenMetadataViews.FTVaultData
 
     prepare(acct: auth(BorrowValue, SaveValue, IssueStorageCapabilityController, PublishCapability) &Account) {
         self.storefront = getAccount(storefrontAddress).capabilities.borrow<&NFTStorefront.Storefront>(NFTStorefront.StorefrontPublicPath)
@@ -21,9 +22,20 @@ transaction(listingID: UInt64, storefrontAddress: Address, metadataLink: String?
                     ?? panic("No Offer with that ID in Storefront")
         let price = self.listing.getDetails().salePrice
 
-        let mainVault = acct.storage.borrow<auth(FungibleToken.Withdraw) &FlowToken.Vault>(from: /storage/flowTokenVault)
-            ?? panic("Cannot borrow FlowToken vault from acct storage")
-        self.paymentVault <- mainVault.withdraw(amount: price)
+        // Borrow a reference to the vault stored on the passed account at the passed publicPath
+        let resolverRef = getAccount(ftContractAddress)
+            .contracts.borrow<&{FungibleToken}>(name: ftContractName)
+                ?? panic("Could not borrow FungibleToken reference to the contract. Make sure the provided contract name ("
+                          .concat(ftContractName).concat(") and address (").concat(ftContractAddress.toString()).concat(") are correct!"))
+
+        // Use that reference to retrieve the FTView
+        self.vaultData = resolverRef.resolveContractView(resourceType: nil, viewType: Type<FungibleTokenMetadataViews.FTVaultData>()) as! FungibleTokenMetadataViews.FTVaultData?
+            ?? panic("Could not resolve FTVaultData view. The ".concat(ftContractName).concat(" contract at ")
+                .concat(ftContractAddress.toString()).concat(" needs to implement the FTVaultData Metadata view in order to execute this transaction."))
+
+        let vaultRef = acct.storage.borrow<auth(FungibleToken.Withdraw) &{FungibleToken.Provider}>(from: self.vaultData.storagePath)
+            ?? panic("Cannot borrow fungible token vault from acct storage")
+        self.paymentVault <- vaultRef.withdraw(amount: price)
 
         if acct.storage.borrow<&DigitalArt.Collection>(from: DigitalArt.CollectionStoragePath) == nil {
             let collection <- DigitalArt.createEmptyCollection(nftType: Type<@DigitalArt.NFT>())

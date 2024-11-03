@@ -152,7 +152,7 @@ contract SequelMarketplace {
         storefrontAddress: Address,
         storefront: &NFTStorefront.Storefront,
         listingID: UInt64,
-        listing: &NFTStorefront.Listing,
+        listing: &{NFTStorefront.ListingPublic},
         paymentVault: @{FungibleToken.Vault},
         buyerAddress: Address,
         metadataLink: String?,
@@ -182,7 +182,7 @@ contract SequelMarketplace {
         sellerRole: String,
         sellerVaultPath: PublicPath,
         paymentVault: @{FungibleToken.Vault},
-        evergreenProfile: &Evergreen.Profile,
+        evergreenProfile: Evergreen.Profile,
     ) {
         let seller = evergreenProfile.getRole(id: sellerRole)!.address
 
@@ -249,7 +249,7 @@ contract SequelMarketplace {
     // Any residual amount goes to the given seller's address.
     access(all)
     fun buildPayments(
-        profile: &Evergreen.Profile,
+        profile: Evergreen.Profile,
         seller: Address,
         sellerRole: String,
         sellerVaultPath: PublicPath,

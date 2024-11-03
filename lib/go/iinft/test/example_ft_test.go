@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetFUSDBalance(t *testing.T) {
+func TestGetExampleTokenBalance(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
 	require.NoError(t, err)
 
@@ -17,26 +17,24 @@ func TestGetFUSDBalance(t *testing.T) {
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
-
-	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address)
 
 	artistAcctName := user1AccountName
 	artistAcct := client.Account(artistAcctName)
 
-	assert.Equal(t, 0.0, scripts.GetFUSDBalance(t, se, artistAcct.Address))
+	assert.Equal(t, 0.0, scripts.GetExampleTokenBalance(t, se, artistAcct.Address))
 
 	scripts.FundAccountWithFlow(t, client, artistAcct.Address, "10.0")
 
-	_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcctName).Test(t).AssertSuccess()
+	_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(artistAcctName).Test(t).AssertSuccess()
 
-	assert.Equal(t, 0.0, scripts.GetFUSDBalance(t, se, artistAcct.Address))
+	assert.Equal(t, 0.0, scripts.GetExampleTokenBalance(t, se, artistAcct.Address))
 
-	scripts.FundAccountWithFUSD(t, se, artistAcct.Address, "123.56")
+	scripts.FundAccountWithExampleToken(t, se, artistAcct.Address, "123.56")
 
-	assert.Equal(t, 123.56, scripts.GetFUSDBalance(t, se, artistAcct.Address))
+	assert.Equal(t, 123.56, scripts.GetExampleTokenBalance(t, se, artistAcct.Address))
 }
 
-func TestSetUpFUSDAccount(t *testing.T) {
+func TestSetUpExampleTokenAccount(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
 	require.NoError(t, err)
 
@@ -44,8 +42,6 @@ func TestSetUpFUSDAccount(t *testing.T) {
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
-
-	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address)
 
 	// set up platform account
 
@@ -56,9 +52,21 @@ func TestSetUpFUSDAccount(t *testing.T) {
 
 	artistAcctName := user1AccountName
 
-	_ = se.NewTransaction("account_setup_fusd").
+	_ = se.NewTransaction("account_setup_example_ft").
 		ProposeAs(artistAcctName).
 		PayloadSigner(artistAcctName).
 		PayAs(platformAcctName).
 		Test(t).AssertSuccess()
+}
+
+func TestAddExampleTokenAsRoyaltyReceiver(t *testing.T) {
+	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	require.NoError(t, err)
+
+	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+
+	se, err := scripts.NewEngine(client, false)
+	require.NoError(t, err)
+
+	scripts.SetUpRoyaltyReceivers(t, se, user2AccountName, adminAccountName, "ExampleToken")
 }

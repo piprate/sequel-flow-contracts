@@ -83,6 +83,16 @@ contract DigitalArt: NonFungibleToken {
             }
         }
 
+        access(all)
+        fun getMetadata() : Metadata? {
+            return self.metadata
+        }
+
+        access(all)
+        fun getEvergreenProfile() : Evergreen.Profile? {
+            return self.evergreenProfile
+        }
+
         // We close masters after all editions are minted instead of deleting master records
         // This process ensures nobody can ever mint tokens with the same asset ID.
         access(all)
@@ -204,14 +214,14 @@ contract DigitalArt: NonFungibleToken {
         let id: UInt64
 
         access(all)
-        let metadata: &Metadata
+        let metadata: Metadata
 
         access(all)
-        let evergreenProfile: &Evergreen.Profile
+        let evergreenProfile: Evergreen.Profile
 
         // initializer
         //
-        init(initID: UInt64, metadata: &Metadata, evergreenProfile: &Evergreen.Profile) {
+        init(initID: UInt64, metadata: Metadata, evergreenProfile: Evergreen.Profile) {
             self.id = initID
             self.metadata = metadata
             self.evergreenProfile = evergreenProfile
@@ -266,7 +276,7 @@ contract DigitalArt: NonFungibleToken {
         }
 
         access(all)
-        fun getEvergreenProfile(): &Evergreen.Profile {
+        fun getEvergreenProfile(): Evergreen.Profile {
             return self.evergreenProfile
         }
 
@@ -281,8 +291,8 @@ contract DigitalArt: NonFungibleToken {
     // the details of DigitalArt in the Collection.  // REMOVE
     access(all)
     resource interface CollectionPublic {
-        access(all)
-        fun deposit(token: @{NonFungibleToken.NFT})
+        //access(all)
+        //fun deposit(token: @{NonFungibleToken.NFT})
 
         access(all)
         view fun getIDs(): [UInt64]
@@ -486,14 +496,14 @@ contract DigitalArt: NonFungibleToken {
         }
 
         access(all)
-        fun evergreenProfile(masterId: String) : &Evergreen.Profile {
+        fun evergreenProfile(masterId: String) : Evergreen.Profile {
             pre {
                DigitalArt.masters.containsKey(masterId) : "Master not found"
             }
 
             let master = &DigitalArt.masters[masterId]! as &Master
 
-            return master.evergreenProfile!
+            return master.getEvergreenProfile()!
         }
 
         // mintEditionNFT mints a token from master with the given ID.
@@ -509,7 +519,7 @@ contract DigitalArt: NonFungibleToken {
 
             assert(master.availableEditions() > 0, message: "No more tokens to mint")
 
-            let metadata = master.metadata!
+            let metadata = master.getMetadata()!
             let edition = master.newEditionID()
             metadata.setEdition(edition: edition)
 
@@ -517,7 +527,7 @@ contract DigitalArt: NonFungibleToken {
             var newNFT <- create NFT(
                 initID: DigitalArt.totalSupply,
                 metadata: metadata,
-                evergreenProfile: master.evergreenProfile!
+                evergreenProfile: master.getEvergreenProfile()!
             )
 
             emit Minted(id: DigitalArt.totalSupply, asset: metadata.asset, edition: edition, modID: modID)

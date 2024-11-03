@@ -52,10 +52,10 @@ func TestDigitalArt_Master(t *testing.T) {
 	t.Run("Should be able to seal new digital art master", func(t *testing.T) {
 
 		_, err := client.Script(`
-import DigitalArt from 0x01cf0e2f2f715450
-import Evergreen from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
+import Evergreen from 0x179b6b1cb6755e31
 
-pub fun main(metadata: DigitalArt.Metadata, evergreenProfile: Evergreen.Profile) {
+access(all) fun main(metadata: DigitalArt.Metadata, evergreenProfile: Evergreen.Profile) {
 
 	// test typical master lifecycle
 
@@ -209,9 +209,9 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 		// ensure the master is closed
 
 		_, err := client.Script(`
-		import DigitalArt from 0x01cf0e2f2f715450
+		import DigitalArt from 0x179b6b1cb6755e31
 
-		pub fun main(masterId: String) {
+		access(all) fun main(masterId: String) {
 			assert(DigitalArt.isClosed(masterId: masterId), message: "master is not closed")
 		}
 		`).
@@ -264,17 +264,17 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 			Argument(cadence.Address(userAcct.Address)).
 			Test(t).
 			AssertSuccess().
-			AssertEventCount(5).
-			AssertEmitEventName("A.01cf0e2f2f715450.DigitalArt.Minted", "A.01cf0e2f2f715450.DigitalArt.Deposit").
-			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Minted", map[string]interface{}{
+			AssertEventCount(8).
+			AssertEmitEventName("A.179b6b1cb6755e31.DigitalArt.Minted", "A.179b6b1cb6755e31.DigitalArt.Deposit").
+			AssertEmitEvent(gwtf.NewTestEvent("A.179b6b1cb6755e31.DigitalArt.Minted", map[string]interface{}{
 				"id":      "0",
 				"asset":   "did:sequel:asset-id",
 				"edition": "1",
 				"modID":   "0",
 			})).
-			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Deposit", map[string]interface{}{
+			AssertEmitEvent(gwtf.NewTestEvent("A.179b6b1cb6755e31.DigitalArt.Deposit", map[string]interface{}{
 				"id": "0",
-				"to": "0xf3fcd2c1a78f5eee",
+				"to": "0xe03daebed8ca0615",
 			}))
 
 		// Assert that the account's collection is correct
@@ -302,17 +302,17 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 			Argument(cadence.Address(userAcct.Address)).
 			Test(t).
 			AssertSuccess().
-			AssertEventCount(5).
-			AssertEmitEventName("A.01cf0e2f2f715450.DigitalArt.Minted", "A.01cf0e2f2f715450.DigitalArt.Deposit").
-			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Minted", map[string]interface{}{
+			AssertEventCount(8).
+			AssertEmitEventName("A.179b6b1cb6755e31.DigitalArt.Minted", "A.179b6b1cb6755e31.DigitalArt.Deposit").
+			AssertEmitEvent(gwtf.NewTestEvent("A.179b6b1cb6755e31.DigitalArt.Minted", map[string]interface{}{
 				"id":      "1",
 				"asset":   "did:sequel:asset-id",
 				"edition": "2",
 				"modID":   "0",
 			})).
-			AssertEmitEvent(gwtf.NewTestEvent("A.01cf0e2f2f715450.DigitalArt.Deposit", map[string]interface{}{
+			AssertEmitEvent(gwtf.NewTestEvent("A.179b6b1cb6755e31.DigitalArt.Deposit", map[string]interface{}{
 				"id": "1",
-				"to": "0xf3fcd2c1a78f5eee",
+				"to": "0xe03daebed8ca0615",
 			}))
 
 		// Assert that the account's collection is correct
@@ -344,13 +344,13 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 
 	t.Run("Should fail if no available editions", func(t *testing.T) {
 		_ = client.Transaction(`
-import DigitalArt from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
 
 transaction(masterId: String) {
     let admin: &DigitalArt.Admin
 
-    prepare(signer: AuthAccount) {
-        self.admin = signer.borrow<&DigitalArt.Admin>(from: DigitalArt.AdminStoragePath)!
+    prepare(signer: auth(BorrowValue) &Account) {
+        self.admin = signer.storage.borrow<&DigitalArt.Admin>(from: DigitalArt.AdminStoragePath)!
 		assert(self.admin.availableEditions(masterId: masterId) == 0, message: "Available editions remain")
     }
 
@@ -388,9 +388,9 @@ func TestDigitalArt_isClosed(t *testing.T) {
 			AssertSuccess()
 
 		_, err := client.Script(`
-		import DigitalArt from 0x01cf0e2f2f715450
+		import DigitalArt from 0x179b6b1cb6755e31
 
-		pub fun main(masterId: String) {
+		access(all) fun main(masterId: String) {
 			assert(!DigitalArt.isClosed(masterId: masterId), message: "test failed")
 		}
 		`).
@@ -401,9 +401,9 @@ func TestDigitalArt_isClosed(t *testing.T) {
 
 	t.Run("isClosed() should return false, if master isn't sealed at all", func(t *testing.T) {
 		_, err := client.Script(`
-		import DigitalArt from 0x01cf0e2f2f715450
+		import DigitalArt from 0x179b6b1cb6755e31
 
-		pub fun main(masterId: String) {
+		access(all) fun main(masterId: String) {
 			assert(!DigitalArt.isClosed(masterId: masterId), message: "test failed")
 		}
 		`).
@@ -445,9 +445,9 @@ func TestDigitalArt_isClosed(t *testing.T) {
 		// ensure the master is closed
 
 		_, err := client.Script(`
-		import DigitalArt from 0x01cf0e2f2f715450
+		import DigitalArt from 0x179b6b1cb6755e31
 		
-		pub fun main(masterId: String) {
+		access(all) fun main(masterId: String) {
 			assert(DigitalArt.isClosed(masterId: masterId), message: "master is not closed")
 		}
 		`).
@@ -519,10 +519,10 @@ func TestDigitalArt_NFT(t *testing.T) {
 	t.Run("getViews() should return a list of view types", func(t *testing.T) {
 		var viewsVal cadence.Value
 		viewsVal, err = client.Script(`
-import DigitalArt from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) : [Type] {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+access(all) fun main(address:Address, tokenID:UInt64) : [Type] {
+    let collection = getAccount(address).capabilities.borrow<&{DigitalArt.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
     if let item = collection.borrowDigitalArt(id: tokenID) {
         return item.getViews()
     }
@@ -537,23 +537,24 @@ pub fun main(address:Address, tokenID:UInt64) : [Type] {
 
 		viewsArray, ok := viewsVal.(cadence.Array)
 		require.True(t, ok)
-		require.Equal(t, 6, len(viewsArray.Values))
+		require.Equal(t, 7, len(viewsArray.Values))
 		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.Display>()", viewsArray.Values[0].String())
-		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.Royalties>()", viewsArray.Values[1].String())
-		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.ExternalURL>()", viewsArray.Values[2].String())
-		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.NFTCollectionData>()", viewsArray.Values[3].String())
-		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.NFTCollectionDisplay>()", viewsArray.Values[4].String())
-		assert.Equal(t, "Type<A.01cf0e2f2f715450.DigitalArt.Metadata>()", viewsArray.Values[5].String())
+		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.Edition>()", viewsArray.Values[1].String())
+		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.Royalties>()", viewsArray.Values[2].String())
+		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.ExternalURL>()", viewsArray.Values[3].String())
+		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.NFTCollectionData>()", viewsArray.Values[4].String())
+		assert.Equal(t, "Type<A.f8d6e0586b0a20c7.MetadataViews.NFTCollectionDisplay>()", viewsArray.Values[5].String())
+		assert.Equal(t, "Type<A.179b6b1cb6755e31.DigitalArt.Metadata>()", viewsArray.Values[6].String())
 	})
 
 	t.Run("resolveView(Type<MetadataViews.Display>()) should return MetadataViews.Display view", func(t *testing.T) {
 		var val cadence.Value
 		val, err = client.Script(`
 import MetadataViews from 0xf8d6e0586b0a20c7
-import DigitalArt from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) : MetadataViews.Display? {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+access(all) fun main(address:Address, tokenID:UInt64) : MetadataViews.Display? {
+    let collection = getAccount(address).capabilities.borrow<&{DigitalArt.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
     if let item = collection.borrowDigitalArt(id: tokenID) {
         if let view = item.resolveView(Type<MetadataViews.Display>()) {
             return view as! MetadataViews.Display
@@ -583,10 +584,10 @@ pub fun main(address:Address, tokenID:UInt64) : MetadataViews.Display? {
 
 		_, err = client.Script(`
 import MetadataViews from 0xf8d6e0586b0a20c7
-import DigitalArt from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+access(all) fun main(address:Address, tokenID:UInt64) {
+    let collection = getAccount(address).capabilities.borrow<&{DigitalArt.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
 
 	var royalties: [MetadataViews.Royalty] = []
 	if let item = collection.borrowDigitalArt(id: tokenID) {
@@ -613,10 +614,10 @@ pub fun main(address:Address, tokenID:UInt64) {
 
 		_, err = client.Script(`
 import MetadataViews from 0xf8d6e0586b0a20c7
-import DigitalArt from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+access(all) fun main(address:Address, tokenID:UInt64) {
+    let collection = getAccount(address).capabilities.borrow<&{DigitalArt.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
 
 	var externalURL: MetadataViews.ExternalURL? = nil
 	if let item = collection.borrowDigitalArt(id: tokenID) {
@@ -639,10 +640,10 @@ pub fun main(address:Address, tokenID:UInt64) {
 		var val cadence.Value
 		val, err = client.Script(`
 import MetadataViews from 0xf8d6e0586b0a20c7
-import DigitalArt from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) : DigitalArt.Metadata? {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+access(all) fun main(address:Address, tokenID:UInt64) : DigitalArt.Metadata? {
+    let collection = getAccount(address).capabilities.borrow<&{DigitalArt.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
     if let item = collection.borrowDigitalArt(id: tokenID) {
         if let view = item.resolveView(Type<DigitalArt.Metadata>()) {
             return view as! DigitalArt.Metadata
@@ -668,10 +669,10 @@ pub fun main(address:Address, tokenID:UInt64) : DigitalArt.Metadata? {
 	t.Run("getAssetID() should return DigitalArt's master ID", func(t *testing.T) {
 		var val cadence.Value
 		val, err = client.Script(`
-import DigitalArt from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) : String {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+access(all) fun main(address:Address, tokenID:UInt64) : String {
+    let collection = getAccount(address).capabilities.borrow<&{DigitalArt.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
     if let item = collection.borrowDigitalArt(id: tokenID) {
         return item.getAssetID()
     }
@@ -690,11 +691,11 @@ pub fun main(address:Address, tokenID:UInt64) : String {
 	t.Run("getEvergreenProfile() should return DigitalArt's Evergreen profile", func(t *testing.T) {
 		var val cadence.Value
 		val, err = client.Script(`
-import DigitalArt from 0x01cf0e2f2f715450
-import Evergreen from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
+import Evergreen from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) : Evergreen.Profile? {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+access(all) fun main(address:Address, tokenID:UInt64) : Evergreen.Profile? {
+    let collection = getAccount(address).capabilities.borrow<&{DigitalArt.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
     if let item = collection.borrowDigitalArt(id: tokenID) {
         return item.getEvergreenProfile()
     }
@@ -752,10 +753,10 @@ func TestDigitalArt_Collection(t *testing.T) {
 	t.Run("getIDs() should return a list of token IDs", func(t *testing.T) {
 		var viewsVal cadence.Value
 		viewsVal, err = client.Script(`
-import DigitalArt from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) : [UInt64] {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+access(all) fun main(address:Address, tokenID:UInt64) : [UInt64] {
+    let collection = getAccount(address).capabilities.borrow<&{DigitalArt.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
     return collection.getIDs()
 }
 `).
@@ -780,13 +781,13 @@ pub fun main(address:Address, tokenID:UInt64) : [UInt64] {
 		var val cadence.Value
 		val, err = client.Script(`
 import NonFungibleToken from 0xf8d6e0586b0a20c7
-import DigitalArt from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) : UInt64 {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{NonFungibleToken.CollectionPublic}>()!
-	let tokenRef = collection.borrowNFT(id: tokenID)
+access(all) fun main(address:Address, tokenID:UInt64) : UInt64 {
+	let collection = getAccount(address).capabilities.borrow<&{NonFungibleToken.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
+	let tokenRef = collection.borrowNFT(tokenID) as! &DigitalArt.NFT?
 
-	return tokenRef.id
+	return tokenRef!.id
 }
 `).
 			Argument(cadence.Address(userAcct.Address)).
@@ -794,18 +795,18 @@ pub fun main(address:Address, tokenID:UInt64) : UInt64 {
 			RunReturns(context.Background())
 		require.NoError(t, err)
 
-		assert.Equal(t, uint64(1), val.(cadence.UInt64))
+		assert.Equal(t, cadence.UInt64(1), val)
 	})
 
 	t.Run("borrowNFT(...) should fail if NFT isn't found", func(t *testing.T) {
 
 		_, err = client.Script(`
 import NonFungibleToken from 0xf8d6e0586b0a20c7
-import DigitalArt from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) : UInt64 {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{NonFungibleToken.CollectionPublic}>()!
-	let tokenRef = collection.borrowNFT(id: tokenID)
+access(all) fun main(address:Address, tokenID:UInt64) : UInt64 {
+    let collection = getAccount(address).capabilities.borrow<&{NonFungibleToken.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
+	let tokenRef = collection.borrowNFT(tokenID)
 
 	return tokenRef.id
 }
@@ -819,10 +820,10 @@ pub fun main(address:Address, tokenID:UInt64) : UInt64 {
 	t.Run("borrowDigitalArt(...) should return DigitalArt.NFT", func(t *testing.T) {
 		var val cadence.Value
 		val, err = client.Script(`
-import DigitalArt from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) : String {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+access(all) fun main(address:Address, tokenID:UInt64) : String {
+    let collection = getAccount(address).capabilities.borrow<&{DigitalArt.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
     let daToken = collection.borrowDigitalArt(id: tokenID)
 	return daToken!.metadata.asset
 }
@@ -838,10 +839,10 @@ pub fun main(address:Address, tokenID:UInt64) : String {
 	t.Run("borrowDigitalArt(...) should return nil if token isn't found", func(t *testing.T) {
 		var val cadence.Value
 		val, err = client.Script(`
-import DigitalArt from 0x01cf0e2f2f715450
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) : String {
-    let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()!
+access(all) fun main(address:Address, tokenID:UInt64) : String {
+    let collection = getAccount(address).capabilities.borrow<&{DigitalArt.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
     if let item = collection.borrowDigitalArt(id: tokenID) {
 		return item.metadata.asset
 	}
@@ -860,12 +861,13 @@ pub fun main(address:Address, tokenID:UInt64) : String {
 
 		_, err = client.Script(`
 import MetadataViews from 0xf8d6e0586b0a20c7
-import DigitalArt from 0x01cf0e2f2f715450
+import ViewResolver from 0xf8d6e0586b0a20c7
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) {
-	let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{MetadataViews.ResolverCollection}>()!
-
-	let resolver = collection.borrowViewResolver(id: tokenID)
+access(all) fun main(address:Address, tokenID:UInt64) {
+	let collection = getAccount(address).capabilities.borrow<&{ViewResolver.ResolverCollection}>(DigitalArt.CollectionPublicPath)!
+	
+	let resolver = collection.borrowViewResolver(id: tokenID)!
 
 	if let view = resolver.resolveView(Type<MetadataViews.Display>()) {
 		let display = view as! MetadataViews.Display
@@ -893,12 +895,12 @@ pub fun main(address:Address, tokenID:UInt64) {
 
 		_, err = client.Script(`
 import MetadataViews from 0xf8d6e0586b0a20c7
-import Evergreen from 0x01cf0e2f2f715450
-import DigitalArt from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) {
-	let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{Evergreen.CollectionPublic}>()!
-
+access(all) fun main(address:Address, tokenID:UInt64) {
+	let collection = getAccount(address).capabilities.borrow<&{Evergreen.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
+	
 	let token = collection.borrowEvergreenToken(id: tokenID)
 
 	let profile = token!.getEvergreenProfile()
@@ -916,11 +918,11 @@ pub fun main(address:Address, tokenID:UInt64) {
 
 		_, err = client.Script(`
 import MetadataViews from 0xf8d6e0586b0a20c7
-import Evergreen from 0x01cf0e2f2f715450
-import DigitalArt from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
+import DigitalArt from 0x179b6b1cb6755e31
 
-pub fun main(address:Address, tokenID:UInt64) {
-	let collection = getAccount(address).getCapability(DigitalArt.CollectionPublicPath)!.borrow<&{Evergreen.CollectionPublic}>()!
+access(all) fun main(address:Address, tokenID:UInt64) {
+	let collection = getAccount(address).capabilities.borrow<&{Evergreen.CollectionPublic}>(DigitalArt.CollectionPublicPath)!
 
 	let token = collection.borrowEvergreenToken(id: tokenID)
 

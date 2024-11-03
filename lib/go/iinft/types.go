@@ -74,19 +74,19 @@ func DigitalArtMetadataFromCadence(val cadence.Value) (*DigitalArtMetadata, erro
 	allFields := valStruct.FieldsMappedByName()
 
 	res := DigitalArtMetadata{
-		Name:              allFields["name"].String(),
-		Artist:            allFields["artist"].String(),
-		Description:       allFields["description"].String(),
-		Type:              allFields["type"].String(),
-		ContentURI:        allFields["contentURI"].String(),
-		ContentPreviewURI: allFields["contentPreviewURI"].String(),
-		ContentMimetype:   allFields["mimetype"].String(),
+		Name:              string(allFields["name"].(cadence.String)),
+		Artist:            string(allFields["artist"].(cadence.String)),
+		Description:       string(allFields["description"].(cadence.String)),
+		Type:              string(allFields["type"].(cadence.String)),
+		ContentURI:        string(allFields["contentURI"].(cadence.String)),
+		ContentPreviewURI: string(allFields["contentPreviewURI"].(cadence.String)),
+		ContentMimetype:   string(allFields["mimetype"].(cadence.String)),
 		Edition:           uint64(allFields["edition"].(cadence.UInt64)),
 		MaxEdition:        uint64(allFields["maxEdition"].(cadence.UInt64)),
-		Asset:             allFields["asset"].String(),
-		MetadataURI:       allFields["metadataURI"].String(),
-		Record:            allFields["record"].String(),
-		AssetHead:         allFields["assetHead"].String(),
+		Asset:             string(allFields["asset"].(cadence.String)),
+		MetadataURI:       string(allFields["metadataURI"].(cadence.String)),
+		Record:            string(allFields["record"].(cadence.String)),
+		AssetHead:         string(allFields["assetHead"].(cadence.String)),
 	}
 
 	return &res, nil

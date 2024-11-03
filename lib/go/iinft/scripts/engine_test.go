@@ -110,7 +110,7 @@ func TestEngine_GetStandardScript_Versus(t *testing.T) {
 	println(res)
 }
 
-func TestEngine_GetCustomScript_MOD_FUSD(t *testing.T) {
+func TestEngine_GetCustomScript_MOD_Flow(t *testing.T) {
 	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false, false)
 	require.NoError(t, err)
 
@@ -125,7 +125,7 @@ func TestEngine_GetCustomScript_MOD_FUSD(t *testing.T) {
 	e, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	res := e.GetCustomScript("digitalart_mint_on_demand_fusd", &scripts.MintOnDemandParameters{
+	res := e.GetCustomScript("digitalart_mint_on_demand_flow", &scripts.MintOnDemandParameters{
 		Metadata: &iinft.DigitalArtMetadata{
 			MetadataURI:       "ipfs://QmMetadata",
 			Name:              "Pure Art",

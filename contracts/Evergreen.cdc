@@ -142,10 +142,10 @@ contract Evergreen {
 
         // getEvergreenProfile returns the token's Profile.
         access(all)
-        fun getEvergreenProfile(): &Profile
+        fun getEvergreenProfile(): Profile
     }
 
-    // An interface for reading the details of an evengreen token in the Collection.
+    // An interface for reading the details of an evergreen token in the Collection.
     access(all)
     resource interface CollectionPublic {
         access(all)

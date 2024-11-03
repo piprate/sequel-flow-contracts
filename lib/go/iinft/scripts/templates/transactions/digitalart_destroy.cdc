@@ -1,14 +1,20 @@
 {{ define "digitalart_destroy" }}
 import NonFungibleToken from {{.NonFungibleToken}}
+import Burner from {{.Burner}}
 import DigitalArt from {{.DigitalArt}}
 
 transaction(tokenId: UInt64) {
-  prepare(acct: AuthAccount) {
-    let collection <- acct.load<@DigitalArt.Collection>(from: DigitalArt.CollectionStoragePath)!
-    let nft <- collection.withdraw(withdrawID: tokenId)
-    destroy nft
+    let collectionRef: auth(NonFungibleToken.Withdraw) &DigitalArt.Collection
 
-    acct.save(<-collection, to: DigitalArt.CollectionStoragePath)
-  }
+    prepare(signer: auth(BorrowValue) &Account) {
+        self.collectionRef = signer.storage.borrow<auth(NonFungibleToken.Withdraw) &DigitalArt.Collection>(from: DigitalArt.CollectionStoragePath)!
+    }
+
+    execute {
+        // withdraw the NFT from the owner's collection
+        let nft <- self.collectionRef.withdraw(withdrawID: tokenId)
+
+        Burner.burn(<-nft)
+    }
 }
 {{ end }}

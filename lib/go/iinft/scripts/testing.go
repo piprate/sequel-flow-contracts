@@ -99,25 +99,10 @@ func GetFlowBalance(t *testing.T, se *Engine, address flow.Address) float64 {
 	return iinft.ToFloat64(v)
 }
 
-func PrepareFUSDMinter(t *testing.T, se *Engine, minterAddress flow.Address) {
+func FundAccountWithExampleToken(t *testing.T, se *Engine, receiverAddress flow.Address, amount string) {
 	t.Helper()
 
-	_ = se.NewTransaction("service_setup_fusd_minter").
-		SignProposeAndPayAsService().
-		Test(t).
-		AssertSuccess()
-
-	_ = se.NewTransaction("service_deposit_fusd_minter").
-		Argument(cadence.NewAddress(minterAddress)).
-		SignProposeAndPayAsService().
-		Test(t).
-		AssertSuccess()
-}
-
-func FundAccountWithFUSD(t *testing.T, se *Engine, receiverAddress flow.Address, amount string) {
-	t.Helper()
-
-	_ = se.NewTransaction("account_fund_fusd").
+	_ = se.NewTransaction("account_fund_example_ft").
 		Argument(cadence.NewAddress(receiverAddress)).
 		UFix64Argument(amount).
 		SignProposeAndPayAsService().
@@ -125,15 +110,35 @@ func FundAccountWithFUSD(t *testing.T, se *Engine, receiverAddress flow.Address,
 		AssertSuccess()
 }
 
-func GetFUSDBalance(t *testing.T, se *Engine, address flow.Address) float64 {
+func GetExampleTokenBalance(t *testing.T, se *Engine, address flow.Address) float64 {
 	t.Helper()
 
-	v, err := se.NewScript("account_balance_fusd").
+	v, err := se.NewScript("account_balance_example_ft").
 		Argument(cadence.NewAddress(address)).
 		RunReturns(context.Background())
 	require.NoError(t, err)
 
 	return iinft.ToFloat64(v)
+}
+
+func SetUpRoyaltyReceivers(t *testing.T, se *Engine, signAndProposeAs, payAs string, extraTokenNames ...string) {
+	t.Helper()
+
+	var addresses []cadence.Value
+	var names []cadence.Value
+
+	for _, name := range extraTokenNames {
+		addresses = append(addresses, cadence.NewAddress(se.ContractAddress(name)))
+		names = append(names, cadence.String(name))
+	}
+
+	_ = se.NewTransaction("account_royalty_receiver_setup").
+		SignAndProposeAs(signAndProposeAs).
+		PayAs(payAs).
+		Argument(cadence.NewArray(addresses)).
+		Argument(cadence.NewArray(names)).
+		Test(t).
+		AssertSuccess()
 }
 
 func CreateSealDigitalArtTx(t *testing.T, se *Engine, client *gwtf.GoWithTheFlow, metadata *iinft.DigitalArtMetadata,

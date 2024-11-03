@@ -24,8 +24,6 @@ func TestMarketplace_listToken(t *testing.T) {
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
 
-	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address)
-
 	platformAcct := client.Account(platformAccountName)
 
 	// set up seller account
@@ -39,7 +37,7 @@ func TestMarketplace_listToken(t *testing.T) {
 
 	artistAcct := client.Account(user2AccountName)
 
-	_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(user2AccountName).PayAs(adminAccountName).Test(t).AssertSuccess()
+	scripts.SetUpRoyaltyReceivers(t, se, user2AccountName, adminAccountName)
 
 	metadata := SampleMetadata(1)
 	profile := PrimaryOnlyEvergreenProfile(artistAcct.Address, platformAcct.Address)
@@ -58,7 +56,7 @@ func TestMarketplace_listToken(t *testing.T) {
 		AssertSuccess()
 
 	nftID := scripts.ExtractUInt64ValueFromEvent(res,
-		"A.01cf0e2f2f715450.DigitalArt.Minted", "id")
+		"A.179b6b1cb6755e31.DigitalArt.Minted", "id")
 
 	// Assert that the account's collection is correct
 	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address.String(), nftID)
@@ -73,170 +71,176 @@ func TestMarketplace_listToken(t *testing.T) {
 			Test(t).
 			AssertSuccess().
 			AssertPartialEvent(gwtf.NewTestEvent(
-				"A.01cf0e2f2f715450.SequelMarketplace.TokenListed",
+				"A.179b6b1cb6755e31.SequelMarketplace.TokenListed",
 				map[string]interface{}{
 					"asset":            "did:sequel:asset-id",
 					"metadataLink":     "link",
 					"nftID":            fmt.Sprintf("%d", nftID),
-					"nftType":          "A.01cf0e2f2f715450.DigitalArt.NFT",
+					"nftType":          "A.179b6b1cb6755e31.DigitalArt.NFT",
 					"paymentVaultType": "A.0ae53cb6e3f42a79.FlowToken.Vault",
 					"payments": []interface{}{
 						map[string]interface{}{
 							"amount":   "10.00000000",
 							"rate":     "0.05000000",
-							"receiver": "0xe03daebed8ca0615",
+							"receiver": "0x045a1763c93006ca",
 							"role":     "Artist",
 						},
 						map[string]interface{}{
 							"amount":   "190.00000000",
 							"rate":     "0.95000000",
-							"receiver": "0xf3fcd2c1a78f5eee",
+							"receiver": "0xe03daebed8ca0615",
 							"role":     "Owner",
 						},
 					},
 					"price":             "200.00000000",
-					"storefrontAddress": "0xf3fcd2c1a78f5eee",
+					"storefrontAddress": "0xe03daebed8ca0615",
 				})).
 			AssertPartialEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
 					"ftVaultType":       "Type\u003cA.0ae53cb6e3f42a79.FlowToken.Vault\u003e()",
 					"nftID":             fmt.Sprintf("%d", nftID),
-					"nftType":           "Type\u003cA.01cf0e2f2f715450.DigitalArt.NFT\u003e()",
+					"nftType":           "Type\u003cA.179b6b1cb6755e31.DigitalArt.NFT\u003e()",
 					"price":             "200.00000000",
-					"storefrontAddress": "0xf3fcd2c1a78f5eee",
+					"storefrontAddress": "0xe03daebed8ca0615",
 				}))
 
 		// test listing IDs separately, as they aren't stable
 		assert.NotZero(t, scripts.ExtractUInt64ValueFromEvent(res,
-			"A.01cf0e2f2f715450.SequelMarketplace.TokenListed", "listingID"))
+			"A.179b6b1cb6755e31.SequelMarketplace.TokenListed", "listingID"))
 		assert.NotZero(t, scripts.ExtractUInt64ValueFromEvent(res,
 			"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable", "listingResourceID"))
 	})
 
-	t.Run("Fail, if seller's receiver is invalid (FUSD)", func(t *testing.T) {
-		// Fund with Flow for FUSD setup fees
+	t.Run("Fail, if seller's receiver is invalid (ExampleToken)", func(t *testing.T) {
+		// Fund with Flow for ExampleToken setup fees
 		scripts.FundAccountWithFlow(t, client, artistAcct.Address, "10.0")
 
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcct.Name).Test(t).AssertSuccess()
+		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(artistAcct.Name).Test(t).AssertSuccess()
 
-		_ = se.NewTransaction("marketplace_list_fusd").
+		_ = se.NewTransaction("marketplace_list").
 			SignProposeAndPayAs(sellerAcctName).
 			UInt64Argument(nftID).
 			UFix64Argument("200.0").
+			Argument(cadence.NewAddress(se.ContractAddress("ExampleToken"))).
+			StringArgument("ExampleToken").
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertFailure("missing fungible token receiver")
 	})
 
-	t.Run("Succeed, if some receivers are invalid (FUSD)", func(t *testing.T) {
-		// Fund with Flow for FUSD setup fees
+	t.Run("Succeed, if some receivers are invalid (ExampleToken)", func(t *testing.T) {
+		// Fund with Flow for ExampleToken setup fees
 		scripts.FundAccountWithFlow(t, client, artistAcct.Address, "10.0")
 
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(artistAcct.Name).Test(t).AssertSuccess()
+		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
+		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(artistAcct.Name).Test(t).AssertSuccess()
 
-		res := se.NewTransaction("marketplace_list_fusd").
+		res := se.NewTransaction("marketplace_list").
 			SignProposeAndPayAs(sellerAcctName).
 			UInt64Argument(nftID).
 			UFix64Argument("200.0").
+			Argument(cadence.NewAddress(se.ContractAddress("ExampleToken"))).
+			StringArgument("ExampleToken").
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
 			AssertPartialEvent(gwtf.NewTestEvent(
-				"A.01cf0e2f2f715450.SequelMarketplace.TokenListed",
+				"A.179b6b1cb6755e31.SequelMarketplace.TokenListed",
 				map[string]interface{}{
 					"asset":            "did:sequel:asset-id",
 					"metadataLink":     "link",
 					"nftID":            fmt.Sprintf("%d", nftID),
-					"nftType":          "A.01cf0e2f2f715450.DigitalArt.NFT",
-					"paymentVaultType": "A.f8d6e0586b0a20c7.FUSD.Vault",
+					"nftType":          "A.179b6b1cb6755e31.DigitalArt.NFT",
+					"paymentVaultType": "A.f8d6e0586b0a20c7.ExampleToken.Vault",
 					"payments": []interface{}{
 						map[string]interface{}{
 							"amount":   "10.00000000",
 							"rate":     "0.05000000",
-							"receiver": "0xe03daebed8ca0615",
+							"receiver": "0x045a1763c93006ca",
 							"role":     "Artist",
 						},
 						map[string]interface{}{
 							"amount":   "190.00000000",
 							"rate":     "0.95000000",
-							"receiver": "0xf3fcd2c1a78f5eee",
+							"receiver": "0xe03daebed8ca0615",
 							"role":     "Owner",
 						},
 					},
 					"price":             "200.00000000",
-					"storefrontAddress": "0xf3fcd2c1a78f5eee",
+					"storefrontAddress": "0xe03daebed8ca0615",
 				})).
 			AssertPartialEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
-					"ftVaultType":       "Type\u003cA.f8d6e0586b0a20c7.FUSD.Vault\u003e()",
+					"ftVaultType":       "Type\u003cA.f8d6e0586b0a20c7.ExampleToken.Vault\u003e()",
 					"nftID":             fmt.Sprintf("%d", nftID),
-					"nftType":           "Type\u003cA.01cf0e2f2f715450.DigitalArt.NFT\u003e()",
+					"nftType":           "Type\u003cA.179b6b1cb6755e31.DigitalArt.NFT\u003e()",
 					"price":             "200.00000000",
-					"storefrontAddress": "0xf3fcd2c1a78f5eee",
+					"storefrontAddress": "0xe03daebed8ca0615",
 				}))
 
 		// test listing IDs separately, as they aren't stable
 		assert.NotZero(t, scripts.ExtractUInt64ValueFromEvent(res,
-			"A.01cf0e2f2f715450.SequelMarketplace.TokenListed", "listingID"))
+			"A.179b6b1cb6755e31.SequelMarketplace.TokenListed", "listingID"))
 		assert.NotZero(t, scripts.ExtractUInt64ValueFromEvent(res,
 			"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable", "listingResourceID"))
 	})
 
-	t.Run("Happy path (FUSD)", func(t *testing.T) {
-		// Fund with Flow for FUSD setup fees
+	t.Run("Happy path (ExampleToken)", func(t *testing.T) {
+		// Fund with Flow for ExampleToken setup fees
 		scripts.FundAccountWithFlow(t, client, platformAcct.Address, "10.0")
 
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(platformAcct.Name).Test(t).AssertSuccess()
+		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
+		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(platformAcct.Name).Test(t).AssertSuccess()
 
-		res := se.NewTransaction("marketplace_list_fusd").
+		res := se.NewTransaction("marketplace_list").
 			SignProposeAndPayAs(sellerAcctName).
 			UInt64Argument(nftID).
 			UFix64Argument("200.0").
+			Argument(cadence.NewAddress(se.ContractAddress("ExampleToken"))).
+			StringArgument("ExampleToken").
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
 			AssertPartialEvent(gwtf.NewTestEvent(
-				"A.01cf0e2f2f715450.SequelMarketplace.TokenListed",
+				"A.179b6b1cb6755e31.SequelMarketplace.TokenListed",
 				map[string]interface{}{
 					"asset":            "did:sequel:asset-id",
 					"metadataLink":     "link",
 					"nftID":            fmt.Sprintf("%d", nftID),
-					"nftType":          "A.01cf0e2f2f715450.DigitalArt.NFT",
-					"paymentVaultType": "A.f8d6e0586b0a20c7.FUSD.Vault",
+					"nftType":          "A.179b6b1cb6755e31.DigitalArt.NFT",
+					"paymentVaultType": "A.f8d6e0586b0a20c7.ExampleToken.Vault",
 					"payments": []interface{}{
 						map[string]interface{}{
 							"amount":   "10.00000000",
 							"rate":     "0.05000000",
-							"receiver": "0xe03daebed8ca0615",
+							"receiver": "0x045a1763c93006ca",
 							"role":     "Artist",
 						},
 						map[string]interface{}{
 							"amount":   "190.00000000",
 							"rate":     "0.95000000",
-							"receiver": "0xf3fcd2c1a78f5eee",
+							"receiver": "0xe03daebed8ca0615",
 							"role":     "Owner",
 						},
 					},
 					"price":             "200.00000000",
-					"storefrontAddress": "0xf3fcd2c1a78f5eee",
+					"storefrontAddress": "0xe03daebed8ca0615",
 				})).
 			AssertPartialEvent(gwtf.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
-					"ftVaultType":       "Type\u003cA.f8d6e0586b0a20c7.FUSD.Vault\u003e()",
+					"ftVaultType":       "Type\u003cA.f8d6e0586b0a20c7.ExampleToken.Vault\u003e()",
 					"nftID":             fmt.Sprintf("%d", nftID),
-					"nftType":           "Type\u003cA.01cf0e2f2f715450.DigitalArt.NFT\u003e()",
+					"nftType":           "Type\u003cA.179b6b1cb6755e31.DigitalArt.NFT\u003e()",
 					"price":             "200.00000000",
-					"storefrontAddress": "0xf3fcd2c1a78f5eee",
+					"storefrontAddress": "0xe03daebed8ca0615",
 				}))
 
 		// test listing IDs separately, as they aren't stable
 		assert.NotZero(t, scripts.ExtractUInt64ValueFromEvent(res,
-			"A.01cf0e2f2f715450.SequelMarketplace.TokenListed", "listingID"))
+			"A.179b6b1cb6755e31.SequelMarketplace.TokenListed", "listingID"))
 		assert.NotZero(t, scripts.ExtractUInt64ValueFromEvent(res,
 			"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable", "listingResourceID"))
 	})
@@ -289,7 +293,7 @@ func TestMarketplace_buyToken(t *testing.T) {
 		AssertSuccess()
 
 	nftID := scripts.ExtractUInt64ValueFromEvent(res,
-		"A.01cf0e2f2f715450.DigitalArt.Minted", "id")
+		"A.179b6b1cb6755e31.DigitalArt.Minted", "id")
 
 	// Assert that the account's collection is correct
 	checkTokenInDigitalArtCollection(t, se, sellerAcct.Address.String(), nftID)
@@ -316,15 +320,15 @@ func TestMarketplace_buyToken(t *testing.T) {
 			Test(t).
 			AssertSuccess().
 			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.01cf0e2f2f715450.SequelMarketplace.TokenSold",
+				"A.179b6b1cb6755e31.SequelMarketplace.TokenSold",
 				map[string]interface{}{
 					"listingID":         fmt.Sprintf("%d", listingID),
 					"nftID":             fmt.Sprintf("%d", nftID),
-					"nftType":           "A.01cf0e2f2f715450.DigitalArt.NFT",
+					"nftType":           "A.179b6b1cb6755e31.DigitalArt.NFT",
 					"paymentVaultType":  "A.0ae53cb6e3f42a79.FlowToken.Vault",
 					"price":             "200.00000000",
-					"storefrontAddress": "0xf3fcd2c1a78f5eee",
-					"buyerAddress":      "0xe03daebed8ca0615",
+					"storefrontAddress": "0xe03daebed8ca0615",
+					"buyerAddress":      "0x045a1763c93006ca",
 					"metadataLink":      "link",
 				}))
 
@@ -343,8 +347,6 @@ func TestMarketplace_payForMintedTokens(t *testing.T) {
 
 	se, err := scripts.NewEngine(client, false)
 	require.NoError(t, err)
-
-	scripts.PrepareFUSDMinter(t, se, client.Account("emulator-account").Address)
 
 	evergreenAddr := flow.HexToAddress(se.WellKnownAddresses()["Evergreen"])
 
@@ -373,18 +375,18 @@ func TestMarketplace_payForMintedTokens(t *testing.T) {
 	}, evergreenAddr)
 	require.NoError(t, err)
 
-	scriptWithFUSD := `
+	scriptWithExampleToken := `
 import FungibleToken from 0xee82856bf20e2aa6
-import FUSD from 0xf8d6e0586b0a20c7
-import Evergreen from 0x01cf0e2f2f715450
-import SequelMarketplace from 0x01cf0e2f2f715450
+import ExampleToken from 0xf8d6e0586b0a20c7
+import Evergreen from 0x179b6b1cb6755e31
+import SequelMarketplace from 0x179b6b1cb6755e31
 
 transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) {
-    let paymentVault: @FungibleToken.Vault
+    let paymentVault: @{FungibleToken.Vault}
 
-    prepare(buyer: AuthAccount, platform: AuthAccount) {
-        let mainVault = buyer.borrow<&FUSD.Vault>(from: /storage/fusdVault)
-            ?? panic("Cannot borrow FUSD vault from acct storage")
+    prepare(buyer: auth(BorrowValue) &Account, platform: &Account) {
+        let mainVault = buyer.storage.borrow<auth(FungibleToken.Withdraw) &ExampleToken.Vault>(from: /storage/exampleTokenVault)
+            ?? panic("Cannot borrow ExampleToken vault from acct storage")
         let price = unitPrice * UFix64(numEditions)
         self.paymentVault <- mainVault.withdraw(amount: price)
     }
@@ -394,7 +396,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 			unitPrice: unitPrice,
 			numEditions: numEditions,
 			sellerRole: "Artist",
-			sellerVaultPath: /public/fusdReceiver,
+			sellerVaultPath: /public/exampleTokenReceiver,
 			paymentVault: <-self.paymentVault,
 			evergreenProfile: profile,
 		)
@@ -402,11 +404,11 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 }`
 
 	t.Run("Fail if seller's receiver is invalid", func(t *testing.T) {
-		_ = se.NewTransaction("account_setup_fusd").SignProposeAndPayAs(buyerAcct.Name).Test(t).AssertSuccess()
+		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(buyerAcct.Name).Test(t).AssertSuccess()
 
-		scripts.FundAccountWithFUSD(t, se, buyerAcct.Address, "1000.0")
+		scripts.FundAccountWithExampleToken(t, se, buyerAcct.Address, "1000.0")
 
-		_ = client.Transaction(scriptWithFUSD).
+		_ = client.Transaction(scriptWithExampleToken).
 			PayloadSigner(buyerAcct.Name).
 			SignProposeAndPayAs(adminAccountName).
 			UInt64Argument(1).
@@ -417,11 +419,11 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 	})
 
 	t.Run("If some receivers are invalid, send the remainder to last good receiver", func(t *testing.T) {
-		// RoleOne's FUSD receiver is missing. RoleOne's cut will go to the seller (the artist).
+		// RoleOne's ExampleToken receiver is missing. RoleOne's cut will go to the seller (the artist).
 
-		_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(artistAcct.Name).PayAs(adminAccountName).Test(t).AssertSuccess()
+		scripts.SetUpRoyaltyReceivers(t, se, artistAcct.Name, adminAccountName, "ExampleToken")
 
-		_ = client.Transaction(scriptWithFUSD).
+		_ = client.Transaction(scriptWithExampleToken).
 			PayloadSigner(buyerAcct.Name).
 			SignProposeAndPayAs(adminAccountName).
 			UInt64Argument(1).
@@ -429,40 +431,43 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 			Argument(happyPathProfile).
 			Test(t).
 			AssertSuccess().
-			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.FUSD.TokensWithdrawn",
+			AssertPartialEvent(gwtf.NewTestEvent(
+				"A.ee82856bf20e2aa6.FungibleToken.Withdrawn",
 				map[string]interface{}{
 					"amount": "100.00000000",
 					"from":   "0x" + buyerAcct.Address.String(),
+					"type":   "A.f8d6e0586b0a20c7.ExampleToken.Vault",
 				})).
-			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited",
+			AssertPartialEvent(gwtf.NewTestEvent(
+				"A.ee82856bf20e2aa6.FungibleToken.Deposited",
 				map[string]interface{}{
 					"amount": "80.00000000",
-					"to":     "0x045a1763c93006ca",
+					"to":     "0x120e725050340cab",
+					"type":   "A.f8d6e0586b0a20c7.ExampleToken.Vault",
 				})).
-			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited",
+			AssertPartialEvent(gwtf.NewTestEvent(
+				"A.ee82856bf20e2aa6.FungibleToken.Deposited",
 				map[string]interface{}{
 					"amount": "20.00000000",
-					"to":     "0x045a1763c93006ca",
+					"to":     "0x120e725050340cab",
+					"type":   "A.f8d6e0586b0a20c7.ExampleToken.Vault",
 				}))
 	})
 
 	t.Run("Happy path (Flow)", func(t *testing.T) {
-		_ = se.NewTransaction("account_royalty_receiver_setup").SignAndProposeAs(roleOneAcct.Name).PayAs(adminAccountName).Test(t).AssertSuccess()
+		scripts.SetUpRoyaltyReceivers(t, se, roleOneAcct.Name, adminAccountName, "ExampleToken")
 
 		_ = client.Transaction(`
 import FungibleToken from 0xee82856bf20e2aa6
 import FlowToken from 0x0ae53cb6e3f42a79
-import Evergreen from 0x01cf0e2f2f715450
-import SequelMarketplace from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
+import SequelMarketplace from 0x179b6b1cb6755e31
 
 transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) {
-    let paymentVault: @FungibleToken.Vault
+    let paymentVault: @{FungibleToken.Vault}
 
-    prepare(buyer: AuthAccount, platform: AuthAccount) {
-        let mainVault = buyer.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)
+    prepare(buyer: auth(BorrowValue) &Account, platform: &Account) {
+        let mainVault = buyer.storage.borrow<auth(FungibleToken.Withdraw) &FlowToken.Vault>(from: /storage/flowTokenVault)
             ?? panic("Cannot borrow FlowToken vault from acct storage")
         let price = unitPrice * UFix64(numEditions)
         self.paymentVault <- mainVault.withdraw(amount: price)
@@ -496,7 +501,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 				"A.0ae53cb6e3f42a79.FlowToken.TokensDeposited",
 				map[string]interface{}{
 					"amount": "80.00000000",
-					"to":     "0x045a1763c93006ca",
+					"to":     "0x120e725050340cab",
 				})).
 			AssertEmitEvent(gwtf.NewTestEvent(
 				"A.0ae53cb6e3f42a79.FlowToken.TokensDeposited",
@@ -507,8 +512,8 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 		require.NoError(t, err)
 	})
 
-	t.Run("Happy path (FUSD)", func(t *testing.T) {
-		_ = client.Transaction(scriptWithFUSD).
+	t.Run("Happy path (ExampleToken)", func(t *testing.T) {
+		_ = client.Transaction(scriptWithExampleToken).
 			PayloadSigner(buyerAcct.Name).
 			SignProposeAndPayAs(adminAccountName).
 			UInt64Argument(1).
@@ -516,20 +521,20 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 			Argument(happyPathProfile).
 			Test(t).
 			AssertSuccess().
-			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.FUSD.TokensWithdrawn",
+			AssertPartialEvent(gwtf.NewTestEvent(
+				"A.ee82856bf20e2aa6.FungibleToken.Withdrawn",
 				map[string]interface{}{
 					"amount": "100.00000000",
 					"from":   "0x" + buyerAcct.Address.String(),
 				})).
-			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited",
+			AssertPartialEvent(gwtf.NewTestEvent(
+				"A.ee82856bf20e2aa6.FungibleToken.Deposited",
 				map[string]interface{}{
 					"amount": "80.00000000",
-					"to":     "0x045a1763c93006ca",
+					"to":     "0x120e725050340cab",
 				})).
-			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.f8d6e0586b0a20c7.FUSD.TokensDeposited",
+			AssertPartialEvent(gwtf.NewTestEvent(
+				"A.ee82856bf20e2aa6.FungibleToken.Deposited",
 				map[string]interface{}{
 					"amount": "20.00000000",
 					"to":     "0x" + roleOneAcct.Address.String(),
@@ -604,25 +609,24 @@ func TestMarketplace_withdrawToken(t *testing.T) {
 			Test(t).
 			AssertSuccess().
 			AssertEmitEvent(gwtf.NewTestEvent(
-				"A.01cf0e2f2f715450.SequelMarketplace.TokenWithdrawn",
+				"A.179b6b1cb6755e31.SequelMarketplace.TokenWithdrawn",
 				map[string]interface{}{
 					"listingID":         fmt.Sprintf("%d", listingID),
 					"nftID":             "0",
-					"nftType":           "A.01cf0e2f2f715450.DigitalArt.NFT",
+					"nftType":           "A.179b6b1cb6755e31.DigitalArt.NFT",
 					"price":             "200.00000000",
-					"storefrontAddress": "0xf3fcd2c1a78f5eee",
+					"storefrontAddress": "0xe03daebed8ca0615",
 					"vaultType":         "A.0ae53cb6e3f42a79.FlowToken.Vault",
 				}))
 
 		// ensure the listing doesn't exist
 		_, err = client.Script(`
 import NFTStorefront from 0xf8d6e0586b0a20c7
-import SequelMarketplace from 0x01cf0e2f2f715450
+import SequelMarketplace from 0x179b6b1cb6755e31
 
-pub fun main(listingID:UInt64, storefrontAddress: Address) {
+access(all) fun main(listingID:UInt64, storefrontAddress: Address) {
 	let storefront = getAccount(storefrontAddress)
-		.getCapability(NFTStorefront.StorefrontPublicPath)!
-		.borrow<&NFTStorefront.Storefront{NFTStorefront.StorefrontPublic}>()
+        .capabilities.borrow<&NFTStorefront.Storefront>(NFTStorefront.StorefrontPublicPath)
 		?? panic("Could not borrow Storefront from provided address")
 
     if let listing = storefront.borrowListing(listingResourceID: listingID) {
@@ -677,10 +681,10 @@ func TestMarketplace_buildPayments(t *testing.T) {
 	t.Run("Happy path (initial sale)", func(t *testing.T) {
 
 		_, err = client.Script(`
-import Evergreen from 0x01cf0e2f2f715450
-import SequelMarketplace from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
+import SequelMarketplace from 0x179b6b1cb6755e31
 
-pub fun main(profile: Evergreen.Profile, seller: Address) {
+access(all) fun main(profile: Evergreen.Profile, seller: Address) {
 
 	let instructions = SequelMarketplace.buildPayments(
         profile: profile,
@@ -701,12 +705,12 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 	assert(payments[0].role == "Role1", message: "incorrect role 1")
 	assert(payments[0].amount == 80.0, message: "incorrect amount 1")
 	assert(payments[0].rate == 0.8, message: "incorrect rate 1")
-	assert(payments[0].receiver == 0xf3fcd2c1a78f5eee, message: "incorrect receiver 1")
+	assert(payments[0].receiver == 0xe03daebed8ca0615, message: "incorrect receiver 1")
 
 	assert(payments[1].role == "Role2", message: "incorrect role 2")
 	assert(payments[1].amount == 20.0, message: "incorrect amount 2")
 	assert(payments[1].rate == 0.2, message: "incorrect rate 2")
-	assert(payments[1].receiver == 0xe03daebed8ca0615, message: "incorrect receiver 2")
+	assert(payments[1].receiver == 0x045a1763c93006ca, message: "incorrect receiver 2")
 }`).
 			Argument(happyPathProfile).
 			Argument(cadence.NewAddress(sellerAcct.Address)).
@@ -717,10 +721,10 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 	t.Run("Happy path (secondary sale)", func(t *testing.T) {
 
 		_, err = client.Script(`
-import Evergreen from 0x01cf0e2f2f715450
-import SequelMarketplace from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
+import SequelMarketplace from 0x179b6b1cb6755e31
 
-pub fun main(profile: Evergreen.Profile, seller: Address) {
+access(all) fun main(profile: Evergreen.Profile, seller: Address) {
 
 	let instructions = SequelMarketplace.buildPayments(
         profile: profile,
@@ -741,17 +745,17 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 	assert(payments[0].role == "Role1", message: "incorrect role 1")
 	assert(payments[0].amount == 5.0, message: "incorrect amount 1")
 	assert(payments[0].rate == 0.05, message: "incorrect rate 1")
-	assert(payments[0].receiver == 0xf3fcd2c1a78f5eee, message: "incorrect receiver 1")
+	assert(payments[0].receiver == 0xe03daebed8ca0615, message: "incorrect receiver 1")
 
 	assert(payments[1].role == "Role2", message: "incorrect role 2")
 	assert(payments[1].amount == 2.5, message: "incorrect amount 2")
 	assert(payments[1].rate == 0.025, message: "incorrect rate 2")
-	assert(payments[1].receiver == 0xe03daebed8ca0615, message: "incorrect receiver 2")
+	assert(payments[1].receiver == 0x045a1763c93006ca, message: "incorrect receiver 2")
 
 	assert(payments[2].role == "Owner", message: "incorrect role 3")
 	assert(payments[2].amount == 92.5, message: "incorrect amount 3")
 	assert(payments[2].rate == 0.925, message: "incorrect rate 3")
-	assert(payments[2].receiver == 0x045a1763c93006ca, message: "incorrect receiver 2")
+	assert(payments[2].receiver == 0x120e725050340cab, message: "incorrect receiver 2")
 }`).
 			Argument(happyPathProfile).
 			Argument(cadence.NewAddress(sellerAcct.Address)).
@@ -767,10 +771,10 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 		require.NoError(t, err)
 
 		_, err = client.Script(`
-import Evergreen from 0x01cf0e2f2f715450
-import SequelMarketplace from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
+import SequelMarketplace from 0x179b6b1cb6755e31
 
-pub fun main(profile: Evergreen.Profile, seller: Address) {
+access(all) fun main(profile: Evergreen.Profile, seller: Address) {
 
 	let instructions = SequelMarketplace.buildPayments(
         profile: profile,
@@ -809,10 +813,10 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 		require.NoError(t, err)
 
 		_, err = client.Script(`
-import Evergreen from 0x01cf0e2f2f715450
-import SequelMarketplace from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
+import SequelMarketplace from 0x179b6b1cb6755e31
 
-pub fun main(profile: Evergreen.Profile, seller: Address) {
+access(all) fun main(profile: Evergreen.Profile, seller: Address) {
 
 	let instructions = SequelMarketplace.buildPayments(
         profile: profile,
@@ -851,10 +855,10 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 		require.NoError(t, err)
 
 		_, err = client.Script(`
-import Evergreen from 0x01cf0e2f2f715450
-import SequelMarketplace from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
+import SequelMarketplace from 0x179b6b1cb6755e31
 
-pub fun main(profile: Evergreen.Profile, seller: Address) {
+access(all) fun main(profile: Evergreen.Profile, seller: Address) {
 
 	let instructions = SequelMarketplace.buildPayments(
         profile: profile,
@@ -875,12 +879,12 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 	assert(payments[0].role == "Role1", message: "incorrect role 1")
 	assert(payments[0].amount == 5.0, message: "incorrect amount 1")
 	assert(payments[0].rate == 0.05, message: "incorrect rate 1")
-	assert(payments[0].receiver == 0xf3fcd2c1a78f5eee, message: "incorrect receiver 1")
+	assert(payments[0].receiver == 0xe03daebed8ca0615, message: "incorrect receiver 1")
 
 	assert(payments[1].role == "Owner", message: "incorrect role 2")
 	assert(payments[1].amount == 95.0, message: "incorrect amount 2")
 	assert(payments[1].rate == 0.95, message: "incorrect rate 2")
-	assert(payments[1].receiver == 0x045a1763c93006ca, message: "incorrect receiver 2")
+	assert(payments[1].receiver == 0x120e725050340cab, message: "incorrect receiver 2")
 }`).
 			Argument(profile).
 			Argument(cadence.NewAddress(sellerAcct.Address)).
@@ -896,10 +900,10 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 		require.NoError(t, err)
 
 		_, err = client.Script(`
-import Evergreen from 0x01cf0e2f2f715450
-import SequelMarketplace from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
+import SequelMarketplace from 0x179b6b1cb6755e31
 
-pub fun main(profile: Evergreen.Profile, seller: Address) {
+access(all) fun main(profile: Evergreen.Profile, seller: Address) {
 
 	let instructions = SequelMarketplace.buildPayments(
         profile: profile,
@@ -920,7 +924,7 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 	assert(payments[0].role == "Owner", message: "incorrect role 1")
 	assert(payments[0].amount == 100.0, message: "incorrect amount 1")
 	assert(payments[0].rate == 1.0, message: "incorrect rate 1")
-	assert(payments[0].receiver == 0x045a1763c93006ca, message: "incorrect receiver 1")
+	assert(payments[0].receiver == 0x120e725050340cab, message: "incorrect receiver 1")
 }`).
 			Argument(profile).
 			Argument(cadence.NewAddress(sellerAcct.Address)).
@@ -945,10 +949,10 @@ pub fun main(profile: Evergreen.Profile, seller: Address) {
 		require.NoError(t, err)
 
 		_, err = client.Script(`
-import Evergreen from 0x01cf0e2f2f715450
-import SequelMarketplace from 0x01cf0e2f2f715450
+import Evergreen from 0x179b6b1cb6755e31
+import SequelMarketplace from 0x179b6b1cb6755e31
 
-pub fun main(profile: Evergreen.Profile, seller: Address, extra1: Address, extra2: Address) {
+access(all) fun main(profile: Evergreen.Profile, seller: Address, extra1: Address, extra2: Address) {
 
 	let instructions = SequelMarketplace.buildPayments(
         profile: profile,
@@ -986,22 +990,22 @@ pub fun main(profile: Evergreen.Profile, seller: Address, extra1: Address, extra
 	assert(payments[0].role == "Role1", message: "incorrect role 1")
 	assert(payments[0].amount == 5.0, message: "incorrect amount 1")
 	assert(payments[0].rate == 0.05, message: "incorrect rate 1")
-	assert(payments[0].receiver == 0xf3fcd2c1a78f5eee, message: "incorrect receiver 1")
+	assert(payments[0].receiver == 0xe03daebed8ca0615, message: "incorrect receiver 1")
 
 	assert(payments[1].role == "Extra1", message: "incorrect role 2")
 	assert(payments[1].amount == 2.0, message: "incorrect amount 2")
 	assert(payments[1].rate == 0.02, message: "incorrect rate 2")
-	assert(payments[1].receiver == 0xe03daebed8ca0615, message: "incorrect receiver 2")
+	assert(payments[1].receiver == 0x045a1763c93006ca, message: "incorrect receiver 2")
 
 	assert(payments[2].role == "Extra2", message: "incorrect role 3")
 	assert(payments[2].amount == 4.0, message: "incorrect amount 3")
 	assert(payments[2].rate == 0.04, message: "incorrect rate 3")
-	assert(payments[2].receiver == 0x179b6b1cb6755e31, message: "incorrect receiver 3")
+	assert(payments[2].receiver == 0xf3fcd2c1a78f5eee, message: "incorrect receiver 3")
 
 	assert(payments[3].role == "Owner", message: "incorrect role 4")
 	assert(payments[3].amount == 89.0, message: "incorrect amount 4")
 	assert(payments[3].rate == 0.89, message: "incorrect rate 4")
-	assert(payments[3].receiver == 0x045a1763c93006ca, message: "incorrect receiver 4")
+	assert(payments[3].receiver == 0x120e725050340cab, message: "incorrect receiver 4")
 }`).
 			Argument(profile).
 			Argument(cadence.NewAddress(sellerAcct.Address)).

@@ -9,24 +9,26 @@ import DigitalArt from {{.DigitalArt}}
 
 transaction {
 
-    prepare(acct: AuthAccount) {
+    prepare(signer: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue, UnpublishCapability) &Account) {
+
+        let collectionData = DigitalArt.resolveContractView(resourceType: nil, viewType: Type<MetadataViews.NFTCollectionData>()) as! MetadataViews.NFTCollectionData?
+            ?? panic("Could not resolve NFTCollectionData view. The DigitalArt contract needs to implement the NFTCollectionData Metadata view in order to execute this transaction")
 
         // Return early if the account already has a collection
-        if acct.borrow<&DigitalArt.Collection>(from: DigitalArt.CollectionStoragePath) != nil {
+        if signer.storage.borrow<&DigitalArt.Collection>(from: collectionData.storagePath) != nil {
             return
         }
 
         // Create a new empty collection
-        let collection <- DigitalArt.createEmptyCollection()
+        let collection <- DigitalArt.createEmptyCollection(nftType: Type<@DigitalArt.NFT>())
 
         // save it to the account
-        acct.save(<-collection, to: DigitalArt.CollectionStoragePath)
+        signer.storage.save(<-collection, to: collectionData.storagePath)
 
         // create a public capability for the collection
-        acct.link<&{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection, Evergreen.CollectionPublic, DigitalArt.CollectionPublic}>(
-            DigitalArt.CollectionPublicPath,
-            target: DigitalArt.CollectionStoragePath
-        )
+        signer.capabilities.unpublish(collectionData.publicPath)
+        let collectionCap = signer.capabilities.storage.issue<&DigitalArt.Collection>(collectionData.storagePath)
+        signer.capabilities.publish(collectionCap, at: collectionData.publicPath)
     }
 }
 {{ end }}
