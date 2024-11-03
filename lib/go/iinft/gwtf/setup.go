@@ -15,9 +15,8 @@ import (
 
 // GoWithTheFlow Entire configuration to work with Go With the Flow
 type GoWithTheFlow struct {
-	State    *flowkit.State
-	Services flowkit.Services
-	//Network                      string
+	State                        *flowkit.State
+	Services                     flowkit.Services
 	Logger                       output.Logger
 	PrependNetworkToAccountNames bool
 }
@@ -116,9 +115,8 @@ func NewGoWithTheFlowError(paths []string, network string, inMemory bool, logLev
 		service = flowkit.NewFlowkit(state, *networkDef, gw, logger)
 	}
 	return &GoWithTheFlow{
-		State:    state,
-		Services: service,
-		//Network:                      network,
+		State:                        state,
+		Services:                     service,
 		Logger:                       logger,
 		PrependNetworkToAccountNames: true,
 	}, nil

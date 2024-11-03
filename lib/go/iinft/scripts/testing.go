@@ -33,7 +33,7 @@ func ConfigureInMemoryEmulator(t *testing.T, client *gwtf.GoWithTheFlow, adminFl
 func FundAccountWithFlow(t *testing.T, client *gwtf.GoWithTheFlow, receiverAddress flow.Address, amount string) {
 	t.Helper()
 
-	contracts := client.State.Contracts() //.ByNetwork(client.Network)
+	contracts := client.State.Contracts()
 	addrMap := make(map[string]string)
 	networkName := client.Services.Network().Name
 

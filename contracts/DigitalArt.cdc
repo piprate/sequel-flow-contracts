@@ -165,8 +165,8 @@ contract DigitalArt: NonFungibleToken {
 
         // The ChainLocker asset head ID of the full metadata JSON.
         // It can be used to retrieve the current metadata JSON (if changed).
-		access(all)
-		let assetHead: String
+        access(all)
+        let assetHead: String
 
         init(
             name: String,
@@ -288,7 +288,7 @@ contract DigitalArt: NonFungibleToken {
 
     // This is the interface that users can cast their DigitalArt Collection as
     // to allow others to deposit DigitalArt into their Collection. It also allows for reading
-    // the details of DigitalArt in the Collection.  // REMOVE
+    // the details of DigitalArt in the Collection.
     access(all)
     resource interface CollectionPublic {
         //access(all)

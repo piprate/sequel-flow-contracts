@@ -343,17 +343,6 @@ func (tb FlowTransactionBuilder) RunE(ctx context.Context) ([]flow.Event, error)
 			Location: codeFileName,
 		},
 		tb.GasLimit,
-		//
-		////tb.Proposer.Address,
-		////authorizers,
-		////tb.Payer.Address,
-		//tb.Proposer.Key.Index(),
-		//code,
-		//codeFileName,
-		//tb.GasLimit,
-		//tb.Arguments,
-		//tb.GoWithTheFlow.Network,
-		//true,
 	)
 	if err != nil {
 		return nil, err
