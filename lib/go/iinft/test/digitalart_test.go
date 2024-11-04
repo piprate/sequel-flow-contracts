@@ -3,7 +3,7 @@ package test
 import (
 	"context"
 	"os"
-	"sort"
+	"slices"
 	"testing"
 	"time"
 
@@ -768,13 +768,13 @@ access(all) fun main(address:Address, tokenID:UInt64) : [UInt64] {
 		idArray, ok := viewsVal.(cadence.Array)
 		require.True(t, ok)
 		require.Equal(t, 2, len(idArray.Values))
-		ids := []int{
-			int(idArray.Values[0].(cadence.UInt64)),
-			int(idArray.Values[1].(cadence.UInt64)),
+		ids := []uint64{
+			uint64(idArray.Values[0].(cadence.UInt64)),
+			uint64(idArray.Values[1].(cadence.UInt64)),
 		}
-		sort.Ints(ids)
-		assert.Equal(t, 0, ids[0])
-		assert.Equal(t, 1, ids[1])
+		slices.Sort(ids)
+		assert.Equal(t, uint64(0), ids[0])
+		assert.Equal(t, uint64(1), ids[1])
 	})
 
 	t.Run("borrowNFT(...) should return NonFungibleToken.NFT", func(t *testing.T) {

@@ -124,12 +124,12 @@ func GetExampleTokenBalance(t *testing.T, se *Engine, address flow.Address) floa
 func SetUpRoyaltyReceivers(t *testing.T, se *Engine, signAndProposeAs, payAs string, extraTokenNames ...string) {
 	t.Helper()
 
-	var addresses []cadence.Value
-	var names []cadence.Value
+	addresses := make([]cadence.Value, len(extraTokenNames))
+	names := make([]cadence.Value, len(extraTokenNames))
 
-	for _, name := range extraTokenNames {
-		addresses = append(addresses, cadence.NewAddress(se.ContractAddress(name)))
-		names = append(names, cadence.String(name))
+	for i, name := range extraTokenNames {
+		addresses[i] = cadence.NewAddress(se.ContractAddress(name))
+		names[i] = cadence.String(name)
 	}
 
 	_ = se.NewTransaction("account_royalty_receiver_setup").

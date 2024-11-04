@@ -12,9 +12,11 @@ linters-settings:
       - performance
       - style
   govet:
-    check-shadowing: true
+    enable:
+      # report about shadowed variables
+      - shadowing
   nolintlint:
-    require-explanation: true
+    require-explanation: false
     require-specific: true
   funlen:
     lines: 100
@@ -30,12 +32,12 @@ linters:
     - asciicheck
     - bodyclose
     - contextcheck
-    - depguard
+    - copyloopvar
+#    - depguard
     - dogsled
 #   - dupl
     - errcheck
     - errorlint
-    - exportloopref
     - exhaustive
     - goconst
 #   - gocritic
@@ -65,4 +67,5 @@ linters:
 
 run:
   issues-exit-code: 1
+  go: '1.22'
 

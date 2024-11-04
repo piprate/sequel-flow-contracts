@@ -86,7 +86,7 @@ func (e EventFetcherBuilder) End(blockHeight uint64) EventFetcherBuilder {
 // Last fetch events from the number last blocks
 func (e EventFetcherBuilder) Last(number uint64) EventFetcherBuilder {
 	e.EndAtCurrentHeight = true
-	e.FromIndex = -int64(number)
+	e.FromIndex = -int64(number) //nolint:gosec
 	return e
 }
 
@@ -187,7 +187,7 @@ func (e EventFetcherBuilder) Run(ctx context.Context) ([]*FormatedEvent, error) 
 	fromIndex := e.FromIndex
 	// if we have a negative fromIndex is relative to endIndex
 	if e.FromIndex <= 0 {
-		fromIndex = int64(endIndex) + e.FromIndex
+		fromIndex = int64(endIndex) + e.FromIndex //nolint:gosec
 	}
 
 	if fromIndex < 0 {

@@ -3,12 +3,12 @@ package gwtf
 import (
 	"context"
 	"fmt"
-	"github.com/onflow/flowkit/v2"
 	"log"
 	"os"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flowkit/v2"
 )
 
 // FlowScriptBuilder is a struct to hold information for running a script

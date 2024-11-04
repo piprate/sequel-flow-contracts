@@ -381,6 +381,7 @@ func TestMarketplace_payForMintedTokens(t *testing.T) {
 	}, evergreenAddr)
 	require.NoError(t, err)
 
+	//nolint:gosec
 	scriptWithExampleToken := `
 import FungibleToken from 0xee82856bf20e2aa6
 import ExampleToken from 0xf8d6e0586b0a20c7
