@@ -12,6 +12,7 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, ftContract
     let paymentVault: @{FungibleToken.Vault}
     let tokenReceiver: &{NonFungibleToken.Receiver}
     let buyerAddress: Address
+    let sellerVaultPath: PublicPath
 
     prepare(buyer: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account, platform: auth(BorrowValue) &Account) {
         if numEditions == 0 {
@@ -78,6 +79,7 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, ftContract
             ?? panic("Cannot borrow fungible token vault from acct storage")
         let price = unitPrice * UFix64(numEditions)
         self.paymentVault <- vaultRef.withdraw(amount: price)
+        self.sellerVaultPath = vaultData.receiverPath
 
         if buyer.storage.borrow<&DigitalArt.Collection>(from: DigitalArt.CollectionStoragePath) == nil {
             let collection <- DigitalArt.createEmptyCollection(nftType: Type<@DigitalArt.NFT>())
@@ -104,7 +106,7 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, ftContract
             unitPrice: unitPrice,
             numEditions: numEditions,
             sellerRole: "Artist",
-            sellerVaultPath: /public/flowTokenReceiver,
+            sellerVaultPath: self.sellerVaultPath,
             paymentVault: <-self.paymentVault,
             evergreenProfile: self.evergreenProfile,
         )
