@@ -132,6 +132,13 @@
 				"testing": "0000000000000001",
 				"testnet": "631e88ae7f1d7c20"
 			}
+		},
+		"USDCFlow": {
+			"aliases": {
+				"mainnet": "f1ab99c82dee3526",
+				"testing": "0000000000000007",
+				"testnet": "64adf39cbc354fcb"
+			}
 		}
 	},
 	"networks": {
@@ -169,10 +176,6 @@
 	"deployments": {
 		"emulator": {
 			"emulator-account": [
-				"Burner",
-				"ViewResolver",
-				"MetadataViews",
-				"NonFungibleToken",
 				"NFTStorefront",
 				"NFTCatalog",
 				"NFTRetrieval",

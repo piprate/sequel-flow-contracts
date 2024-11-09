@@ -1,14 +1,13 @@
 {{ define "catalog_get_collection_tokens" }}
 import MetadataViews from {{.MetadataViews}}
 import NFTCatalog from {{.NFTCatalog}}
-import NFTRetrieval from {{.NFTRetrieval}}
 
-pub struct NFT {
-    pub let id: UInt64
-    pub let name: String
-    pub let description: String
-    pub let thumbnail: String
-    pub let externalURL: String
+access(all) struct NFT {
+    access(all) let id: UInt64
+    access(all) let name: String
+    access(all) let description: String
+    access(all) let thumbnail: String
+    access(all) let externalURL: String
 
     init(
         id: UInt64,
@@ -25,7 +24,7 @@ pub struct NFT {
     }
 }
 
-pub fun main(ownerAddress: Address, collectionIdentifier: String): [NFT] {
+access(all) fun main(ownerAddress: Address, collectionIdentifier: String): [NFT] {
     let account = getAuthAccount(ownerAddress)
 
     let value = NFTCatalog.getCatalogEntry(collectionIdentifier: collectionIdentifier)!
@@ -33,18 +32,45 @@ pub fun main(ownerAddress: Address, collectionIdentifier: String): [NFT] {
     let tempPathStr = "catalog".concat(keyHash)
     let tempPublicPath = PublicPath(identifier: tempPathStr)!
 
-    account.link<&{MetadataViews.ResolverCollection}>(
-        tempPublicPath,
-        target: value.collectionData.storagePath
-    )
-
     let collectionCap = account.getCapability<&AnyResource{MetadataViews.ResolverCollection}>(tempPublicPath)
 
     if !collectionCap.check() {
         return []
     }
 
-    let views = NFTRetrieval.getNFTViewsFromCap(collectionIdentifier: collectionIdentifier, collectionCap: collectionCap)
+    fun hasMultipleCollectionsFn(nftTypeIdentifier : String): Bool {
+        let typeCollections = NFTCatalog.getCollectionsForType(nftTypeIdentifier: nftTypeIdentifier)!
+        var numberOfCollections = 0
+        for identifier in typeCollections.keys {
+            let existence = typeCollections[identifier]!
+            if existence {
+                numberOfCollections = numberOfCollections + 1
+            }
+            if numberOfCollections > 1 {
+                return true
+            }
+        }
+        return false
+    }
+
+    let views : [MetadataViews.NFTView] = []
+
+    // Check if we have multiple collections for the NFT type...
+    let hasMultipleCollections = self.hasMultipleCollections(nftTypeIdentifier : value.nftType.identifier)
+
+    if collectionCap.check() {
+        let collectionRef = collectionCap.borrow()!
+        for id in collectionRef.getIDs() {
+            let nftResolver = collectionRef.borrowViewResolver(id: id)
+            let nftViews = MetadataViews.getNFTView(id: id, viewResolver: nftResolver!)
+            if !hasMultipleCollections {
+                views.append(nftViews)
+            } else if nftViews.display!.name == value.collectionDisplay.name {
+                views.append(nftViews)
+            }
+
+        }
+    }
 
     let items: [NFT] = []
 
