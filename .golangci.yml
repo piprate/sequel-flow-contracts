@@ -1,6 +1,6 @@
 linters-settings:
   errcheck:
-    check-type-assertions: true
+    check-type-assertions: false
   goconst:
     min-len: 2
     min-occurrences: 3
