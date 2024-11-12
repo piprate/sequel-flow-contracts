@@ -27,14 +27,14 @@
 			"source": "./contracts/DigitalArt.cdc",
 			"aliases": {
 				"mainnet": "3cb7ceeb625a600a",
-				"testnet": "745b085dafdd4fc0"
+				"testnet": "fdf325e9204fc94a"
 			}
 		},
 		"Evergreen": {
 			"source": "./contracts/Evergreen.cdc",
 			"aliases": {
 				"mainnet": "3cb7ceeb625a600a",
-				"testnet": "745b085dafdd4fc0"
+				"testnet": "fdf325e9204fc94a"
 			}
 		},
 		"ExampleToken": {
@@ -121,7 +121,7 @@
 			"source": "./contracts/SequelMarketplace.cdc",
 			"aliases": {
 				"mainnet": "3cb7ceeb625a600a",
-				"testnet": "745b085dafdd4fc0"
+				"testnet": "fdf325e9204fc94a"
 			}
 		},
 		"ViewResolver": {

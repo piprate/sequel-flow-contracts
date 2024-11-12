@@ -32,8 +32,6 @@ contract DigitalArt: NonFungibleToken {
     let CollectionPublicPath: PublicPath
     access(all)
     let AdminStoragePath: StoragePath
-    access(all)
-    let AdminPrivatePath: PrivatePath
 
     // The total number of DigitalArt NFTs that have been minted
     //
@@ -594,15 +592,22 @@ contract DigitalArt: NonFungibleToken {
     //
     init() {
         // Set our named paths
-        self.CollectionStoragePath = /storage/sequelDigitalArtCollection
-        self.CollectionPublicPath = /public/sequelDigitalArtCollection
+        self.CollectionStoragePath = /storage/sequelDigitalArtCollectionV2
+        self.CollectionPublicPath = /public/sequelDigitalArtCollectionV2
         self.AdminStoragePath = /storage/digitalArtAdmin
-        self.AdminPrivatePath = /private/digitalArtAdmin
 
         // Initialize the total supply
         self.totalSupply = 0
 
         self.masters = {}
+
+        // Create a Collection resource and save it to storage
+        let collection <- create Collection()
+        self.account.storage.save(<-collection, to: self.CollectionStoragePath)
+
+        // create a public capability for the collection
+        let collectionCap = self.account.capabilities.storage.issue<&DigitalArt.Collection>(self.CollectionStoragePath)
+        self.account.capabilities.publish(collectionCap, at: self.CollectionPublicPath)
 
         // Create a Admin resource and save it to storage
         let admin <- create Admin()
