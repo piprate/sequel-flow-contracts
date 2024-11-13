@@ -24,18 +24,18 @@ func CadenceValueToJSONString(value cadence.Value) string {
 	return string(j)
 }
 
-// CadenceValueToInterface convert a candence.Value into interface{}
+// CadenceValueToInterface convert a cadence.Value into interface{}
 func CadenceValueToInterface(field cadence.Value) interface{} {
 	if field == nil {
 		return ""
 	}
 
-	switch field := field.(type) {
+	switch typedField := field.(type) {
 	case cadence.Optional:
-		return CadenceValueToInterface(field.Value)
+		return CadenceValueToInterface(typedField.Value)
 	case cadence.Dictionary:
 		result := map[string]interface{}{}
-		for _, item := range field.Pairs {
+		for _, item := range typedField.Pairs {
 			key, err := strconv.Unquote(item.Key.String())
 			if err != nil {
 				result[item.Key.String()] = CadenceValueToInterface(item.Value)
@@ -47,15 +47,13 @@ func CadenceValueToInterface(field cadence.Value) interface{} {
 		return result
 	case cadence.Struct:
 		result := map[string]interface{}{}
-		subStructNames := field.StructType.Fields
-
-		for j, subField := range field.Fields {
-			result[subStructNames[j].Identifier] = CadenceValueToInterface(subField)
+		for name, subField := range typedField.FieldsMappedByName() {
+			result[name] = CadenceValueToInterface(subField)
 		}
 		return result
 	case cadence.Array:
 		var result []interface{}
-		for _, item := range field.Values {
+		for _, item := range typedField.Values {
 			result = append(result, CadenceValueToInterface(item))
 		}
 		return result

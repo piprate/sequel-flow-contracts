@@ -1,4 +1,5 @@
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
+import ViewResolver from "/standard/ViewResolver.cdc"
 import MetadataViews from "./standard/MetadataViews.cdc"
 import Evergreen from "./Evergreen.cdc"
 
@@ -9,39 +10,53 @@ import Evergreen from "./Evergreen.cdc"
 //
 // Source: https://github.com/piprate/sequel-flow-contracts
 //
-pub contract DigitalArt: NonFungibleToken {
+access(all)
+contract DigitalArt: NonFungibleToken {
 
     // Events
     //
-    pub event ContractInitialized()
-    pub event Withdraw(id: UInt64, from: Address?)
-    pub event Deposit(id: UInt64, to: Address?)
-    pub event Minted(id: UInt64, asset: String, edition: UInt64, modID: UInt64)
+    access(all)
+    event ContractInitialized()
+    access(all)
+    event Withdraw(id: UInt64, from: Address?)
+    access(all)
+    event Deposit(id: UInt64, to: Address?)
+    access(all)
+    event Minted(id: UInt64, asset: String, edition: UInt64, modID: UInt64)
 
     // Named Paths
     //
-    pub let CollectionStoragePath: StoragePath
-    pub let CollectionPublicPath: PublicPath
-    pub let AdminStoragePath: StoragePath
-    pub let AdminPrivatePath: PrivatePath
+    access(all)
+    let CollectionStoragePath: StoragePath
+    access(all)
+    let CollectionPublicPath: PublicPath
+    access(all)
+    let AdminStoragePath: StoragePath
 
     // The total number of DigitalArt NFTs that have been minted
     //
-    pub var totalSupply: UInt64
+    access(all)
+    var totalSupply: UInt64
 
     // Variable size dictionary of Master resources
-    access(self) var masters: {String: Master}
+    access(self)
+    var masters: {String: Master}
 
     // Master enables mint-on-demand functionality and defines a master copy of a token
     // that is used to mint a number of editions (limited by metadata.maxEditions).
     // Once all editions are minted, the master is 'closed' but remains on-chain
     // to prevent re-minting NFTs with the same asset ID.
     //
-    pub struct Master {
-        pub var metadata: Metadata?
-        pub var evergreenProfile: Evergreen.Profile?
-        pub var nextEdition: UInt64
-        pub var closed: Bool
+    access(all)
+    struct Master {
+        access(all)
+        var metadata: Metadata?
+        access(all)
+        var evergreenProfile: Evergreen.Profile?
+        access(all)
+        var nextEdition: UInt64
+        access(all)
+        var closed: Bool
 
         init(metadata: Metadata, evergreenProfile: Evergreen.Profile)  {
             self.metadata = metadata
@@ -50,13 +65,15 @@ pub contract DigitalArt: NonFungibleToken {
             self.closed = false
         }
 
-        pub fun newEditionID() : UInt64 {
+        access(all)
+        fun newEditionID() : UInt64 {
             let val = self.nextEdition
             self.nextEdition = self.nextEdition + UInt64(1)
             return val
         }
 
-        pub fun availableEditions() : UInt64 {
+        access(all)
+        fun availableEditions() : UInt64 {
             if !self.closed && self.metadata!.maxEdition >= self.nextEdition {
                 return self.metadata!.maxEdition - self.nextEdition + UInt64(1)
             } else {
@@ -64,9 +81,20 @@ pub contract DigitalArt: NonFungibleToken {
             }
         }
 
+        access(all)
+        fun getMetadata() : Metadata? {
+            return self.metadata
+        }
+
+        access(all)
+        fun getEvergreenProfile() : Evergreen.Profile? {
+            return self.evergreenProfile
+        }
+
         // We close masters after all editions are minted instead of deleting master records
         // This process ensures nobody can ever mint tokens with the same asset ID.
-        pub fun close() {
+        access(all)
+        fun close() {
             self.metadata = nil
             self.evergreenProfile = nil
             self.nextEdition = 0
@@ -76,41 +104,67 @@ pub contract DigitalArt: NonFungibleToken {
 
     // Metadata defines Digital Art's metadata.
     //
-    pub struct Metadata {
+    access(all)
+    struct Metadata {
         // Name
-        pub let name: String
+        access(all)
+        let name: String
+
         // Artist name
-        pub let artist: String
+        access(all)
+        let artist: String
+
         // Description
-        pub let description: String
+        access(all)
+        let description: String
+
         // Media type: Image, Audio, Video
-        pub let type: String
+        access(all)
+        let type: String
+
         // A URI of the original digital art content.
-        pub let contentURI: String
+        access(all)
+        let contentURI: String
+
         // A URI of the digital art preview content (i.e. a thumbnail).
-        pub let contentPreviewURI: String
+        access(all)
+        let contentPreviewURI: String
+
         // MIME type (e.g. 'image/jpeg')
-        pub let mimetype: String
+        access(all)
+        let mimetype: String
+
         // Edition number of the given NFT. Editions are unique for the same master,
         // identified by the asset ID.
-        pub var edition: UInt64
+        access(all)
+        var edition: UInt64
+
         // The number of editions that may have been produced for the given master.
         // This number can't be exceeded by the contract, but there is no obligation
         // to mint all the declared editions.
         // If maxEdition == 1, the given NFT is one-of-a-kind.
-        pub let maxEdition: UInt64
+        access(all)
+        let maxEdition: UInt64
+
         // The DID of the master's asset. This ID is the same
         // for all editions of a particular Digital Art NFT.
-        pub let asset: String
+        access(all)
+        let asset: String
+
         // A URI of the full digital art's metadata JSON
         // as it existed at the time the master was sealed.
-        pub let metadataURI: String
+        access(all)
+        let metadataURI: String
+
         // The ChainLocker record ID of the full metadata JSON
         // as it existed at the time the master was sealed.
-        pub let record: String
+        access(all)
+        let record: String
+
         // The ChainLocker asset head ID of the full metadata JSON.
         // It can be used to retrieve the current metadata JSON (if changed).
-		pub let assetHead: String
+        access(all)
+        let assetHead: String
 
         init(
             name: String,
@@ -142,7 +196,8 @@ pub contract DigitalArt: NonFungibleToken {
             self.assetHead = assetHead
         }
 
-        pub fun setEdition(edition: UInt64) {
+        access(all)
+        fun setEdition(edition: UInt64) {
             self.edition = edition
         }
     }
@@ -150,12 +205,17 @@ pub contract DigitalArt: NonFungibleToken {
     // NFT
     // DigitalArt as an NFT
     //
-    pub resource NFT: NonFungibleToken.INFT, MetadataViews.Resolver, Evergreen.Token {
+    access(all)
+    resource NFT: NonFungibleToken.NFT, ViewResolver.Resolver, Evergreen.Token {
         // The token's ID
-        pub let id: UInt64
+        access(all)
+        let id: UInt64
 
-        pub let metadata: Metadata
-        pub let evergreenProfile: Evergreen.Profile
+        access(all)
+        let metadata: Metadata
+
+        access(all)
+        let evergreenProfile: Evergreen.Profile
 
         // initializer
         //
@@ -165,9 +225,11 @@ pub contract DigitalArt: NonFungibleToken {
             self.evergreenProfile = evergreenProfile
         }
 
-        pub fun getViews(): [Type] {
+        access(all)
+        view fun getViews(): [Type] {
             return [
                 Type<MetadataViews.Display>(),
+                Type<MetadataViews.Edition>(),
                 Type<MetadataViews.Royalties>(),
                 Type<MetadataViews.ExternalURL>(),
                 Type<MetadataViews.NFTCollectionData>(),
@@ -176,8 +238,9 @@ pub contract DigitalArt: NonFungibleToken {
             ]
         }
 
-        pub fun resolveView(_ view: Type): AnyStruct? {
-            switch view {
+        access(all)
+        fun resolveView(_ type: Type): AnyStruct? {
+            switch type {
                 case Type<MetadataViews.Display>():
                     return MetadataViews.Display(
                         name: self.metadata.name,
@@ -186,54 +249,18 @@ pub contract DigitalArt: NonFungibleToken {
                             url: DigitalArt.getWebFriendlyURL(url: self.metadata.contentPreviewURI)
                         )
                     )
+                case Type<MetadataViews.Edition>():
+                    return MetadataViews.Edition(name: nil, number: self.metadata.edition, max: self.metadata.maxEdition)
                 case Type<MetadataViews.Royalties>():
                     return MetadataViews.Royalties(
                         self.evergreenProfile.buildRoyalties(defaultReceiverPath: MetadataViews.getRoyaltyReceiverPublicPath())
                     )
                 case Type<MetadataViews.ExternalURL>():
-                    return MetadataViews.ExternalURL(url: "https://app.sequel.space/tokens/digital-art/".concat(self.id.toString()))
+                    return MetadataViews.ExternalURL("https://app.sequel.space/tokens/digital-art/".concat(self.id.toString()))
                 case Type<MetadataViews.NFTCollectionData>():
-                    return MetadataViews.NFTCollectionData(
-                        storagePath: DigitalArt.CollectionStoragePath,
-                        publicPath: DigitalArt.CollectionPublicPath,
-                        providerPath: /private/sequelDigitalArtCollection,
-                        publicCollection: Type<&DigitalArt.Collection{DigitalArt.CollectionPublic}>(),
-                        publicLinkedType: Type<&DigitalArt.Collection{DigitalArt.CollectionPublic,NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver,MetadataViews.ResolverCollection}>(),
-                        providerLinkedType: Type<&DigitalArt.Collection{DigitalArt.CollectionPublic,NonFungibleToken.CollectionPublic,NonFungibleToken.Provider,MetadataViews.ResolverCollection}>(),
-                        createEmptyCollectionFunction: (fun (): @NonFungibleToken.Collection {
-                            return <-DigitalArt.createEmptyCollection()
-                        })
-                    )
+                    return DigitalArt.resolveContractView(resourceType: Type<@NFT>(), viewType: type)
                 case Type<MetadataViews.NFTCollectionDisplay>():
-                    let media = MetadataViews.Media(
-                        file: MetadataViews.HTTPFile(
-                            url: "https://sequel.space/home/img/flow-sequel-logo.png"
-                        ),
-                        mediaType: "image/png"
-                    )
-                    return MetadataViews.NFTCollectionDisplay(
-                        name: "Sequel Digital Art",
-                        description: "Sequel is a social platform where everything is for fun and purely fictional.",
-                        externalURL: MetadataViews.ExternalURL("https://sequel.space"),
-                        squareImage: MetadataViews.Media(
-                            file: MetadataViews.HTTPFile(
-                                url: "https://sequel.space/home/img/flow-sequel-logo.png"
-                            ),
-                            mediaType: "image/png"
-                        ),
-                        bannerImage: MetadataViews.Media(
-                            file: MetadataViews.HTTPFile(
-                                url: "https://sequel.space/home/img/flow-sequel-banner.jpg"
-                            ),
-                            mediaType: "image/jpeg"
-                        ),
-                        socials: {
-                            "instagram": MetadataViews.ExternalURL("https://www.instagram.com/sequelspace"),
-                            "mastodon": MetadataViews.ExternalURL("https://mastodon.social/@sequel"),
-                            "discord": MetadataViews.ExternalURL("https://discord.gg/YaR7BFuXNk"),
-                            "twitter": MetadataViews.ExternalURL("https://twitter.com/sequelspace")
-                        }
-                    )
+                    return DigitalArt.resolveContractView(resourceType: Type<@NFT>(), viewType: type)
                 case Type<DigitalArt.Metadata>():
                     return self.metadata
             }
@@ -241,23 +268,38 @@ pub contract DigitalArt: NonFungibleToken {
             return nil
         }
 
-        pub fun getAssetID(): String {
+        access(all)
+        fun getAssetID(): String {
             return self.metadata.asset
         }
 
-        pub fun getEvergreenProfile(): Evergreen.Profile {
+        access(all)
+        fun getEvergreenProfile(): Evergreen.Profile {
             return self.evergreenProfile
+        }
+
+        access(all)
+        fun createEmptyCollection(): @{NonFungibleToken.Collection}{
+            return <-create Collection()
         }
     }
 
     // This is the interface that users can cast their DigitalArt Collection as
     // to allow others to deposit DigitalArt into their Collection. It also allows for reading
     // the details of DigitalArt in the Collection.
-    pub resource interface CollectionPublic {
-        pub fun deposit(token: @NonFungibleToken.NFT)
-        pub fun getIDs(): [UInt64]
-        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
-        pub fun borrowDigitalArt(id: UInt64): &DigitalArt.NFT? {
+    access(all)
+    resource interface CollectionPublic {
+        //access(all)
+        //fun deposit(token: @{NonFungibleToken.NFT})
+
+        access(all)
+        view fun getIDs(): [UInt64]
+
+        access(all)
+        view fun borrowNFT(_ id: UInt64): &{NonFungibleToken.NFT}?
+
+        access(all)
+        fun borrowDigitalArt(id: UInt64): &DigitalArt.NFT? {
             // If the result isn't nil, the id of the returned reference
             // should be the same as the argument to the function
             post {
@@ -270,38 +312,37 @@ pub contract DigitalArt: NonFungibleToken {
     // Collection
     // A collection of DigitalArt NFTs owned by an account
     //
-    pub resource Collection:
+    access(all)
+    resource Collection:
             CollectionPublic,
             Evergreen.CollectionPublic,
-            NonFungibleToken.Provider,
-            NonFungibleToken.Receiver,
-            NonFungibleToken.CollectionPublic,
-            MetadataViews.ResolverCollection {
+            NonFungibleToken.Collection,
+            ViewResolver.ResolverCollection {
 
-        // dictionary of NFT conforming tokens
-        // NFT is a resource type with an `UInt64` ID field
-        //
-        pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
+        /// dictionary of NFT conforming tokens
+        /// NFT is a resource type with an `UInt64` ID field
+        access(all)
+        var ownedNFTs: @{UInt64: {NonFungibleToken.NFT}}
 
-        // withdraw
-        // Removes an NFT from the collection and moves it to the caller
-        //
-        pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
-            let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
+        /// withdraw removes an NFT from the collection and moves it to the caller
+        access(NonFungibleToken.Withdraw) fun withdraw(withdrawID: UInt64): @{NonFungibleToken.NFT} {
+            let token <- self.ownedNFTs.remove(key: withdrawID)
+                ?? panic("DigitalArt.Collection.withdraw: Could not withdraw an NFT with ID "
+                        .concat(withdrawID.toString())
+                        .concat(". Check the submitted ID to make sure it is one that this collection owns."))
 
             emit Withdraw(id: token.id, from: self.owner?.address)
 
             return <-token
         }
 
-        // deposit
-        // Takes a NFT and adds it to the collections dictionary
-        // and adds the ID to the id array
-        //
-        pub fun deposit(token: @NonFungibleToken.NFT) {
+        /// deposit takes a NFT and adds it to the collections dictionary
+        /// and adds the ID to the id array
+        access(all)
+        fun deposit(token: @{NonFungibleToken.NFT}) {
             let token <- token as! @DigitalArt.NFT
 
-            let id: UInt64 = token.id
+            let id = token.id
 
             // add the new token to the dictionary which removes the old one
             let oldToken <- self.ownedNFTs[id] <- token
@@ -311,10 +352,9 @@ pub contract DigitalArt: NonFungibleToken {
             destroy oldToken
         }
 
-        // getIDs
-        // Returns an array of the IDs that are in the collection
-        //
-        pub fun getIDs(): [UInt64] {
+        /// getIDs returns an array of the IDs that are in the collection
+        access(all)
+        view fun getIDs(): [UInt64] {
             return self.ownedNFTs.keys
         }
 
@@ -322,8 +362,9 @@ pub contract DigitalArt: NonFungibleToken {
         // Gets a reference to an NFT in the collection
         // so that the caller can read its metadata and call its methods
         //
-        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
-            return (&self.ownedNFTs[id] as &NonFungibleToken.NFT?)!
+        access(all)
+        view fun borrowNFT(_ id: UInt64): &{NonFungibleToken.NFT}? {
+            return &self.ownedNFTs[id]
         }
 
         // borrowDigitalArt
@@ -331,27 +372,43 @@ pub contract DigitalArt: NonFungibleToken {
         // exposing all of its fields (including the typeID).
         // This is safe as there are no functions that can be called on the DigitalArt.
         //
-        pub fun borrowDigitalArt(id: UInt64): &DigitalArt.NFT? {
+        access(all)
+        fun borrowDigitalArt(id: UInt64): &DigitalArt.NFT? {
             if self.ownedNFTs[id] != nil {
-                let ref = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
+                let ref = (&self.ownedNFTs[id] as &{NonFungibleToken.NFT}?)!
                 return ref as! &DigitalArt.NFT
             } else {
                 return nil
             }
         }
 
-        pub fun borrowViewResolver(id: UInt64): &AnyResource{MetadataViews.Resolver} {
-            let nft = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
-            return nft as! &DigitalArt.NFT
+        /// Borrow the view resolver for the specified NFT ID
+        access(all)
+        view fun borrowViewResolver(id: UInt64): &{ViewResolver.Resolver}? {
+            if let nft = &self.ownedNFTs[id] as &{NonFungibleToken.NFT}? {
+                return nft as &{ViewResolver.Resolver}
+            }
+            return nil
         }
 
-        pub fun borrowEvergreenToken(id: UInt64): &AnyResource{Evergreen.Token}? {
+        access(all)
+        fun borrowEvergreenToken(id: UInt64): &{Evergreen.Token}? {
             return self.borrowDigitalArt(id: id)
         }
 
-        // destructor
-        destroy() {
-            destroy self.ownedNFTs
+        access(all)
+        fun createEmptyCollection(): @{NonFungibleToken.Collection} {
+            return <-create Collection()
+        }
+
+        access(all)
+        view fun getSupportedNFTTypes(): {Type: Bool} {
+            return { Type<@NFT>() : true}
+        }
+
+        access(all)
+        view fun isSupportedNFTType(type: Type) : Bool {
+            return type == Type<@NFT>()
         }
 
         // initializer
@@ -364,19 +421,22 @@ pub contract DigitalArt: NonFungibleToken {
     // createEmptyCollection
     // public function that anyone can call to create a new empty collection
     //
-    pub fun createEmptyCollection(): @NonFungibleToken.Collection {
+    access(all)
+    fun createEmptyCollection(nftType: Type): @{NonFungibleToken.Collection}{
         return <- create Collection()
     }
 
-    pub fun getMetadata(address:Address, tokenId:UInt64) : Metadata? {
+    access(all)
+    fun getMetadata(address:Address, tokenId:UInt64) : &Metadata {
         let acct = getAccount(address)
-        let collectionRef = acct.getCapability(self.CollectionPublicPath)!.borrow<&{DigitalArt.CollectionPublic}>()
+        let collectionRef = acct.capabilities.get<&{DigitalArt.CollectionPublic}>(self.CollectionPublicPath)!.borrow()
 			?? panic("Could not borrow capability from public collection")
 
         return collectionRef.borrowDigitalArt(id: tokenId)!.metadata
     }
 
-    pub fun isClosed(masterId: String): Bool {
+    access(all)
+    fun isClosed(masterId: String): Bool {
         if DigitalArt.masters.containsKey(masterId) {
             let master = &DigitalArt.masters[masterId]! as &Master
             return master.closed
@@ -385,7 +445,8 @@ pub contract DigitalArt: NonFungibleToken {
         }
     }
 
-    pub fun getWebFriendlyURL(url: String): String {
+    access(all)
+    fun getWebFriendlyURL(url: String): String {
         if url.slice(from: 0, upTo: 4) == "ipfs" {
             return "https://sequel.mypinata.cloud/ipfs/".concat(url.slice(from: 7, upTo: url.length))
         } else {
@@ -397,11 +458,13 @@ pub contract DigitalArt: NonFungibleToken {
     // Resource that an admin or something similar would own to be
     // able to mint new NFTs
     //
-    pub resource Admin {
+    access(all)
+    resource Admin {
 
         // sealMaster saves and freezes the master copy that then can be used
         // to mint NFT editions.
-        pub fun sealMaster(metadata: Metadata, evergreenProfile: Evergreen.Profile) {
+        access(all)
+        fun sealMaster(metadata: Metadata, evergreenProfile: Evergreen.Profile) {
             pre {
                metadata.asset != "" : "Empty asset ID"
                metadata.edition == UInt64(0) : "Edition should be zero"
@@ -414,11 +477,13 @@ pub contract DigitalArt: NonFungibleToken {
             )
         }
 
-        pub fun isSealed(masterId: String) : Bool {
+        access(all)
+        fun isSealed(masterId: String) : Bool {
             return DigitalArt.masters.containsKey(masterId)
         }
 
-        pub fun availableEditions(masterId: String) : UInt64 {
+        access(all)
+        fun availableEditions(masterId: String) : UInt64 {
             pre {
                DigitalArt.masters.containsKey(masterId) : "Master not found"
             }
@@ -428,20 +493,22 @@ pub contract DigitalArt: NonFungibleToken {
             return master.availableEditions()
         }
 
-        pub fun evergreenProfile(masterId: String) : Evergreen.Profile {
+        access(all)
+        fun evergreenProfile(masterId: String) : Evergreen.Profile {
             pre {
                DigitalArt.masters.containsKey(masterId) : "Master not found"
             }
 
             let master = &DigitalArt.masters[masterId]! as &Master
 
-            return master.evergreenProfile!
+            return master.getEvergreenProfile()!
         }
 
         // mintEditionNFT mints a token from master with the given ID.
         // If it's a mint-on-demand, provide MOD ID to link it with the Marketplace database.
         // Otherwise, set modID to 0.
-        pub fun mintEditionNFT(masterId: String, modID: UInt64) : @DigitalArt.NFT {
+        access(all)
+        fun mintEditionNFT(masterId: String, modID: UInt64) : @DigitalArt.NFT {
             pre {
                DigitalArt.masters.containsKey(masterId) : "Master not found"
             }
@@ -450,7 +517,7 @@ pub contract DigitalArt: NonFungibleToken {
 
             assert(master.availableEditions() > 0, message: "No more tokens to mint")
 
-            let metadata = master.metadata!
+            let metadata = master.getMetadata()!
             let edition = master.newEditionID()
             metadata.setEdition(edition: edition)
 
@@ -458,7 +525,7 @@ pub contract DigitalArt: NonFungibleToken {
             var newNFT <- create NFT(
                 initID: DigitalArt.totalSupply,
                 metadata: metadata,
-                evergreenProfile: master.evergreenProfile!
+                evergreenProfile: master.getEvergreenProfile()!
             )
 
             emit Minted(id: DigitalArt.totalSupply, asset: metadata.asset, edition: edition, modID: modID)
@@ -473,23 +540,78 @@ pub contract DigitalArt: NonFungibleToken {
         }
     }
 
+    access(all)
+    view fun getContractViews(resourceType: Type?): [Type] {
+        return [
+            Type<MetadataViews.NFTCollectionData>(),
+            Type<MetadataViews.NFTCollectionDisplay>()
+        ]
+    }
+
+    access(all)
+    view fun resolveContractView(resourceType: Type?, viewType: Type): AnyStruct? {
+        switch viewType {
+            case Type<MetadataViews.NFTCollectionData>():
+                return MetadataViews.NFTCollectionData(
+                    storagePath: DigitalArt.CollectionStoragePath,
+                    publicPath: DigitalArt.CollectionPublicPath,
+                    publicCollection: Type<&DigitalArt.Collection>(),
+                    publicLinkedType: Type<&DigitalArt.Collection>(),
+                    createEmptyCollectionFunction: fun (): @{NonFungibleToken.Collection} {
+                        return <-DigitalArt.createEmptyCollection(nftType: Type<@Collection>())
+                    }
+                )
+            case Type<MetadataViews.NFTCollectionDisplay>():
+                return MetadataViews.NFTCollectionDisplay(
+                    name: "Sequel Digital Art",
+                    description: "Sequel is a social platform where everything is for fun and purely fictional.",
+                    externalURL: MetadataViews.ExternalURL("https://sequel.space"),
+                    squareImage: MetadataViews.Media(
+                        file: MetadataViews.HTTPFile(
+                            url: "https://sequel.space/home/img/flow-sequel-logo.png"
+                        ),
+                        mediaType: "image/png"
+                    ),
+                    bannerImage: MetadataViews.Media(
+                        file: MetadataViews.HTTPFile(
+                            url: "https://sequel.space/home/img/flow-sequel-banner.jpg"
+                        ),
+                        mediaType: "image/jpeg"
+                    ),
+                    socials: {
+                        "instagram": MetadataViews.ExternalURL("https://www.instagram.com/sequelspace"),
+                        "mastodon": MetadataViews.ExternalURL("https://mastodon.social/@sequel"),
+                        "twitter": MetadataViews.ExternalURL("https://twitter.com/sequelspace")
+                    }
+                )
+        }
+        return nil
+    }
+
     // initializer
     //
     init() {
         // Set our named paths
-        self.CollectionStoragePath = /storage/sequelDigitalArtCollection
-        self.CollectionPublicPath = /public/sequelDigitalArtCollection
+        self.CollectionStoragePath = /storage/sequelDigitalArtCollectionV2
+        self.CollectionPublicPath = /public/sequelDigitalArtCollectionV2
         self.AdminStoragePath = /storage/digitalArtAdmin
-        self.AdminPrivatePath = /private/digitalArtAdmin
 
         // Initialize the total supply
         self.totalSupply = 0
 
         self.masters = {}
 
+        // Create a Collection resource and save it to storage
+        let collection <- create Collection()
+        self.account.storage.save(<-collection, to: self.CollectionStoragePath)
+
+        // create a public capability for the collection
+        let collectionCap = self.account.capabilities.storage.issue<&DigitalArt.Collection>(self.CollectionStoragePath)
+        self.account.capabilities.publish(collectionCap, at: self.CollectionPublicPath)
+
         // Create a Admin resource and save it to storage
         let admin <- create Admin()
-        self.account.save(<-admin, to: self.AdminStoragePath)
+        self.account.storage.save(<-admin, to: self.AdminStoragePath)
 
         emit ContractInitialized()
     }

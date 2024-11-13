@@ -16,7 +16,7 @@ func TestUFix64ToString(t *testing.T) {
 func TestStringToPath(t *testing.T) {
 	val, err := StringToPath("/private/test")
 	assert.NoError(t, err)
-	assert.Equal(t, "private", val.Domain)
+	assert.Equal(t, "private", val.Domain.Identifier())
 	assert.Equal(t, "test", val.Identifier)
 
 	_, err = StringToPath("/bad/test")

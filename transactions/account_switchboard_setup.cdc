@@ -4,31 +4,24 @@ import MetadataViews from "../contracts/standard/MetadataViews.cdc"
 
 transaction {
 
-    prepare(acct: AuthAccount) {
+    prepare(signer: auth(BorrowValue, SaveValue, IssueStorageCapabilityController, PublishCapability, UnpublishCapability) &Account) {
         // Check if the account already has a Switchboard resource
-        if acct.borrow<&FungibleTokenSwitchboard.Switchboard>
-          (from: FungibleTokenSwitchboard.StoragePath) == nil {
-
-            // Create a new Switchboard resource and put it into storage
-            acct.save(
-                <- FungibleTokenSwitchboard.createSwitchboard(),
-                to: FungibleTokenSwitchboard.StoragePath)
-
-            // Create a public capability to the Switchboard exposing the deposit
-            // function through the {FungibleToken.Receiver} interface
-            acct.link<&FungibleTokenSwitchboard.Switchboard{FungibleToken.Receiver}>(
-                FungibleTokenSwitchboard.ReceiverPublicPath,
-                target: FungibleTokenSwitchboard.StoragePath
-            )
-
-            // Create a public capability to the Switchboard exposing both the
-            // deposit function and the getVaultCapabilities function through the
-            // {FungibleTokenSwitchboard.SwitchboardPublic} interface
-            acct.link<&FungibleTokenSwitchboard.Switchboard{FungibleTokenSwitchboard.SwitchboardPublic}>(
-                FungibleTokenSwitchboard.PublicPath,
-                target: FungibleTokenSwitchboard.StoragePath
-            )
+        if signer.storage.borrow<&FungibleTokenSwitchboard.Switchboard>(from: FungibleTokenSwitchboard.StoragePath) == nil {
+            // Create a new Switchboard and save it in storage
+            signer.storage.save(<-FungibleTokenSwitchboard.createSwitchboard(), to: FungibleTokenSwitchboard.StoragePath)
+            // Clear existing Capabilities at canonical paths
+            signer.capabilities.unpublish(FungibleTokenSwitchboard.ReceiverPublicPath)
+            signer.capabilities.unpublish(FungibleTokenSwitchboard.PublicPath)
+            // Issue Receiver & Switchboard Capabilities
+            let receiverCap = signer.capabilities.storage.issue<&{FungibleToken.Receiver}>(
+                    FungibleTokenSwitchboard.StoragePath
+                )
+            let switchboardPublicCap = signer.capabilities.storage.issue<&{FungibleTokenSwitchboard.SwitchboardPublic, FungibleToken.Receiver}>(
+                    FungibleTokenSwitchboard.StoragePath
+                )
+            // Publish Capabilities
+            signer.capabilities.publish(receiverCap, at: FungibleTokenSwitchboard.ReceiverPublicPath)
+            signer.capabilities.publish(switchboardPublicCap, at: FungibleTokenSwitchboard.PublicPath)
         }
-
     }
 }

@@ -9,16 +9,16 @@ import SequelMarketplace from {{.SequelMarketplace}}
 transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UInt64) {
     let admin: &DigitalArt.Admin
     let evergreenProfile: Evergreen.Profile
-    let paymentVault: @FungibleToken.Vault
-    let tokenReceiver: &{NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver}
+    let paymentVault: @{FungibleToken.Vault}
+    let tokenReceiver: &{NonFungibleToken.Receiver}
     let buyerAddress: Address
 
-    prepare(buyer: AuthAccount, platform: AuthAccount) {
+    prepare(buyer: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account, platform: auth(BorrowValue) &Account) {
         if numEditions == 0 {
             panic("no editions requested")
         }
 
-        self.admin = platform.borrow<&DigitalArt.Admin>(from: DigitalArt.AdminStoragePath)!
+        self.admin = platform.storage.borrow<&DigitalArt.Admin>(from: DigitalArt.AdminStoragePath)!
 
         {{- if .Parameters.Metadata }}
         if !self.admin.isSealed(masterId: masterId) {
@@ -63,22 +63,20 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
 
         self.evergreenProfile = self.admin.evergreenProfile(masterId: masterId)
 
-        let mainVault = buyer.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)
-            ?? panic("Cannot borrow FlowToken vault from acct storage")
+        let vaultRef = buyer.storage.borrow<auth(FungibleToken.Withdraw) &FlowToken.Vault>(from: /storage/flowTokenVault)
+            ?? panic("The buyer does not have a FlowToken Vault")
         let price = unitPrice * UFix64(numEditions)
-        self.paymentVault <- mainVault.withdraw(amount: price)
+        self.paymentVault <- vaultRef.withdraw(amount: price)
 
-        if buyer.borrow<&DigitalArt.Collection>(from: DigitalArt.CollectionStoragePath) == nil {
-            let collection <- DigitalArt.createEmptyCollection() as! @DigitalArt.Collection
-            buyer.save(<-collection, to: DigitalArt.CollectionStoragePath)
-            buyer.link<&{NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver, DigitalArt.CollectionPublic}>(
-                DigitalArt.CollectionPublicPath,
-                target: DigitalArt.CollectionStoragePath
-            )
+        if buyer.storage.borrow<&DigitalArt.Collection>(from: DigitalArt.CollectionStoragePath) == nil {
+            let collection <- DigitalArt.createEmptyCollection(nftType: Type<@DigitalArt.NFT>())
+            buyer.storage.save(<-collection, to: DigitalArt.CollectionStoragePath)
+            let collectionCap = buyer.capabilities.storage.issue<&DigitalArt.Collection>(DigitalArt.CollectionStoragePath)
+            buyer.capabilities.publish(collectionCap, at: DigitalArt.CollectionPublicPath)
         }
 
-        self.tokenReceiver = buyer.getCapability(DigitalArt.CollectionPublicPath)
-            .borrow<&{NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver}>()
+        self.tokenReceiver = buyer.capabilities
+            .borrow<&{NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver}>(DigitalArt.CollectionPublicPath)
             ?? panic("Cannot borrow NFT collection receiver from acct")
 
         self.buyerAddress = buyer.address

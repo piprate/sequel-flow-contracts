@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/cadence/common"
 	"github.com/onflow/flow-go-sdk"
 )
 
@@ -67,24 +67,26 @@ func DigitalArtMetadataFromCadence(val cadence.Value) (*DigitalArtMetadata, erro
 	}
 
 	valStruct, ok := val.(cadence.Struct)
-	if !ok || valStruct.StructType.QualifiedIdentifier != "DigitalArt.Metadata" || len(valStruct.Fields) != 13 {
+	if !ok || valStruct.StructType.QualifiedIdentifier != "DigitalArt.Metadata" || len(valStruct.FieldsMappedByName()) != 13 {
 		return nil, errors.New("bad Metadata value")
 	}
 
+	allFields := valStruct.FieldsMappedByName()
+
 	res := DigitalArtMetadata{
-		Name:              valStruct.Fields[0].ToGoValue().(string),
-		Artist:            valStruct.Fields[1].ToGoValue().(string),
-		Description:       valStruct.Fields[2].ToGoValue().(string),
-		Type:              valStruct.Fields[3].ToGoValue().(string),
-		ContentURI:        valStruct.Fields[4].ToGoValue().(string),
-		ContentPreviewURI: valStruct.Fields[5].ToGoValue().(string),
-		ContentMimetype:   valStruct.Fields[6].ToGoValue().(string),
-		Edition:           uint64(valStruct.Fields[7].(cadence.UInt64)),
-		MaxEdition:        uint64(valStruct.Fields[8].(cadence.UInt64)),
-		Asset:             valStruct.Fields[9].ToGoValue().(string),
-		MetadataURI:       valStruct.Fields[10].ToGoValue().(string),
-		Record:            valStruct.Fields[11].ToGoValue().(string),
-		AssetHead:         valStruct.Fields[12].ToGoValue().(string),
+		Name:              string(allFields["name"].(cadence.String)),
+		Artist:            string(allFields["artist"].(cadence.String)),
+		Description:       string(allFields["description"].(cadence.String)),
+		Type:              string(allFields["type"].(cadence.String)),
+		ContentURI:        string(allFields["contentURI"].(cadence.String)),
+		ContentPreviewURI: string(allFields["contentPreviewURI"].(cadence.String)),
+		ContentMimetype:   string(allFields["mimetype"].(cadence.String)),
+		Edition:           uint64(allFields["edition"].(cadence.UInt64)),
+		MaxEdition:        uint64(allFields["maxEdition"].(cadence.UInt64)),
+		Asset:             string(allFields["asset"].(cadence.String)),
+		MetadataURI:       string(allFields["metadataURI"].(cadence.String)),
+		Record:            string(allFields["record"].(cadence.String)),
+		AssetHead:         string(allFields["assetHead"].(cadence.String)),
 	}
 
 	return &res, nil
@@ -105,14 +107,15 @@ func DigitalArtMetadataToCadence(metadata *DigitalArtMetadata, digitalArtAddr fl
 		cadence.String(metadata.MetadataURI),
 		cadence.String(metadata.Record),
 		cadence.String(metadata.AssetHead),
-	}).WithType(&cadence.StructType{
-		Location: common.AddressLocation{
+	}).WithType(cadence.NewStructType(
+		common.AddressLocation{
 			Address: common.Address(digitalArtAddr),
 			Name:    common.AddressLocationPrefix,
 		},
-		QualifiedIdentifier: "DigitalArt.Metadata",
-		Fields:              metadataCadenceFields,
-	})
+		"DigitalArt.Metadata",
+		metadataCadenceFields,
+		nil,
+	))
 }
 
 func ToFloat64(value cadence.Value) float64 {
@@ -146,7 +149,7 @@ func StringToPath(path string) (cadence.Path, error) {
 	if parts[1] != "private" && parts[1] != "public" && parts[1] != "storage" {
 		return val, errors.New("bad domain in Cadence path")
 	}
-	val.Domain = parts[1]
+	val.Domain = common.PathDomainFromIdentifier(parts[1])
 	val.Identifier = parts[2]
 	return val, nil
 }
@@ -154,54 +157,54 @@ func StringToPath(path string) (cadence.Path, error) {
 var metadataCadenceFields = []cadence.Field{
 	{
 		Identifier: "name",
-		Type:       cadence.StringType{},
+		Type:       cadence.StringType,
 	},
 	{
 		Identifier: "artist",
-		Type:       cadence.StringType{},
+		Type:       cadence.StringType,
 	},
 	{
 		Identifier: "description",
-		Type:       cadence.StringType{},
+		Type:       cadence.StringType,
 	},
 	{
 		Identifier: "type",
-		Type:       cadence.StringType{},
+		Type:       cadence.StringType,
 	},
 	{
 		Identifier: "contentURI",
-		Type:       cadence.StringType{},
+		Type:       cadence.StringType,
 	},
 	{
 		Identifier: "contentPreviewURI",
-		Type:       cadence.StringType{},
+		Type:       cadence.StringType,
 	},
 	{
 		Identifier: "mimetype",
-		Type:       cadence.StringType{},
+		Type:       cadence.StringType,
 	},
 	{
 		Identifier: "edition",
-		Type:       cadence.UInt64Type{},
+		Type:       cadence.UInt64Type,
 	},
 	{
 		Identifier: "maxEdition",
-		Type:       cadence.UInt64Type{},
+		Type:       cadence.UInt64Type,
 	},
 	{
 		Identifier: "asset",
-		Type:       cadence.StringType{},
+		Type:       cadence.StringType,
 	},
 	{
 		Identifier: "metadataURI",
-		Type:       cadence.StringType{},
+		Type:       cadence.StringType,
 	},
 	{
 		Identifier: "record",
-		Type:       cadence.StringType{},
+		Type:       cadence.StringType,
 	},
 	{
 		Identifier: "assetHead",
-		Type:       cadence.StringType{},
+		Type:       cadence.StringType,
 	},
 }

@@ -2,7 +2,7 @@
 import NonFungibleToken from {{.NonFungibleToken}}
 import DigitalArt from {{.DigitalArt}}
 
-pub fun main(address:Address, tokenId:UInt64) : DigitalArt.Metadata? {
+access(all) fun main(address:Address, tokenId:UInt64) : &DigitalArt.Metadata? {
     let meta = DigitalArt.getMetadata(address: address, tokenId: tokenId)
     return meta
 

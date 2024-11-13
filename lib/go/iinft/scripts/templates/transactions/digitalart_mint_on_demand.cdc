@@ -1,24 +1,25 @@
-{{ define "digitalart_mint_on_demand_fusd" }}
+{{ define "digitalart_mint_on_demand" }}
 import NonFungibleToken from {{.NonFungibleToken}}
 import FungibleToken from {{.FungibleToken}}
-import FUSD from {{.FUSD}}
+import FungibleTokenMetadataViews from {{.FungibleTokenMetadataViews}}
 import Evergreen from {{.Evergreen}}
 import DigitalArt from {{.DigitalArt}}
 import SequelMarketplace from {{.SequelMarketplace}}
 
-transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UInt64) {
+transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, ftContractAddress: Address, ftContractName: String, modID: UInt64) {
     let admin: &DigitalArt.Admin
     let evergreenProfile: Evergreen.Profile
-    let paymentVault: @FungibleToken.Vault
-    let tokenReceiver: &{NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver}
+    let paymentVault: @{FungibleToken.Vault}
+    let tokenReceiver: &{NonFungibleToken.Receiver}
     let buyerAddress: Address
+    let sellerVaultPath: PublicPath
 
-    prepare(buyer: AuthAccount, platform: AuthAccount) {
+    prepare(buyer: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account, platform: auth(BorrowValue) &Account) {
         if numEditions == 0 {
             panic("no editions requested")
         }
 
-        self.admin = platform.borrow<&DigitalArt.Admin>(from: DigitalArt.AdminStoragePath)!
+        self.admin = platform.storage.borrow<&DigitalArt.Admin>(from: DigitalArt.AdminStoragePath)!
 
         {{- if .Parameters.Metadata }}
         if !self.admin.isSealed(masterId: masterId) {
@@ -63,22 +64,32 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
 
         self.evergreenProfile = self.admin.evergreenProfile(masterId: masterId)
 
-        let mainVault = buyer.borrow<&FUSD.Vault>(from: /storage/fusdVault)
-            ?? panic("Cannot borrow FUSD vault from acct storage")
-        let price = unitPrice * UFix64(numEditions)
-        self.paymentVault <- mainVault.withdraw(amount: price)
+        // Borrow a reference to the vault stored on the passed account at the passed publicPath
+        let resolverRef = getAccount(ftContractAddress)
+            .contracts.borrow<&{FungibleToken}>(name: ftContractName)
+                ?? panic("Could not borrow FungibleToken reference to the contract. Make sure the provided contract name ("
+                          .concat(ftContractName).concat(") and address (").concat(ftContractAddress.toString()).concat(") are correct!"))
 
-        if buyer.borrow<&DigitalArt.Collection>(from: DigitalArt.CollectionStoragePath) == nil {
-            let collection <- DigitalArt.createEmptyCollection() as! @DigitalArt.Collection
-            buyer.save(<-collection, to: DigitalArt.CollectionStoragePath)
-            buyer.link<&{NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver, DigitalArt.CollectionPublic}>(
-                DigitalArt.CollectionPublicPath,
-                target: DigitalArt.CollectionStoragePath
-            )
+        // Use that reference to retrieve the FTView
+       let vaultData = resolverRef.resolveContractView(resourceType: nil, viewType: Type<FungibleTokenMetadataViews.FTVaultData>()) as! FungibleTokenMetadataViews.FTVaultData?
+            ?? panic("Could not resolve FTVaultData view. The ".concat(ftContractName).concat(" contract at ")
+                .concat(ftContractAddress.toString()).concat(" needs to implement the FTVaultData Metadata view in order to execute this transaction."))
+
+        let vaultRef = buyer.storage.borrow<auth(FungibleToken.Withdraw) &{FungibleToken.Provider}>(from: vaultData.storagePath)
+            ?? panic("Cannot borrow fungible token vault from acct storage")
+        let price = unitPrice * UFix64(numEditions)
+        self.paymentVault <- vaultRef.withdraw(amount: price)
+        self.sellerVaultPath = vaultData.receiverPath
+
+        if buyer.storage.borrow<&DigitalArt.Collection>(from: DigitalArt.CollectionStoragePath) == nil {
+            let collection <- DigitalArt.createEmptyCollection(nftType: Type<@DigitalArt.NFT>())
+            buyer.storage.save(<-collection, to: DigitalArt.CollectionStoragePath)
+            let collectionCap = buyer.capabilities.storage.issue<&DigitalArt.Collection>(DigitalArt.CollectionStoragePath)
+            buyer.capabilities.publish(collectionCap, at: DigitalArt.CollectionPublicPath)
         }
 
-        self.tokenReceiver = buyer.getCapability(DigitalArt.CollectionPublicPath)
-            .borrow<&{NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver}>()
+        self.tokenReceiver = buyer.capabilities
+            .borrow<&{NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver}>(DigitalArt.CollectionPublicPath)
             ?? panic("Cannot borrow NFT collection receiver from acct")
 
         self.buyerAddress = buyer.address
@@ -95,7 +106,7 @@ transaction(masterId: String, numEditions: UInt64, unitPrice: UFix64, modID: UIn
             unitPrice: unitPrice,
             numEditions: numEditions,
             sellerRole: "Artist",
-            sellerVaultPath: /public/fusdReceiver,
+            sellerVaultPath: self.sellerVaultPath,
             paymentVault: <-self.paymentVault,
             evergreenProfile: self.evergreenProfile,
         )

@@ -6,6 +6,7 @@ package main
 */
 
 import (
+	"context"
 	"flag"
 	"os"
 	"time"
@@ -32,10 +33,10 @@ func main() {
 		os.Exit(-1)
 	}
 
-	client.CreateAccounts("emulator-account")
+	client.CreateAccounts(context.Background(), "emulator-account")
 
 	adminAcct := client.Account(sequelAdminName)
-	if err = scripts.FundAccountWithFlowE(client, adminAcct.Address(), amount); err != nil {
+	if err = scripts.FundAccountWithFlowE(client, adminAcct.Address, amount); err != nil {
 		panic(err)
 	}
 }

@@ -12,7 +12,7 @@ func inspectNFTSupplyScript(addrMap map[string]string, tokenContractName string,
 		import NonFungibleToken from %s
 		import %s from %s
 
-		pub fun main() {
+		access(all) fun main() {
 			assert(
                 %s.totalSupply == UInt64(%d),
                 message: "incorrect totalSupply!"
@@ -31,9 +31,9 @@ func inspectCollectionLenScript(addrMap map[string]string, userAddr, tokenContra
 		import NonFungibleToken from %s
 		import %s from %s
 
-		pub fun main() {
+		access(all) fun main() {
 			let acct = getAccount(0x%s)
-			let collectionRef = acct.getCapability(%s)!.borrow<&{NonFungibleToken.CollectionPublic}>()
+			let collectionRef = acct.capabilities.borrow<&{NonFungibleToken.CollectionPublic}>(%s)
 				?? panic("Could not borrow capability from public collection")
 			
 			if %d != collectionRef.getIDs().length {
@@ -53,12 +53,12 @@ func inspectCollectionScript(addrMap map[string]string, userAddr, tokenContractN
 		import NonFungibleToken from %s
 		import %s from %s
 
-		pub fun main() {
+		access(all) fun main() {
 			let acct = getAccount(0x%s)
-			let collectionRef = acct.getCapability(%s)!.borrow<&{NonFungibleToken.CollectionPublic}>()
+			let collectionRef = acct.capabilities.borrow<&{NonFungibleToken.CollectionPublic}>(%s)
 				?? panic("Could not borrow capability from public collection")
 			
-			let tokenRef = collectionRef.borrowNFT(id: UInt64(%d))
+			let tokenRef = collectionRef.borrowNFT(UInt64(%d))
 		}
 	`
 

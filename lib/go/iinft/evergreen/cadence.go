@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/cadence/common"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
 )
@@ -18,21 +18,23 @@ func RoleFromCadence(val cadence.Value) (*Role, error) {
 	}
 
 	valStruct, ok := val.(cadence.Struct)
-	if !ok || valStruct.StructType.QualifiedIdentifier != "Evergreen.Role" || len(valStruct.Fields) != 6 {
+	if !ok || valStruct.StructType.QualifiedIdentifier != "Evergreen.Role" || len(valStruct.FieldsMappedByName()) != 6 {
 		return nil, errors.New("bad Evergreen Role value")
 	}
 
+	fieldMap := valStruct.FieldsMappedByName()
+
 	var receiverPath string
-	if opt := valStruct.Fields[5].(cadence.Optional).Value; opt != nil {
+	if opt := fieldMap["receiverPath"].(cadence.Optional).Value; opt != nil {
 		receiverPath = opt.String()
 	}
 
 	res := Role{
-		ID:                        valStruct.Fields[0].ToGoValue().(string),
-		Description:               valStruct.Fields[1].ToGoValue().(string),
-		InitialSaleCommission:     iinft.ToFloat64(valStruct.Fields[2]),
-		SecondaryMarketCommission: iinft.ToFloat64(valStruct.Fields[3]),
-		Address:                   flow.BytesToAddress(valStruct.Fields[4].(cadence.Address).Bytes()),
+		ID:                        string(fieldMap["id"].(cadence.String)),
+		Description:               string(fieldMap["description"].(cadence.String)),
+		InitialSaleCommission:     iinft.ToFloat64(fieldMap["initialSaleCommission"]),
+		SecondaryMarketCommission: iinft.ToFloat64(fieldMap["secondaryMarketCommission"]),
+		Address:                   flow.BytesToAddress(fieldMap["address"].(cadence.Address).Bytes()),
 		ReceiverPath:              receiverPath,
 	}
 
@@ -55,14 +57,15 @@ func RoleToCadence(role *Role, evergreenAddr flow.Address) (cadence.Value, error
 		iinft.UFix64FromFloat64(role.SecondaryMarketCommission),
 		cadence.BytesToAddress(role.Address.Bytes()),
 		cadence.NewOptional(receiverPath),
-	}).WithType(&cadence.StructType{
-		Location: common.AddressLocation{
+	}).WithType(cadence.NewStructType(
+		common.AddressLocation{
 			Address: common.Address(evergreenAddr),
 			Name:    common.AddressLocationPrefix,
 		},
-		QualifiedIdentifier: "Evergreen.Role",
-		Fields:              roleCadenceFields,
-	}), nil
+		"Evergreen.Role",
+		roleCadenceFields,
+		nil,
+	)), nil
 }
 
 func ProfileFromCadence(val cadence.Value) (*Profile, error) {
@@ -74,17 +77,19 @@ func ProfileFromCadence(val cadence.Value) (*Profile, error) {
 	}
 
 	valStruct, ok := val.(cadence.Struct)
-	if !ok || valStruct.StructType.QualifiedIdentifier != "Evergreen.Profile" || len(valStruct.Fields) != 3 {
+	if !ok || valStruct.StructType.QualifiedIdentifier != "Evergreen.Profile" || len(valStruct.FieldsMappedByName()) != 3 {
 		return nil, errors.New("bad Evergreen Profile value")
 	}
 
+	fieldMap := valStruct.FieldsMappedByName()
+
 	res := Profile{
-		ID:          valStruct.Fields[0].ToGoValue().(string),
-		Description: valStruct.Fields[1].ToGoValue().(string),
+		ID:          string(fieldMap["id"].(cadence.String)),
+		Description: string(fieldMap["description"].(cadence.String)),
 		Roles:       []*Role{},
 	}
 
-	rolesArray, ok := valStruct.Fields[2].(cadence.Array)
+	rolesArray, ok := fieldMap["roles"].(cadence.Array)
 	if !ok {
 		return nil, errors.New("bad Evergreen Profile value")
 	}
@@ -116,54 +121,64 @@ func ProfileToCadence(profile *Profile, evergreenAddr flow.Address) (cadence.Val
 		cadence.String(profile.ID),
 		cadence.String(profile.Description),
 		cadence.NewArray(roles),
-	}).WithType(&cadence.StructType{
-		Location: common.AddressLocation{
+	}).WithType(cadence.NewStructType(
+		common.AddressLocation{
 			Address: common.Address(evergreenAddr),
 			Name:    common.AddressLocationPrefix,
 		},
-		QualifiedIdentifier: "Evergreen.Profile",
-		Fields:              profileCadenceFields,
-	}), nil
+		"Evergreen.Profile",
+		profileCadenceFields(evergreenAddr),
+		nil,
+	)), nil
 }
 
 var roleCadenceFields = []cadence.Field{
 	{
 		Identifier: "id",
-		Type:       cadence.StringType{},
+		Type:       cadence.StringType,
 	},
 	{
 		Identifier: "description",
-		Type:       cadence.StringType{},
+		Type:       cadence.StringType,
 	},
 	{
 		Identifier: "initialSaleCommission",
-		Type:       cadence.UFix64Type{},
+		Type:       cadence.UFix64Type,
 	},
 	{
 		Identifier: "secondaryMarketCommission",
-		Type:       cadence.UFix64Type{},
+		Type:       cadence.UFix64Type,
 	},
 	{
 		Identifier: "address",
-		Type:       cadence.AddressType{},
+		Type:       cadence.AddressType,
 	},
 	{
 		Identifier: "receiverPath",
-		Type:       cadence.OptionalType{},
+		Type:       cadence.NewOptionalType(cadence.StringType),
 	},
 }
 
-var profileCadenceFields = []cadence.Field{
-	{
-		Identifier: "id",
-		Type:       cadence.StringType{},
-	},
-	{
-		Identifier: "description",
-		Type:       cadence.StringType{},
-	},
-	{
-		Identifier: "roles",
-		Type:       cadence.DictionaryType{},
-	},
+func profileCadenceFields(evergreenAddr flow.Address) []cadence.Field {
+	return []cadence.Field{
+		{
+			Identifier: "id",
+			Type:       cadence.StringType,
+		},
+		{
+			Identifier: "description",
+			Type:       cadence.StringType,
+		},
+		{
+			Identifier: "roles",
+			Type: cadence.NewDictionaryType(cadence.StringType, cadence.NewStructType(
+				common.AddressLocation{
+					Address: common.Address(evergreenAddr),
+					Name:    common.AddressLocationPrefix,
+				},
+				"Evergreen.Role",
+				roleCadenceFields,
+				nil)),
+		},
+	}
 }

@@ -6,8 +6,8 @@ import DigitalArt from {{.DigitalArt}}
 transaction(metadata: DigitalArt.Metadata, evergreenProfile: Evergreen.Profile) {
     let admin: &DigitalArt.Admin
 
-    prepare(signer: AuthAccount) {
-        self.admin = signer.borrow<&DigitalArt.Admin>(from: DigitalArt.AdminStoragePath)!
+    prepare(signer: auth(BorrowValue) &Account) {
+        self.admin = signer.storage.borrow<&DigitalArt.Admin>(from: DigitalArt.AdminStoragePath)!
     }
 
     execute {

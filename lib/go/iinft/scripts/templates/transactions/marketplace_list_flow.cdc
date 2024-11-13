@@ -7,25 +7,33 @@ import DigitalArt from {{.DigitalArt}}
 import SequelMarketplace from {{.SequelMarketplace}}
 
 transaction(tokenID: UInt64, price: UFix64, metadataLink: String?) {
-  let nftProviderCapability: Capability<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,Evergreen.CollectionPublic}>
-  let storefront: &NFTStorefront.Storefront
+  let nftProviderCapability: Capability<auth(NonFungibleToken.Withdraw) &DigitalArt.Collection>
+  let storefront: auth(NFTStorefront.CreateListing) &NFTStorefront.Storefront
 
-  prepare(acct: AuthAccount) {
-    let nftProviderPath = /private/SequelNFTProviderForNFTStorefront
-    if !acct.getCapability<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,Evergreen.CollectionPublic}>(nftProviderPath)!.check() {
-        acct.link<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,Evergreen.CollectionPublic}>(nftProviderPath, target: DigitalArt.CollectionStoragePath)
+  prepare(acct: auth(BorrowValue, SaveValue, IssueStorageCapabilityController, PublishCapability) &Account) {
+    self.nftProviderCapability = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdraw) &DigitalArt.Collection>(
+        DigitalArt.CollectionStoragePath
+    )
+    assert(self.nftProviderCapability.check(), message: "Missing or mis-typed nft collection provider")
+
+    // If the account doesn't already have a Storefront
+    if acct.storage.borrow<&NFTStorefront.Storefront>(from: NFTStorefront.StorefrontStoragePath) == nil {
+
+        // Create a new empty .Storefront
+        let storefront <- NFTStorefront.createStorefront()
+
+        // save it to the account
+        acct.storage.save(<-storefront, to: NFTStorefront.StorefrontStoragePath)
+
+        // create a public capability for the .Storefront & publish
+        let storefrontPublicCap = acct.capabilities.storage.issue<&{NFTStorefront.StorefrontPublic}>(
+            NFTStorefront.StorefrontStoragePath
+        )
+        acct.capabilities.publish(storefrontPublicCap, at: NFTStorefront.StorefrontPublicPath)
     }
 
-    self.nftProviderCapability = acct.getCapability<&{NonFungibleToken.Provider,NonFungibleToken.CollectionPublic,Evergreen.CollectionPublic}>(nftProviderPath)!
-    assert(self.nftProviderCapability.borrow() != nil, message: "Missing or mis-typed nft collection provider")
-
-    if acct.borrow<&NFTStorefront.Storefront>(from: NFTStorefront.StorefrontStoragePath) == nil {
-        let storefront <- NFTStorefront.createStorefront() as! @NFTStorefront.Storefront
-        acct.save(<-storefront, to: NFTStorefront.StorefrontStoragePath)
-        acct.link<&NFTStorefront.Storefront{NFTStorefront.StorefrontPublic}>(NFTStorefront.StorefrontPublicPath, target: NFTStorefront.StorefrontStoragePath)
-    }
-    self.storefront = acct.borrow<&NFTStorefront.Storefront>(from: NFTStorefront.StorefrontStoragePath)
-        ?? panic("Missing or mis-typed NFTStorefront Storefront")
+    self.storefront = acct.storage.borrow<auth(NFTStorefront.CreateListing) &NFTStorefront.Storefront>(from: NFTStorefront.StorefrontStoragePath)
+        ?? panic("Could not borrow Storefront from provided address")
   }
 
   execute {

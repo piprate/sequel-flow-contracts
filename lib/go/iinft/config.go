@@ -1,22 +1,22 @@
 package iinft
 
 import (
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/onflow/flowkit/v2/accounts"
 )
 
-func LoadFlowKitAccount(addrStr, keyStr string) (flowkit.Account, error) {
-	acct := flowkit.Account{}
+func LoadFlowKitAccount(addrStr, keyStr string) (accounts.Account, error) {
+	acct := accounts.Account{}
 
 	key, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, keyStr)
 	if err != nil {
 		return acct, err
 	}
 
-	acct.SetName("Sequel")
-	acct.SetAddress(flow.HexToAddress(addrStr))
-	acct.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key))
+	acct.Name = "Sequel"
+	acct.Address = flow.HexToAddress(addrStr)
+	acct.Key = accounts.NewHexKeyFromPrivateKey(0, crypto.SHA3_256, key)
 
 	return acct, nil
 }

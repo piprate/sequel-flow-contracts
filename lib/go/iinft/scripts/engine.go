@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+
 	"path"
 	"strings"
 	"text/template"
 
-	"github.com/onflow/cadence/runtime/format"
+	"github.com/onflow/cadence/format"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
 	"github.com/rs/zerolog/log"
@@ -42,9 +44,10 @@ func init() {
 
 type (
 	Engine struct {
-		client             *gwtf.GoWithTheFlow
-		preloadedTemplates map[string]string
-		wellKnownAddresses map[string]string
+		client                   *gwtf.GoWithTheFlow
+		preloadedTemplates       map[string]string
+		wellKnownAddresses       map[string]string
+		wellKnownAddressesBinary map[string]flow.Address
 	}
 )
 
@@ -53,18 +56,21 @@ const (
 )
 
 var (
-	requiredWellKnownAddresses = []string{
-		"FungibleToken", "FlowToken", "NonFungibleToken", "NFTStorefront", "FUSD",
-		"NFTCatalog", "NFTRetrieval", "Art", "Content", "Evergreen",
-		"DigitalArt", "SequelMarketplace", "FungibleTokenSwitchboard",
+	requiredWellKnownContracts = []string{
+		"Burner", "FlowToken", "FungibleToken", "FungibleTokenMetadataViews",
+		"FungibleTokenSwitchboard", "MetadataViews", "NFTStorefront",
+		"NonFungibleToken", "NFTCatalog", "NFTRetrieval",
+		"Art", "Content",
+		"Evergreen", "DigitalArt", "SequelMarketplace",
 	}
 )
 
 func NewEngine(client *gwtf.GoWithTheFlow, preload bool) (*Engine, error) {
 	eng := &Engine{
-		client:             client,
-		preloadedTemplates: make(map[string]string),
-		wellKnownAddresses: make(map[string]string),
+		client:                   client,
+		preloadedTemplates:       make(map[string]string),
+		wellKnownAddresses:       make(map[string]string),
+		wellKnownAddressesBinary: make(map[string]flow.Address),
 	}
 
 	if err := eng.loadContractAddresses(); err != nil {
@@ -75,32 +81,44 @@ func NewEngine(client *gwtf.GoWithTheFlow, preload bool) (*Engine, error) {
 }
 
 func (e *Engine) loadContractAddresses() error {
-	contracts := e.client.State.Contracts().ByNetwork(e.client.Network)
-	deployedContracts, err := e.client.State.DeploymentContractsByNetwork(e.client.Network)
+	contracts := e.client.State.Contracts()
+	network := e.client.Services.Network()
+	networkName := network.Name
+	deployedContracts, err := e.client.State.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return err
 	}
-	for _, contract := range contracts {
-		if contract.Alias != "" {
-			e.wellKnownAddresses[contract.Name] = contract.Alias
+	for _, contract := range *contracts {
+		for _, alias := range contract.Aliases {
+			if alias.Network == networkName {
+				e.wellKnownAddressesBinary[contract.Name] = alias.Address
+			}
 		}
 	}
 	for _, contract := range deployedContracts {
-		e.wellKnownAddresses[strings.Split(path.Base(contract.Source), ".")[0]] = "0x" + contract.AccountAddress.String()
+		e.wellKnownAddressesBinary[strings.Split(path.Base(contract.Location()), ".")[0]] = contract.AccountAddress
 	}
 
-	for _, requiredAddress := range requiredWellKnownAddresses {
-		if _, found := e.wellKnownAddresses[requiredAddress]; !found {
-			return fmt.Errorf("address not found for contract %s", requiredAddress)
+	for _, requiredContractName := range requiredWellKnownContracts {
+		if _, found := e.wellKnownAddressesBinary[requiredContractName]; !found {
+			return fmt.Errorf("address not found for contract %s", requiredContractName)
 		}
 	}
 	log.Debug().Str("addresses", fmt.Sprintf("%v", e.wellKnownAddresses)).Msg("Loaded contract addresses")
+
+	for name, addr := range e.wellKnownAddressesBinary {
+		e.wellKnownAddresses[name] = addr.HexWithPrefix()
+	}
 
 	return nil
 }
 
 func (e *Engine) WellKnownAddresses() map[string]string {
 	return e.wellKnownAddresses
+}
+
+func (e *Engine) ContractAddress(contractName string) flow.Address {
+	return e.wellKnownAddressesBinary[contractName]
 }
 
 func (e *Engine) GetStandardScript(scriptID string) string {

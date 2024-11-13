@@ -1,6 +1,7 @@
 package gwtf
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -9,8 +10,10 @@ import (
 
 	"github.com/araddon/dateparse"
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
+	"github.com/onflow/flowkit/v2/transactions"
 )
 
 // TransactionFromFile will start a flow transaction builder
@@ -19,7 +22,7 @@ func (f *GoWithTheFlow) TransactionFromFile(filename string) FlowTransactionBuil
 		GoWithTheFlow:  f,
 		FileName:       filename,
 		Arguments:      []cadence.Value{},
-		PayloadSigners: []*flowkit.Account{},
+		PayloadSigners: []*accounts.Account{},
 		GasLimit:       9999,
 	}
 }
@@ -31,7 +34,7 @@ func (f *GoWithTheFlow) Transaction(content string) FlowTransactionBuilder {
 		FileName:       "inline",
 		Content:        content,
 		Arguments:      []cadence.Value{},
-		PayloadSigners: []*flowkit.Account{},
+		PayloadSigners: []*accounts.Account{},
 		GasLimit:       9999,
 	}
 }
@@ -71,7 +74,7 @@ func (tb FlowTransactionBuilder) SignProposeAndPayAs(signer string) FlowTransact
 
 // SignProposeAndPayAsService set the payer, proposer and envelope signer
 func (tb FlowTransactionBuilder) SignProposeAndPayAsService() FlowTransactionBuilder {
-	key := fmt.Sprintf("%s-account", tb.GoWithTheFlow.Network)
+	key := fmt.Sprintf("%s-account", tb.GoWithTheFlow.Services.Network().Name)
 	account, err := tb.GoWithTheFlow.State.Accounts().ByName(key)
 	if err != nil {
 		log.Fatal(err)
@@ -94,7 +97,7 @@ func (tb FlowTransactionBuilder) AccountArgument(key string) FlowTransactionBuil
 	f := tb.GoWithTheFlow
 
 	account := f.Account(key)
-	return tb.Argument(cadence.BytesToAddress(account.Address().Bytes()))
+	return tb.Argument(cadence.BytesToAddress(account.Address.Bytes()))
 }
 
 // StringArgument add a String Argument to the transaction
@@ -268,18 +271,18 @@ func (tb FlowTransactionBuilder) PayloadSigner(value string) FlowTransactionBuil
 }
 
 // RunPrintEventsFull will run a transaction and print all events
-func (tb FlowTransactionBuilder) RunPrintEventsFull() {
-	PrintEvents(tb.Run(), map[string][]string{})
+func (tb FlowTransactionBuilder) RunPrintEventsFull(ctx context.Context) {
+	PrintEvents(tb.Run(ctx), map[string][]string{})
 }
 
 // RunPrintEvents will run a transaction and print all events ignoring some fields
-func (tb FlowTransactionBuilder) RunPrintEvents(ignoreFields map[string][]string) {
-	PrintEvents(tb.Run(), ignoreFields)
+func (tb FlowTransactionBuilder) RunPrintEvents(ctx context.Context, ignoreFields map[string][]string) {
+	PrintEvents(tb.Run(ctx), ignoreFields)
 }
 
-// Run run the transaction
-func (tb FlowTransactionBuilder) Run() []flow.Event {
-	events, err := tb.RunE()
+// Run runs the transaction
+func (tb FlowTransactionBuilder) Run(ctx context.Context) []flow.Event {
+	events, err := tb.RunE(ctx)
 	if err != nil {
 		tb.GoWithTheFlow.Logger.Error(fmt.Sprintf("Error executing script: %s output %v", tb.FileName, err))
 		os.Exit(1)
@@ -288,7 +291,7 @@ func (tb FlowTransactionBuilder) Run() []flow.Event {
 }
 
 // RunE runs returns error
-func (tb FlowTransactionBuilder) RunE() ([]flow.Event, error) {
+func (tb FlowTransactionBuilder) RunE(ctx context.Context) ([]flow.Event, error) {
 
 	if tb.Proposer == nil {
 		return nil, errors.New("you need to set the proposer")
@@ -310,33 +313,36 @@ func (tb FlowTransactionBuilder) RunE() ([]flow.Event, error) {
 	}
 
 	authorizers := make([]flow.Address, len(authorizerAccounts))
-	var signers []*flowkit.Account
+	var signers []*accounts.Account
 	for i, signer := range authorizerAccounts {
-		authorizers[i] = signer.Address()
-		if signer.Name() != tb.Payer.Name() {
+		authorizers[i] = signer.Address
+		if signer.Name != tb.Payer.Name {
 			signers = append(signers, signer)
 		}
-		signerNames[signer.Name()] = true
+		signerNames[signer.Name] = true
 	}
 
-	if _, found := signerNames[tb.Proposer.Name()]; !found && tb.Proposer.Name() != tb.Payer.Name() {
+	if _, found := signerNames[tb.Proposer.Name]; !found && tb.Proposer.Name != tb.Payer.Name {
 		return nil, errors.New("proposer doesn't match any authorizers or the payer")
 	}
 
 	// we append the Payer at the end here so that it signs last
 	signers = append(signers, tb.Payer)
 
-	tx, err := tb.GoWithTheFlow.Services.Transactions.Build(
-		tb.Proposer.Address(),
-		authorizers,
-		tb.Payer.Address(),
-		tb.Proposer.Key().Index(),
-		code,
-		codeFileName,
+	tx, err := tb.GoWithTheFlow.Services.BuildTransaction(
+		ctx,
+		transactions.AddressesRoles{
+			Proposer:    tb.Proposer.Address,
+			Authorizers: authorizers,
+			Payer:       tb.Payer.Address,
+		},
+		tb.Proposer.Key.Index(),
+		flowkit.Script{
+			Code:     code,
+			Args:     tb.Arguments,
+			Location: codeFileName,
+		},
 		tb.GasLimit,
-		tb.Arguments,
-		tb.GoWithTheFlow.Network,
-		true,
 	)
 	if err != nil {
 		return nil, err
@@ -354,9 +360,7 @@ func (tb FlowTransactionBuilder) RunE() ([]flow.Event, error) {
 		}
 	}
 
-	txBytes := []byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode()))
-	_, res, err := tb.GoWithTheFlow.Services.Transactions.SendSigned(txBytes, true)
-
+	_, res, err := tb.GoWithTheFlow.Services.SendSignedTransaction(ctx, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -387,9 +391,9 @@ type FlowTransactionBuilder struct {
 	FileName       string
 	Content        string
 	Arguments      []cadence.Value
-	Proposer       *flowkit.Account
-	Payer          *flowkit.Account
-	MainSigner     *flowkit.Account
-	PayloadSigners []*flowkit.Account
+	Proposer       *accounts.Account
+	Payer          *accounts.Account
+	MainSigner     *accounts.Account
+	PayloadSigners []*accounts.Account
 	GasLimit       uint64
 }

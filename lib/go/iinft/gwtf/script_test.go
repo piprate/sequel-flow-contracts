@@ -1,17 +1,19 @@
 package gwtf
 
 import (
+	"context"
 	"testing"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flowkit/v2/output"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSetupFails(t *testing.T) {
 
 	g := NewGoWithTheFlow([]string{"../../../../flow.json"}, "emulator", true, output.NoneLog)
-	_, err := g.CreateAccountsE("foobar")
+	ctx := context.Background()
+	_, err := g.CreateAccountsE(ctx, "foobar")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "could not find account with name foobar")
 }
