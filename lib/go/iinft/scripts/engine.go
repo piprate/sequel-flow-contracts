@@ -9,7 +9,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/onflow/cadence/runtime/format"
+	"github.com/onflow/cadence/format"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"

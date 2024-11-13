@@ -1,19 +1,19 @@
 module github.com/piprate/sequel-flow-contracts/lib/go/iinft
 
-go 1.22
+go 1.22.0
 
-toolchain go1.22.3
+toolchain go1.23.3
 
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
-	github.com/onflow/cadence v1.0.0
-	github.com/onflow/flow-emulator v1.0.1
-	github.com/onflow/flow-go-sdk v1.0.0
-	github.com/onflow/flowkit/v2 v2.0.1
-	github.com/rs/zerolog v1.29.0
-	github.com/spf13/afero v1.10.0
+	github.com/onflow/cadence v1.2.1
+	github.com/onflow/flow-emulator v1.1.0
+	github.com/onflow/flow-go-sdk v1.2.2
+	github.com/onflow/flowkit/v2 v2.1.0
+	github.com/rs/zerolog v1.33.0
+	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
+	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f
 )
 
 require (
@@ -147,17 +147,18 @@ require (
 	github.com/multiformats/go-multistream v0.5.0 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/onflow/atree v0.8.0-rc.6 // indirect
+	github.com/onflow/atree v0.8.0 // indirect
 	github.com/onflow/crypto v0.25.2 // indirect
-	github.com/onflow/flow-core-contracts/lib/go/contracts v1.3.1 // indirect
-	github.com/onflow/flow-core-contracts/lib/go/templates v1.3.1 // indirect
-	github.com/onflow/flow-ft/lib/go/contracts v1.0.0 // indirect
-	github.com/onflow/flow-ft/lib/go/templates v1.0.0 // indirect
-	github.com/onflow/flow-go v0.38.0-preview.0.0.20241002124048-21cfe5aea5a8 // indirect
-	github.com/onflow/flow-nft/lib/go/contracts v1.2.1 // indirect
-	github.com/onflow/flow-nft/lib/go/templates v1.2.0 // indirect
+	github.com/onflow/flow-core-contracts/lib/go/contracts v1.4.0 // indirect
+	github.com/onflow/flow-core-contracts/lib/go/templates v1.4.0 // indirect
+	github.com/onflow/flow-ft/lib/go/contracts v1.0.1 // indirect
+	github.com/onflow/flow-ft/lib/go/templates v1.0.1 // indirect
+	github.com/onflow/flow-go v0.38.0-preview.0.0.20241022154145-6a254edbec23 // indirect
+	github.com/onflow/flow-nft/lib/go/contracts v1.2.2 // indirect
+	github.com/onflow/flow-nft/lib/go/templates v1.2.1 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.4.7 // indirect
 	github.com/onflow/go-ethereum v1.14.7 // indirect
+	github.com/onflow/nft-storefront/lib/go/contracts v1.0.0 // indirect
 	github.com/onflow/sdks v0.6.0-preview.1 // indirect
 	github.com/onflow/wal v1.0.2 // indirect
 	github.com/onsi/gomega v1.29.0 // indirect
@@ -215,7 +216,7 @@ require (
 	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/oauth2 v0.17.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sync v0.9.0 // indirect
 	golang.org/x/sys v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
