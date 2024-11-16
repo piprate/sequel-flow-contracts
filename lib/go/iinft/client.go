@@ -103,8 +103,7 @@ func NewGoWithTheFlowError(baseLoader flowkit.ReaderWriter, network string, inMe
 				grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
 			),
 		)
-
-		if err != nil || client == nil {
+		if err != nil {
 			return nil, fmt.Errorf("failed to connect to host %s", networkDef.Host)
 		}
 	}
