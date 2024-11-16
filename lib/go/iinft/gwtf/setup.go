@@ -3,8 +3,10 @@ package gwtf
 import (
 	"context"
 	"fmt"
+
 	"log"
 
+	"github.com/onflow/flow-go-sdk/access"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/config"
@@ -16,6 +18,7 @@ import (
 // GoWithTheFlow Entire configuration to work with Go With the Flow
 type GoWithTheFlow struct {
 	State                        *flowkit.State
+	Client                       access.Client
 	Services                     flowkit.Services
 	Logger                       output.Logger
 	PrependNetworkToAccountNames bool
