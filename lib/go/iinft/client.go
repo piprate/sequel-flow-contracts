@@ -2,15 +2,19 @@ package iinft
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path"
 
 	"github.com/onflow/flow-emulator/emulator"
+	"github.com/onflow/flow-go-sdk/access"
+	grpcAccess "github.com/onflow/flow-go-sdk/access/grpc"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/gateway"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
 	"github.com/spf13/afero"
+	"google.golang.org/grpc"
 )
 
 type (
@@ -61,6 +65,7 @@ func NewGoWithTheFlowError(baseLoader flowkit.ReaderWriter, network string, inMe
 
 	logger := NewFlowKitLogger()
 	var service *flowkit.Flowkit
+	var client access.Client
 
 	if inMemory {
 		// YAY, we can run it inline in memory!
@@ -91,11 +96,70 @@ func NewGoWithTheFlowError(baseLoader flowkit.ReaderWriter, network string, inMe
 			return nil, err
 		}
 		service = flowkit.NewFlowkit(state, *networkDef, gw, logger)
+
+		client, err = grpcAccess.NewClient(
+			networkDef.Host,
+			grpcAccess.WithGRPCDialOptions(
+				grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
+			),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to connect to host %s", networkDef.Host)
+		}
 	}
 	return &gwtf.GoWithTheFlow{
 		State:                        state,
 		Services:                     service,
+		Client:                       client,
 		Logger:                       logger,
 		PrependNetworkToAccountNames: true,
 	}, nil
+}
+
+// NewGrpcClientForNetworkFS creates a new local go with the flow client
+func NewGrpcClientForNetworkFS(flowBasePath, network string) (access.Client, error) {
+	return NewGrpcClient(&fileLoader{
+		baseDir:  flowBasePath,
+		fsLoader: &afero.Afero{Fs: afero.NewOsFs()},
+	}, network)
+}
+
+// NewGrpcClientForNetworkEmbedded creates a new test go with the flow client based on embedded setup
+func NewGrpcClientForNetworkEmbedded(network string) (access.Client, error) {
+	return NewGrpcClient(&embeddedFileLoader{}, network)
+}
+
+// maxGRPCMessageSize 60mb
+const maxGRPCMessageSize = 1024 * 1024 * 60
+
+func NewGrpcClient(baseLoader flowkit.ReaderWriter, network string, opts ...grpcAccess.ClientOption) (access.Client, error) {
+	state, err := flowkit.Load([]string{"flow.json"}, baseLoader)
+	if err != nil {
+		return nil, err
+	}
+
+	networkDef, err := state.Networks().ByName(network)
+	if err != nil {
+		return nil, err
+	}
+
+	options := append(
+		[]grpcAccess.ClientOption{
+			grpcAccess.WithGRPCDialOptions(
+				grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
+			),
+		},
+		opts...,
+	)
+
+	gClient, err := grpcAccess.NewClient(
+		networkDef.Host,
+		options...,
+	)
+
+	if err != nil || gClient == nil {
+		return nil, fmt.Errorf("failed to connect to host %s", networkDef.Host)
+	}
+
+	return gClient, nil
 }
