@@ -1,13 +1,10 @@
-import FungibleToken from "../contracts/standard/FungibleToken.cdc"
 import FlowToken from "../contracts/standard/FlowToken.cdc"
 
-pub fun main(address: Address): UFix64 {
-  let account = getAccount(address)
+access(all) fun main(account: Address): UFix64 {
 
-  let vaultRef = account
-    .getCapability(/public/flowTokenBalance)
-    .borrow<&FlowToken.Vault{FungibleToken.Balance}>()
-    ?? panic("Cannot borrow FlowToken vault from acct storage")
+    let vaultRef = getAccount(account)
+        .capabilities.borrow<&FlowToken.Vault>(/public/flowTokenBalance)
+        ?? panic("Could not borrow Balance reference to the Vault")
 
-  return vaultRef.balance
+    return vaultRef.balance
 }

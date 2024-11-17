@@ -1,75 +1,106 @@
 {
   "contracts": {
-    "FungibleToken": {
-      "source": "./contracts/standard/FungibleToken.cdc",
+    "Art": {
+      "source": "./contracts/thirdparty/versus/Art.cdc",
       "aliases": {
-        "testnet": "0x9a0766d93b6608b7",
-        "mainnet" :"0xf233dcee88fe0abe"
+        "mainnet": "d796ff17107bbff6",
+        "testnet": "99ca04281098b33d"
+      }
+    },
+    "Burner": {
+      "source": "./contracts/standard/Burner.cdc",
+      "aliases": {
+        "mainnet": "f233dcee88fe0abe",
+        "testnet": "9a0766d93b6608b7"
+      }
+    },
+    "Content": {
+      "source": "./contracts/thirdparty/versus/Content.cdc",
+      "aliases": {
+        "mainnet": "d796ff17107bbff6",
+        "testnet": "99ca04281098b33d"
       }
     },
     "FlowToken": {
       "source": "./contracts/standard/FlowToken.cdc",
       "aliases": {
-        "testnet": "0x7e60df042a9c0868",
-        "mainnet" : "0x1654653399040a61"
+        "mainnet": "1654653399040a61",
+        "testnet": "7e60df042a9c0868"
       }
     },
-    "NonFungibleToken": {
-      "source": "./contracts/standard/NonFungibleToken.cdc",
+    "FungibleToken": {
+      "source": "./contracts/standard/FungibleToken.cdc",
       "aliases": {
-        "testnet": "0x631e88ae7f1d7c20",
-        "mainnet": "0x1d7e57aa55817448"
+        "mainnet": "f233dcee88fe0abe",
+        "testnet": "9a0766d93b6608b7"
       }
     },
-    "NFTStorefront": {
-      "source": "./contracts/standard/NFTStorefront.cdc",
+    "FungibleTokenMetadataViews": {
+      "source": "./contracts/standard/FungibleTokenMetadataViews.cdc",
       "aliases": {
-        "testnet": "0x94b06cfca1d8a476",
-        "mainnet": "0x4eb8a10cb9f87357"
-      }
-    },
-    "MetadataViews": {
-      "source": "./contracts/standard/MetadataViews.cdc",
-      "aliases": {
-        "testnet": "0x631e88ae7f1d7c20",
-        "mainnet": "0x1d7e57aa55817448"
+        "mainnet": "f233dcee88fe0abe",
+        "testnet": "9a0766d93b6608b7"
       }
     },
     "FungibleTokenSwitchboard": {
       "source": "./contracts/standard/FungibleTokenSwitchboard.cdc",
       "aliases": {
-        "testnet": "0x745b085dafdd4fc0",
-        "mainnet": "0x3cb7ceeb625a600a"
+        "mainnet": "f233dcee88fe0abe",
+        "testnet": "9a0766d93b6608b7"
       }
     },
-    "FUSD": {
-      "source": "./contracts/standard/FUSD.cdc",
+    "MetadataViews": {
+      "source": "./contracts/standard/MetadataViews.cdc",
       "aliases": {
-        "testnet": "0xe223d8a629e49c68",
-        "mainnet": "0x3c5959b568896393"
+        "mainnet": "1d7e57aa55817448",
+        "testnet": "631e88ae7f1d7c20"
       }
     },
-    "Evergreen": {
-      "source": "./contracts/Evergreen.cdc",
+    "NFTCatalog": {
+      "source": "./contracts/thirdparty/nft_catalog/NFTCatalog.cdc",
       "aliases": {
-        "testnet": "0x745b085dafdd4fc0",
-        "mainnet": "0x3cb7ceeb625a600a"
+        "mainnet": "49a7cda3a1eecc29",
+        "testnet": "324c34e1c517e4db"
       }
     },
-    "DigitalArt": {
-      "source": "./contracts/DigitalArt.cdc",
+    "NFTRetrieval": {
+      "source": "./contracts/thirdparty/nft_catalog/NFTRetrieval.cdc",
       "aliases": {
-        "testnet": "0x745b085dafdd4fc0",
-        "mainnet": "0x3cb7ceeb625a600a"
+        "mainnet": "49a7cda3a1eecc29",
+        "testnet": "324c34e1c517e4db"
       }
     },
-    "SequelMarketplace": {
-      "source": "./contracts/SequelMarketplace.cdc",
+    "NFTStorefront": {
+      "source": "./contracts/standard/NFTStorefront.cdc",
       "aliases": {
-        "testnet": "0x745b085dafdd4fc0",
-        "mainnet": "0x3cb7ceeb625a600a"
+        "mainnet": "4eb8a10cb9f87357",
+        "testnet": "94b06cfca1d8a476"
       }
-    }
+    },
+    "NonFungibleToken": {
+      "source": "./contracts/standard/NonFungibleToken.cdc",
+      "aliases": {
+        "mainnet": "1d7e57aa55817448",
+        "testnet": "631e88ae7f1d7c20"
+      }
+    },
+    "USDCFlow": {
+      "source": "",
+      "aliases": {
+        "mainnet": "f1ab99c82dee3526",
+        "testnet": "64adf39cbc354fcb"
+      }
+    },
+    "ViewResolver": {
+      "source": "./contracts/standard/ViewResolver.cdc",
+      "aliases": {
+        "mainnet": "1d7e57aa55817448",
+        "testnet": "631e88ae7f1d7c20"
+      }
+    },
+    "Evergreen": "./contracts/Evergreen.cdc",
+    "DigitalArt": "./contracts/DigitalArt.cdc",
+    "SequelMarketplace": "./contracts/SequelMarketplace.cdc"
   },
   "networks": {
     "mainnet": "access.mainnet.nodes.onflow.org:9000",
@@ -77,12 +108,18 @@
   },
   "accounts": {
     "mainnet-sequel-admin": {
-      "address": "0x3cb7ceeb625a600a",
-      "key": "${MAINNET_SEQUEL_ADMIN}"
+      "address": "9a02a1d17295f3e7",
+      "key": {
+        "type": "file",
+        "location": ".keys/mainnet-sequel-admin.pkey"
+      }
     },
     "mainnet-sequel-platform" : {
-      "address": "0xdaa82f4d11943b81",
-      "key": "${MAINNET_SEQUEL_PLATFORM}"
+      "address": "3be013520d983043",
+      "key": {
+        "type": "file",
+        "location": ".keys/mainnet-sequel-platform.pkey"
+      }
     }
   },
   "deployments": {
@@ -90,8 +127,7 @@
       "mainnet-sequel-admin": [
         "Evergreen",
         "DigitalArt",
-        "SequelMarketplace",
-        "FungibleTokenSwitchboard"
+        "SequelMarketplace"
       ]
     }
   }

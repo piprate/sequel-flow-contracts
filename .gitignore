@@ -29,3 +29,5 @@ lib/go/iinft/bin
 
 # Flow emulator
 flowdb
+
+.keys
