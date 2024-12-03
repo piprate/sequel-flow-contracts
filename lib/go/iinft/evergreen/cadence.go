@@ -6,7 +6,7 @@ import (
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/common"
 	"github.com/onflow/flow-go-sdk"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
+	"github.com/piprate/splash"
 )
 
 func RoleFromCadence(val cadence.Value) (*Role, error) {
@@ -32,8 +32,8 @@ func RoleFromCadence(val cadence.Value) (*Role, error) {
 	res := Role{
 		ID:                        string(fieldMap["id"].(cadence.String)),
 		Description:               string(fieldMap["description"].(cadence.String)),
-		InitialSaleCommission:     iinft.ToFloat64(fieldMap["initialSaleCommission"]),
-		SecondaryMarketCommission: iinft.ToFloat64(fieldMap["secondaryMarketCommission"]),
+		InitialSaleCommission:     splash.ToFloat64(fieldMap["initialSaleCommission"]),
+		SecondaryMarketCommission: splash.ToFloat64(fieldMap["secondaryMarketCommission"]),
 		Address:                   flow.BytesToAddress(fieldMap["address"].(cadence.Address).Bytes()),
 		ReceiverPath:              receiverPath,
 	}
@@ -44,7 +44,7 @@ func RoleFromCadence(val cadence.Value) (*Role, error) {
 func RoleToCadence(role *Role, evergreenAddr flow.Address) (cadence.Value, error) {
 	var receiverPath cadence.Value
 	if role.ReceiverPath != "" {
-		path, err := iinft.StringToPath(role.ReceiverPath)
+		path, err := splash.StringToPath(role.ReceiverPath)
 		if err != nil {
 			return nil, err
 		}
@@ -53,8 +53,8 @@ func RoleToCadence(role *Role, evergreenAddr flow.Address) (cadence.Value, error
 	return cadence.NewStruct([]cadence.Value{
 		cadence.String(role.ID),
 		cadence.String(role.Description),
-		iinft.UFix64FromFloat64(role.InitialSaleCommission),
-		iinft.UFix64FromFloat64(role.SecondaryMarketCommission),
+		splash.UFix64FromFloat64(role.InitialSaleCommission),
+		splash.UFix64FromFloat64(role.SecondaryMarketCommission),
 		cadence.BytesToAddress(role.Address.Bytes()),
 		cadence.NewOptional(receiverPath),
 	}).WithType(cadence.NewStructType(

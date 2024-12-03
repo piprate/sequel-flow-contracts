@@ -2,13 +2,11 @@ package iinft
 
 import (
 	"errors"
-	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/common"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
 )
 
 type (
@@ -55,6 +53,15 @@ type (
 		// AssetHead is the ChainLocker asset head ID of the full metadata JSON.
 		// It can be used to retrieve the current metadata JSON (if changed).
 		AssetHead string
+	}
+
+	// MintOnDemandParameters provides inputs for "digitalart_mint_on_demand_flow" and
+	// "digitalart_mint_on_demand" transaction templates.
+	// If Metadata is nil, the transactions won't include checks if the master is sealed
+	// (and sealing it, if it's not).
+	MintOnDemandParameters struct {
+		Metadata *DigitalArtMetadata
+		Profile  *evergreen.Profile
 	}
 )
 
@@ -116,42 +123,6 @@ func DigitalArtMetadataToCadence(metadata *DigitalArtMetadata, digitalArtAddr fl
 		metadataCadenceFields,
 		nil,
 	))
-}
-
-func ToFloat64(value cadence.Value) float64 {
-	val, _ := strconv.ParseFloat(value.(cadence.UFix64).String(), 64)
-	return val
-}
-
-func UFix64ToString(v float64) string {
-	vStr := strconv.FormatFloat(v, 'f', -1, 64)
-	if strings.Contains(vStr, ".") {
-		return vStr
-	}
-
-	return vStr + ".0"
-}
-
-func UFix64FromFloat64(v float64) cadence.Value {
-	cv, err := cadence.NewUFix64(fmt.Sprintf("%.4f", v))
-	if err != nil {
-		panic(err)
-	}
-	return cv
-}
-
-func StringToPath(path string) (cadence.Path, error) {
-	var val cadence.Path
-	parts := strings.Split(path, "/")
-	if len(parts) != 3 || (len(parts) > 0 && len(parts[0]) > 0) {
-		return val, errors.New("bad Cadence path")
-	}
-	if parts[1] != "private" && parts[1] != "public" && parts[1] != "storage" {
-		return val, errors.New("bad domain in Cadence path")
-	}
-	val.Domain = common.PathDomainFromIdentifier(parts[1])
-	val.Identifier = parts[2]
-	return val, nil
 }
 
 var metadataCadenceFields = []cadence.Field{

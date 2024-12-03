@@ -4,43 +4,43 @@ import (
 	"testing"
 
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/scripts"
+	"github.com/piprate/splash"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGetExampleTokenBalance(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	artistAcctName := user1AccountName
 	artistAcct := client.Account(artistAcctName)
 
-	assert.Equal(t, 0.0, scripts.GetExampleTokenBalance(t, se, artistAcct.Address))
+	assert.Equal(t, 0.0, GetExampleTokenBalance(t, se, artistAcct.Address))
 
-	scripts.FundAccountWithFlow(t, client, artistAcct.Address, "10.0")
+	FundAccountWithFlow(t, se, artistAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(artistAcctName).Test(t).AssertSuccess()
 
-	assert.Equal(t, 0.0, scripts.GetExampleTokenBalance(t, se, artistAcct.Address))
+	assert.Equal(t, 0.0, GetExampleTokenBalance(t, se, artistAcct.Address))
 
-	scripts.FundAccountWithExampleToken(t, se, artistAcct.Address, "123.56")
+	FundAccountWithExampleToken(t, se, artistAcct.Address, "123.56")
 
-	assert.Equal(t, 123.56, scripts.GetExampleTokenBalance(t, se, artistAcct.Address))
+	assert.Equal(t, 123.56, GetExampleTokenBalance(t, se, artistAcct.Address))
 }
 
 func TestSetUpExampleTokenAccount(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	// set up platform account
@@ -48,7 +48,7 @@ func TestSetUpExampleTokenAccount(t *testing.T) {
 	platformAcctName := "emulator-sequel-platform"
 	platformAcct := client.Account(platformAcctName)
 
-	scripts.FundAccountWithFlow(t, client, platformAcct.Address, "10.0")
+	FundAccountWithFlow(t, se, platformAcct.Address, "10.0")
 
 	artistAcctName := user1AccountName
 
@@ -60,13 +60,13 @@ func TestSetUpExampleTokenAccount(t *testing.T) {
 }
 
 func TestAddExampleTokenAsRoyaltyReceiver(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
-	scripts.SetUpRoyaltyReceivers(t, se, user2AccountName, adminAccountName, "ExampleToken")
+	SetUpRoyaltyReceivers(t, se, user2AccountName, adminAccountName, "ExampleToken")
 }

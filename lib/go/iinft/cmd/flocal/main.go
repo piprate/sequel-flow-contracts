@@ -11,8 +11,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/onflow/cadence"
+	"github.com/onflow/flowkit/v2/config"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/scripts"
+	"github.com/piprate/splash"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -28,15 +30,32 @@ func main() {
 
 	flag.Parse()
 
-	client, err := iinft.NewGoWithTheFlowFS(".", "emulator", false, false)
+	client, err := splash.NewNetworkConnector(
+		config.DefaultPaths(),
+		splash.NewFileSystemLoader("."),
+		"emulator",
+		splash.NewZeroLogger())
 	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to create network connector")
 		os.Exit(-1)
 	}
 
 	client.CreateAccounts(context.Background(), "emulator-account")
 
+	se, err := iinft.NewTemplateEngine(client)
+	if err != nil {
+		os.Exit(-1)
+	}
+
 	adminAcct := client.Account(sequelAdminName)
-	if err = scripts.FundAccountWithFlowE(client, adminAcct.Address, amount); err != nil {
-		panic(err)
+
+	_, err = se.NewTransaction("account_fund_flow").
+		Argument(cadence.NewAddress(adminAcct.Address)).
+		UFix64Argument(amount).
+		SignProposeAndPayAsService().
+		RunE(context.Background())
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to execute account funding transaction")
+		os.Exit(-1)
 	}
 }
