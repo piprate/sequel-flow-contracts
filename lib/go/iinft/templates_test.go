@@ -1,4 +1,4 @@
-package scripts_test
+package iinft_test
 
 import (
 	"context"
@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
+	. "github.com/piprate/sequel-flow-contracts/lib/go/iinft"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/scripts"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
@@ -20,7 +20,7 @@ func init() {
 }
 
 func TestNewEngine_emulator(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("emulator", true, false)
+	client, err := NewInMemoryConnectorEmbedded(false)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -31,12 +31,12 @@ func TestNewEngine_emulator(t *testing.T) {
 	err = client.InitializeContractsE(ctx)
 	require.NoError(t, err)
 
-	_, err = scripts.NewEngine(client, false)
+	_, err = NewTemplateEngine(client)
 	require.NoError(t, err)
 }
 
 func TestNewEngine_emulatorWithFees(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("emulator", true, true)
+	client, err := NewInMemoryConnectorEmbedded(true)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -44,34 +44,39 @@ func TestNewEngine_emulatorWithFees(t *testing.T) {
 	_, err = client.DoNotPrependNetworkToAccountNames().CreateAccountsE(ctx, "emulator-account")
 	require.NoError(t, err)
 
-	adminAcct := client.Account("emulator-sequel-admin")
-	scripts.FundAccountWithFlow(t, client, adminAcct.Address, "1000.0")
-
-	err = client.InitializeContractsE(ctx)
+	te, err := NewTemplateEngine(client)
 	require.NoError(t, err)
 
-	_, err = scripts.NewEngine(client, false)
+	adminAcct := client.Account("emulator-sequel-admin")
+	_ = te.NewTransaction("account_fund_flow").
+		Argument(cadence.NewAddress(adminAcct.Address)).
+		UFix64Argument("1000.0").
+		SignProposeAndPayAsService().
+		Test(t).
+		AssertSuccess()
+
+	err = client.InitializeContractsE(ctx)
 	require.NoError(t, err)
 }
 
 func TestNewEngine_testnet(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("testnet", false, false)
+	client, err := NewNetworkConnectorEmbedded("testnet")
 	require.NoError(t, err)
 
-	_, err = scripts.NewEngine(client, false)
+	_, err = NewTemplateEngine(client)
 	require.NoError(t, err)
 }
 
 func TestNewEngine_mainnet(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false, false)
+	client, err := NewNetworkConnectorEmbedded("mainnet")
 	require.NoError(t, err)
 
-	_, err = scripts.NewEngine(client, false)
+	_, err = NewTemplateEngine(client)
 	require.NoError(t, err)
 }
 
 func TestEngine_GetStandardScript(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("testnet", false, false)
+	client, err := NewNetworkConnectorEmbedded("testnet")
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -82,7 +87,7 @@ func TestEngine_GetStandardScript(t *testing.T) {
 	err = client.InitializeContractsE(ctx)
 	require.NoError(t, err)
 
-	e, err := scripts.NewEngine(client, false)
+	e, err := NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	res := e.GetStandardScript("catalog_get_collection_tokens")
@@ -91,7 +96,7 @@ func TestEngine_GetStandardScript(t *testing.T) {
 }
 
 func TestEngine_GetStandardScript_Versus(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false, false)
+	client, err := NewNetworkConnectorEmbedded("mainnet")
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -102,7 +107,7 @@ func TestEngine_GetStandardScript_Versus(t *testing.T) {
 	err = client.InitializeContractsE(ctx)
 	require.NoError(t, err)
 
-	e, err := scripts.NewEngine(client, false)
+	e, err := NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	res := e.GetStandardScript("versus_get_art")
@@ -111,7 +116,7 @@ func TestEngine_GetStandardScript_Versus(t *testing.T) {
 }
 
 func TestEngine_GetCustomScript_MOD_Flow(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowEmbedded("mainnet", false, false)
+	client, err := NewNetworkConnectorEmbedded("mainnet")
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -122,11 +127,11 @@ func TestEngine_GetCustomScript_MOD_Flow(t *testing.T) {
 	err = client.InitializeContractsE(ctx)
 	require.NoError(t, err)
 
-	e, err := scripts.NewEngine(client, false)
+	e, err := NewTemplateEngine(client)
 	require.NoError(t, err)
 
-	res := e.GetCustomScript("digitalart_mint_on_demand_flow", &scripts.MintOnDemandParameters{
-		Metadata: &iinft.DigitalArtMetadata{
+	res := e.GetCustomScript("digitalart_mint_on_demand_flow", &MintOnDemandParameters{
+		Metadata: &DigitalArtMetadata{
 			MetadataURI:       "ipfs://QmMetadata",
 			Name:              "Pure Art",
 			Artist:            "did:sequel:artist",

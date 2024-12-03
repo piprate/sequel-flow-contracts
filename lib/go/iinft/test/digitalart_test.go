@@ -11,8 +11,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/scripts"
+	"github.com/piprate/splash"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
@@ -33,12 +32,12 @@ func init() {
 }
 
 func TestDigitalArt_Master(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	artistAcct := client.Account(user1AccountName)
@@ -102,12 +101,12 @@ access(all) fun main(metadata: DigitalArt.Metadata, evergreenProfile: Evergreen.
 }
 
 func TestDigitalArt_sealMaster(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	artistAcct := client.Account(user1AccountName)
@@ -118,7 +117,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 
 		metadata := SampleMetadata(4)
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
@@ -131,13 +130,13 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 
 		// Seal the master
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
 
 		// try again, should fail
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("Master already sealed")
@@ -148,7 +147,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 		metadata := SampleMetadata(4)
 		metadata.Asset = ""
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("Empty asset ID")
@@ -159,7 +158,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 		metadata := SampleMetadata(4)
 		metadata.MaxEdition = 0
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("MaxEdition should be positive")
@@ -170,7 +169,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 		metadata := SampleMetadata(4)
 		metadata.Edition = 2
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("Edition should be zero")
@@ -179,7 +178,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 	t.Run("Shouldn't be able to re-seal an already closed master", func(t *testing.T) {
 		userAcct := client.Account(user1AccountName)
 
-		scripts.FundAccountWithFlow(t, client, userAcct.Address, "10.0")
+		FundAccountWithFlow(t, se, userAcct.Address, "10.0")
 
 		_ = se.NewTransaction("account_setup").
 			SignProposeAndPayAs(user1AccountName).
@@ -191,7 +190,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 
 		// seal a master with 1 edition
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
@@ -219,7 +218,7 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 			RunReturns(context.Background())
 		require.NoError(t, err)
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertFailure("Master already sealed")
@@ -227,17 +226,17 @@ func TestDigitalArt_sealMaster(t *testing.T) {
 }
 
 func TestDigitalArt_mintEditionNFT(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	userAcct := client.Account(user1AccountName)
 
-	scripts.FundAccountWithFlow(t, client, userAcct.Address, "10.0")
+	FundAccountWithFlow(t, se, userAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").
 		SignProposeAndPayAs(user1AccountName).
@@ -250,7 +249,7 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 	metadata := SampleMetadata(2)
 	profile := BasicEvergreenProfile(userAcct.Address)
 
-	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -266,13 +265,13 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 			AssertSuccess().
 			AssertEventCount(8).
 			AssertEmitEventName("A.179b6b1cb6755e31.DigitalArt.Minted", "A.179b6b1cb6755e31.DigitalArt.Deposit").
-			AssertEmitEvent(gwtf.NewTestEvent("A.179b6b1cb6755e31.DigitalArt.Minted", map[string]interface{}{
+			AssertEmitEvent(splash.NewTestEvent("A.179b6b1cb6755e31.DigitalArt.Minted", map[string]interface{}{
 				"id":      "0",
 				"asset":   "did:sequel:asset-id",
 				"edition": "1",
 				"modID":   "0",
 			})).
-			AssertEmitEvent(gwtf.NewTestEvent("A.179b6b1cb6755e31.DigitalArt.Deposit", map[string]interface{}{
+			AssertEmitEvent(splash.NewTestEvent("A.179b6b1cb6755e31.DigitalArt.Deposit", map[string]interface{}{
 				"id": "0",
 				"to": "0xe03daebed8ca0615",
 			}))
@@ -304,13 +303,13 @@ func TestDigitalArt_mintEditionNFT(t *testing.T) {
 			AssertSuccess().
 			AssertEventCount(8).
 			AssertEmitEventName("A.179b6b1cb6755e31.DigitalArt.Minted", "A.179b6b1cb6755e31.DigitalArt.Deposit").
-			AssertEmitEvent(gwtf.NewTestEvent("A.179b6b1cb6755e31.DigitalArt.Minted", map[string]interface{}{
+			AssertEmitEvent(splash.NewTestEvent("A.179b6b1cb6755e31.DigitalArt.Minted", map[string]interface{}{
 				"id":      "1",
 				"asset":   "did:sequel:asset-id",
 				"edition": "2",
 				"modID":   "0",
 			})).
-			AssertEmitEvent(gwtf.NewTestEvent("A.179b6b1cb6755e31.DigitalArt.Deposit", map[string]interface{}{
+			AssertEmitEvent(splash.NewTestEvent("A.179b6b1cb6755e31.DigitalArt.Deposit", map[string]interface{}{
 				"id": "1",
 				"to": "0xe03daebed8ca0615",
 			}))
@@ -367,12 +366,12 @@ transaction(masterId: String) {
 }
 
 func TestDigitalArt_isClosed(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	artistAcct := client.Account(user1AccountName)
@@ -382,7 +381,7 @@ func TestDigitalArt_isClosed(t *testing.T) {
 	t.Run("isClosed() should return false, if master isn't closed", func(t *testing.T) {
 		metadata := SampleMetadata(1)
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
@@ -415,7 +414,7 @@ func TestDigitalArt_isClosed(t *testing.T) {
 	t.Run("isClosed() should return true, if master is closed", func(t *testing.T) {
 		userAcct := client.Account(user1AccountName)
 
-		scripts.FundAccountWithFlow(t, client, userAcct.Address, "10.0")
+		FundAccountWithFlow(t, se, userAcct.Address, "10.0")
 
 		_ = se.NewTransaction("account_setup").
 			SignProposeAndPayAs(user1AccountName).
@@ -427,7 +426,7 @@ func TestDigitalArt_isClosed(t *testing.T) {
 
 		// seal a master with 1 edition
 
-		_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+		_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 			SignProposeAndPayAs(adminAccountName).
 			Test(t).
 			AssertSuccess()
@@ -458,17 +457,17 @@ func TestDigitalArt_isClosed(t *testing.T) {
 }
 
 func TestDigitalArt_NFT(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	userAcct := client.Account(user1AccountName)
 
-	scripts.FundAccountWithFlow(t, client, userAcct.Address, "10.0")
+	FundAccountWithFlow(t, se, userAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").
 		SignProposeAndPayAs(user1AccountName).
@@ -480,7 +479,7 @@ func TestDigitalArt_NFT(t *testing.T) {
 	profile.Roles[0].ReceiverPath = "/public/flowTokenReceiver"
 	profile.Roles[0].Description = "artist's royalty"
 
-	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -715,17 +714,17 @@ access(all) fun main(address:Address, tokenID:UInt64) : Evergreen.Profile? {
 }
 
 func TestDigitalArt_Collection(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	userAcct := client.Account(user1AccountName)
 
-	scripts.FundAccountWithFlow(t, client, userAcct.Address, "10.0")
+	FundAccountWithFlow(t, se, userAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").
 		SignProposeAndPayAs(user1AccountName).
@@ -735,7 +734,7 @@ func TestDigitalArt_Collection(t *testing.T) {
 	metadata := SampleMetadata(4)
 	profile := BasicEvergreenProfile(userAcct.Address)
 
-	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -937,18 +936,18 @@ access(all) fun main(address:Address, tokenID:UInt64) {
 }
 
 func TestDigitalArt_createEmptyCollection(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	receiverAcctName := user2AccountName
 	receiverAcct := client.Account(receiverAcctName)
 
-	scripts.FundAccountWithFlow(t, client, receiverAcct.Address, "10.0")
+	FundAccountWithFlow(t, se, receiverAcct.Address, "10.0")
 
 	t.Run("Should be able to create a new empty NFT Collection", func(t *testing.T) {
 
@@ -961,7 +960,7 @@ func TestDigitalArt_createEmptyCollection(t *testing.T) {
 	})
 }
 
-func checkDigitalArtNFTSupply(t *testing.T, se *scripts.Engine, expectedSupply int) {
+func checkDigitalArtNFTSupply(t *testing.T, se *splash.TemplateEngine, expectedSupply int) {
 	t.Helper()
 
 	_, err := se.NewInlineScript(
@@ -970,7 +969,7 @@ func checkDigitalArtNFTSupply(t *testing.T, se *scripts.Engine, expectedSupply i
 	require.NoError(t, err)
 }
 
-func checkTokenInDigitalArtCollection(t *testing.T, se *scripts.Engine, userAddr string, nftID uint64) {
+func checkTokenInDigitalArtCollection(t *testing.T, se *splash.TemplateEngine, userAddr string, nftID uint64) {
 	t.Helper()
 
 	_, err := se.NewInlineScript(
@@ -979,7 +978,7 @@ func checkTokenInDigitalArtCollection(t *testing.T, se *scripts.Engine, userAddr
 	require.NoError(t, err)
 }
 
-func checkDigitalArtCollectionLen(t *testing.T, se *scripts.Engine, userAddr string, length int) {
+func checkDigitalArtCollectionLen(t *testing.T, se *splash.TemplateEngine, userAddr string, length int) {
 	t.Helper()
 
 	_, err := se.NewInlineScript(

@@ -5,7 +5,9 @@ import (
 	"os"
 
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/internal/assets"
+	"github.com/piprate/splash"
 )
 
 //go:generate go run github.com/kevinburke/go-bindata/go-bindata -prefix ../../.. -o internal/assets/assets.go -pkg assets -nometadata -nomemcopy ../../../contracts/... ../../../flow.json
@@ -31,4 +33,14 @@ func (f *embeddedFileLoader) MkdirAll(path string, perm os.FileMode) error {
 
 func (f *embeddedFileLoader) Stat(path string) (os.FileInfo, error) {
 	return nil, errors.New("operation Stat not allowed in embeddedFileLoader")
+}
+
+// NewNetworkConnectorEmbedded creates a new Splash Connector that uses embedded Flow configuration.
+func NewNetworkConnectorEmbedded(network string) (*splash.Connector, error) {
+	return splash.NewNetworkConnector([]string{config.DefaultPath}, &embeddedFileLoader{}, network, splash.NewZeroLogger())
+}
+
+// NewInMemoryConnectorEmbedded creates a new Splash Connector for in-memory emulator that uses embedded Flow configuration.
+func NewInMemoryConnectorEmbedded(enableTxFees bool) (*splash.Connector, error) {
+	return splash.NewInMemoryConnector([]string{config.DefaultPath}, &embeddedFileLoader{}, enableTxFees, splash.NewZeroLogger())
 }

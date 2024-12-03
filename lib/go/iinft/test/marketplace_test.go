@@ -9,19 +9,18 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
 	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/gwtf"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/scripts"
+	"github.com/piprate/splash"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMarketplace_listToken(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	platformAcct := client.Account(platformAccountName)
@@ -31,18 +30,18 @@ func TestMarketplace_listToken(t *testing.T) {
 	sellerAcctName := user1AccountName
 	sellerAcct := client.Account(sellerAcctName)
 
-	scripts.FundAccountWithFlow(t, client, sellerAcct.Address, "10.0")
+	FundAccountWithFlow(t, se, sellerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
 	artistAcct := client.Account(user2AccountName)
 
-	scripts.SetUpRoyaltyReceivers(t, se, user2AccountName, adminAccountName)
+	SetUpRoyaltyReceivers(t, se, user2AccountName, adminAccountName)
 
 	metadata := SampleMetadata(1)
 	profile := PrimaryOnlyEvergreenProfile(artistAcct.Address, platformAcct.Address)
 
-	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -55,7 +54,7 @@ func TestMarketplace_listToken(t *testing.T) {
 		Test(t).
 		AssertSuccess()
 
-	nftID := scripts.ExtractUInt64ValueFromEvent(res,
+	nftID := splash.ExtractUInt64ValueFromEvent(res,
 		"A.179b6b1cb6755e31.DigitalArt.Minted", "id")
 
 	// Assert that the account's collection is correct
@@ -72,7 +71,7 @@ func TestMarketplace_listToken(t *testing.T) {
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
-			AssertPartialEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(splash.NewTestEvent(
 				"A.179b6b1cb6755e31.SequelMarketplace.TokenListed",
 				map[string]interface{}{
 					"asset":            "did:sequel:asset-id",
@@ -97,7 +96,7 @@ func TestMarketplace_listToken(t *testing.T) {
 					"price":             "200.00000000",
 					"storefrontAddress": "0xe03daebed8ca0615",
 				})).
-			AssertPartialEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(splash.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
 					"ftVaultType":       "Type\u003cA.0ae53cb6e3f42a79.FlowToken.Vault\u003e()",
@@ -108,15 +107,15 @@ func TestMarketplace_listToken(t *testing.T) {
 				}))
 
 		// test listing IDs separately, as they aren't stable
-		assert.NotZero(t, scripts.ExtractUInt64ValueFromEvent(res,
+		assert.NotZero(t, splash.ExtractUInt64ValueFromEvent(res,
 			"A.179b6b1cb6755e31.SequelMarketplace.TokenListed", "listingID"))
-		assert.NotZero(t, scripts.ExtractUInt64ValueFromEvent(res,
+		assert.NotZero(t, splash.ExtractUInt64ValueFromEvent(res,
 			"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable", "listingResourceID"))
 	})
 
 	t.Run("Fail, if seller's receiver is invalid (ExampleToken)", func(t *testing.T) {
 		// Fund with Flow for ExampleToken setup fees
-		scripts.FundAccountWithFlow(t, client, artistAcct.Address, "10.0")
+		FundAccountWithFlow(t, se, artistAcct.Address, "10.0")
 
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(artistAcct.Name).Test(t).AssertSuccess()
 
@@ -133,7 +132,7 @@ func TestMarketplace_listToken(t *testing.T) {
 
 	t.Run("Succeed, if some receivers are invalid (ExampleToken)", func(t *testing.T) {
 		// Fund with Flow for ExampleToken setup fees
-		scripts.FundAccountWithFlow(t, client, artistAcct.Address, "10.0")
+		FundAccountWithFlow(t, se, artistAcct.Address, "10.0")
 
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(artistAcct.Name).Test(t).AssertSuccess()
@@ -147,7 +146,7 @@ func TestMarketplace_listToken(t *testing.T) {
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
-			AssertPartialEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(splash.NewTestEvent(
 				"A.179b6b1cb6755e31.SequelMarketplace.TokenListed",
 				map[string]interface{}{
 					"asset":            "did:sequel:asset-id",
@@ -172,7 +171,7 @@ func TestMarketplace_listToken(t *testing.T) {
 					"price":             "200.00000000",
 					"storefrontAddress": "0xe03daebed8ca0615",
 				})).
-			AssertPartialEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(splash.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
 					"ftVaultType":       "Type\u003cA.f8d6e0586b0a20c7.ExampleToken.Vault\u003e()",
@@ -183,15 +182,15 @@ func TestMarketplace_listToken(t *testing.T) {
 				}))
 
 		// test listing IDs separately, as they aren't stable
-		assert.NotZero(t, scripts.ExtractUInt64ValueFromEvent(res,
+		assert.NotZero(t, splash.ExtractUInt64ValueFromEvent(res,
 			"A.179b6b1cb6755e31.SequelMarketplace.TokenListed", "listingID"))
-		assert.NotZero(t, scripts.ExtractUInt64ValueFromEvent(res,
+		assert.NotZero(t, splash.ExtractUInt64ValueFromEvent(res,
 			"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable", "listingResourceID"))
 	})
 
 	t.Run("Happy path (ExampleToken)", func(t *testing.T) {
 		// Fund with Flow for ExampleToken setup fees
-		scripts.FundAccountWithFlow(t, client, platformAcct.Address, "10.0")
+		FundAccountWithFlow(t, se, platformAcct.Address, "10.0")
 
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(platformAcct.Name).Test(t).AssertSuccess()
@@ -205,7 +204,7 @@ func TestMarketplace_listToken(t *testing.T) {
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
-			AssertPartialEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(splash.NewTestEvent(
 				"A.179b6b1cb6755e31.SequelMarketplace.TokenListed",
 				map[string]interface{}{
 					"asset":            "did:sequel:asset-id",
@@ -230,7 +229,7 @@ func TestMarketplace_listToken(t *testing.T) {
 					"price":             "200.00000000",
 					"storefrontAddress": "0xe03daebed8ca0615",
 				})).
-			AssertPartialEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(splash.NewTestEvent(
 				"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable",
 				map[string]interface{}{
 					"ftVaultType":       "Type\u003cA.f8d6e0586b0a20c7.ExampleToken.Vault\u003e()",
@@ -241,20 +240,20 @@ func TestMarketplace_listToken(t *testing.T) {
 				}))
 
 		// test listing IDs separately, as they aren't stable
-		assert.NotZero(t, scripts.ExtractUInt64ValueFromEvent(res,
+		assert.NotZero(t, splash.ExtractUInt64ValueFromEvent(res,
 			"A.179b6b1cb6755e31.SequelMarketplace.TokenListed", "listingID"))
-		assert.NotZero(t, scripts.ExtractUInt64ValueFromEvent(res,
+		assert.NotZero(t, splash.ExtractUInt64ValueFromEvent(res,
 			"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable", "listingResourceID"))
 	})
 }
 
 func TestMarketplace_buyToken(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	platformAcct := client.Account(platformAccountName)
@@ -264,7 +263,7 @@ func TestMarketplace_buyToken(t *testing.T) {
 	sellerAcctName := "emulator-user1"
 	sellerAcct := client.Account(sellerAcctName)
 
-	scripts.FundAccountWithFlow(t, client, sellerAcct.Address, "10.0")
+	FundAccountWithFlow(t, se, sellerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
@@ -273,15 +272,15 @@ func TestMarketplace_buyToken(t *testing.T) {
 	buyerAcctName := "emulator-user2"
 	buyerAcct := client.Account(buyerAcctName)
 
-	scripts.FundAccountWithFlow(t, client, buyerAcct.Address, "10.0")
+	FundAccountWithFlow(t, se, buyerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
-	scripts.FundAccountWithFlow(t, client, buyerAcct.Address, "1000.0")
+	FundAccountWithFlow(t, se, buyerAcct.Address, "1000.0")
 
 	metadata := SampleMetadata(1)
 	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address, platformAcct.Address)
 
-	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -294,7 +293,7 @@ func TestMarketplace_buyToken(t *testing.T) {
 		Test(t).
 		AssertSuccess()
 
-	nftID := scripts.ExtractUInt64ValueFromEvent(res,
+	nftID := splash.ExtractUInt64ValueFromEvent(res,
 		"A.179b6b1cb6755e31.DigitalArt.Minted", "id")
 
 	// Assert that the account's collection is correct
@@ -312,7 +311,7 @@ func TestMarketplace_buyToken(t *testing.T) {
 		Test(t).
 		AssertSuccess()
 
-	listingID := scripts.ExtractUInt64ValueFromEvent(res,
+	listingID := splash.ExtractUInt64ValueFromEvent(res,
 		"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable", "listingResourceID")
 
 	t.Run("Happy path (Flow)", func(t *testing.T) {
@@ -325,7 +324,7 @@ func TestMarketplace_buyToken(t *testing.T) {
 			Argument(cadence.NewOptional(cadence.String("link"))).
 			Test(t).
 			AssertSuccess().
-			AssertEmitEvent(gwtf.NewTestEvent(
+			AssertEmitEvent(splash.NewTestEvent(
 				"A.179b6b1cb6755e31.SequelMarketplace.TokenSold",
 				map[string]interface{}{
 					"listingID":         fmt.Sprintf("%d", listingID),
@@ -346,12 +345,12 @@ func TestMarketplace_buyToken(t *testing.T) {
 }
 
 func TestMarketplace_payForMintedTokens(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	evergreenAddr := flow.HexToAddress(se.WellKnownAddresses()["Evergreen"])
@@ -360,7 +359,7 @@ func TestMarketplace_payForMintedTokens(t *testing.T) {
 	artistAcct := client.Account(user3AccountName) // the artist is the seller
 	roleOneAcct := client.Account(user1AccountName)
 
-	scripts.FundAccountWithFlow(t, client, buyerAcct.Address, "1000.0")
+	FundAccountWithFlow(t, se, buyerAcct.Address, "1000.0")
 
 	happyPathProfile, err := evergreen.ProfileToCadence(&evergreen.Profile{
 		ID: "did:sequel:evergreen3",
@@ -413,7 +412,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 	t.Run("Fail if seller's receiver is invalid", func(t *testing.T) {
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(buyerAcct.Name).Test(t).AssertSuccess()
 
-		scripts.FundAccountWithExampleToken(t, se, buyerAcct.Address, "1000.0")
+		FundAccountWithExampleToken(t, se, buyerAcct.Address, "1000.0")
 
 		_ = client.Transaction(scriptWithExampleToken).
 			PayloadSigner(buyerAcct.Name).
@@ -428,7 +427,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 	t.Run("If some receivers are invalid, send the remainder to last good receiver", func(t *testing.T) {
 		// RoleOne's ExampleToken receiver is missing. RoleOne's cut will go to the seller (the artist).
 
-		scripts.SetUpRoyaltyReceivers(t, se, artistAcct.Name, adminAccountName, "ExampleToken")
+		SetUpRoyaltyReceivers(t, se, artistAcct.Name, adminAccountName, "ExampleToken")
 
 		_ = client.Transaction(scriptWithExampleToken).
 			PayloadSigner(buyerAcct.Name).
@@ -438,21 +437,21 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 			Argument(happyPathProfile).
 			Test(t).
 			AssertSuccess().
-			AssertPartialEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(splash.NewTestEvent(
 				"A.ee82856bf20e2aa6.FungibleToken.Withdrawn",
 				map[string]interface{}{
 					"amount": "100.00000000",
 					"from":   "0x" + buyerAcct.Address.String(),
 					"type":   "A.f8d6e0586b0a20c7.ExampleToken.Vault",
 				})).
-			AssertPartialEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(splash.NewTestEvent(
 				"A.ee82856bf20e2aa6.FungibleToken.Deposited",
 				map[string]interface{}{
 					"amount": "80.00000000",
 					"to":     "0x120e725050340cab",
 					"type":   "A.f8d6e0586b0a20c7.ExampleToken.Vault",
 				})).
-			AssertPartialEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(splash.NewTestEvent(
 				"A.ee82856bf20e2aa6.FungibleToken.Deposited",
 				map[string]interface{}{
 					"amount": "20.00000000",
@@ -462,7 +461,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 	})
 
 	t.Run("Happy path (Flow)", func(t *testing.T) {
-		scripts.SetUpRoyaltyReceivers(t, se, roleOneAcct.Name, adminAccountName, "ExampleToken")
+		SetUpRoyaltyReceivers(t, se, roleOneAcct.Name, adminAccountName, "ExampleToken")
 
 		_ = client.Transaction(`
 import FungibleToken from 0xee82856bf20e2aa6
@@ -498,19 +497,19 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 			Argument(happyPathProfile).
 			Test(t).
 			AssertSuccess().
-			AssertEmitEvent(gwtf.NewTestEvent(
+			AssertEmitEvent(splash.NewTestEvent(
 				"A.0ae53cb6e3f42a79.FlowToken.TokensWithdrawn",
 				map[string]interface{}{
 					"amount": "100.00000000",
 					"from":   "0x" + buyerAcct.Address.String(),
 				})).
-			AssertEmitEvent(gwtf.NewTestEvent(
+			AssertEmitEvent(splash.NewTestEvent(
 				"A.0ae53cb6e3f42a79.FlowToken.TokensDeposited",
 				map[string]interface{}{
 					"amount": "80.00000000",
 					"to":     "0x120e725050340cab",
 				})).
-			AssertEmitEvent(gwtf.NewTestEvent(
+			AssertEmitEvent(splash.NewTestEvent(
 				"A.0ae53cb6e3f42a79.FlowToken.TokensDeposited",
 				map[string]interface{}{
 					"amount": "20.00000000",
@@ -528,19 +527,19 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 			Argument(happyPathProfile).
 			Test(t).
 			AssertSuccess().
-			AssertPartialEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(splash.NewTestEvent(
 				"A.ee82856bf20e2aa6.FungibleToken.Withdrawn",
 				map[string]interface{}{
 					"amount": "100.00000000",
 					"from":   "0x" + buyerAcct.Address.String(),
 				})).
-			AssertPartialEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(splash.NewTestEvent(
 				"A.ee82856bf20e2aa6.FungibleToken.Deposited",
 				map[string]interface{}{
 					"amount": "80.00000000",
 					"to":     "0x120e725050340cab",
 				})).
-			AssertPartialEvent(gwtf.NewTestEvent(
+			AssertPartialEvent(splash.NewTestEvent(
 				"A.ee82856bf20e2aa6.FungibleToken.Deposited",
 				map[string]interface{}{
 					"amount": "20.00000000",
@@ -550,12 +549,12 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 }
 
 func TestMarketplace_withdrawToken(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	platformAcct := client.Account(platformAccountName)
@@ -565,14 +564,14 @@ func TestMarketplace_withdrawToken(t *testing.T) {
 	sellerAcctName := "emulator-user1"
 	sellerAcct := client.Account(sellerAcctName)
 
-	scripts.FundAccountWithFlow(t, client, sellerAcct.Address, "10.0")
+	FundAccountWithFlow(t, se, sellerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
 	metadata := SampleMetadata(1)
 	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address, platformAcct.Address)
 
-	_ = scripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -600,7 +599,7 @@ func TestMarketplace_withdrawToken(t *testing.T) {
 		Test(t).
 		AssertSuccess()
 
-	listingID := scripts.ExtractUInt64ValueFromEvent(res,
+	listingID := splash.ExtractUInt64ValueFromEvent(res,
 		"A.f8d6e0586b0a20c7.NFTStorefront.ListingAvailable", "listingResourceID")
 
 	t.Run("Fail, if listing doesn't exist", func(t *testing.T) {
@@ -617,7 +616,7 @@ func TestMarketplace_withdrawToken(t *testing.T) {
 			UInt64Argument(listingID).
 			Test(t).
 			AssertSuccess().
-			AssertEmitEvent(gwtf.NewTestEvent(
+			AssertEmitEvent(splash.NewTestEvent(
 				"A.179b6b1cb6755e31.SequelMarketplace.TokenWithdrawn",
 				map[string]interface{}{
 					"listingID":         fmt.Sprintf("%d", listingID),
@@ -654,12 +653,12 @@ access(all) fun main(listingID:UInt64, storefrontAddress: Address) {
 }
 
 func TestMarketplace_buildPayments(t *testing.T) {
-	client, err := iinft.NewGoWithTheFlowFS("../../../..", "emulator", true, true)
+	client, err := splash.NewInMemoryTestConnector("../../../..", true)
 	require.NoError(t, err)
 
-	scripts.ConfigureInMemoryEmulator(t, client, "1000.0")
+	ConfigureInMemoryEmulator(t, client, "1000.0")
 
-	se, err := scripts.NewEngine(client, false)
+	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
 	evergreenAddr := flow.HexToAddress(se.WellKnownAddresses()["Evergreen"])
