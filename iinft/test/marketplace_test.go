@@ -7,18 +7,19 @@ import (
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
+	"github.com/piprate/sequel-flow-contracts/iinft"
+	"github.com/piprate/sequel-flow-contracts/iinft/evergreen"
+	"github.com/piprate/sequel-flow-contracts/iinft/testscripts"
 	"github.com/piprate/splash"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMarketplace_listToken(t *testing.T) {
-	client, err := splash.NewInMemoryTestConnector("../../../..", true)
+	client, err := splash.NewInMemoryTestConnector("../..", true)
 	require.NoError(t, err)
 
-	ConfigureInMemoryEmulator(t, client, "1000.0")
+	testscripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
@@ -30,18 +31,18 @@ func TestMarketplace_listToken(t *testing.T) {
 	sellerAcctName := user1AccountName
 	sellerAcct := client.Account(sellerAcctName)
 
-	FundAccountWithFlow(t, se, sellerAcct.Address, "10.0")
+	testscripts.FundAccountWithFlow(t, se, sellerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
 	artistAcct := client.Account(user2AccountName)
 
-	SetUpRoyaltyReceivers(t, se, user2AccountName, adminAccountName)
+	testscripts.SetUpRoyaltyReceivers(t, se, user2AccountName, adminAccountName)
 
 	metadata := SampleMetadata(1)
 	profile := PrimaryOnlyEvergreenProfile(artistAcct.Address, platformAcct.Address)
 
-	_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = testscripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -115,7 +116,7 @@ func TestMarketplace_listToken(t *testing.T) {
 
 	t.Run("Fail, if seller's receiver is invalid (ExampleToken)", func(t *testing.T) {
 		// Fund with Flow for ExampleToken setup fees
-		FundAccountWithFlow(t, se, artistAcct.Address, "10.0")
+		testscripts.FundAccountWithFlow(t, se, artistAcct.Address, "10.0")
 
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(artistAcct.Name).Test(t).AssertSuccess()
 
@@ -132,7 +133,7 @@ func TestMarketplace_listToken(t *testing.T) {
 
 	t.Run("Succeed, if some receivers are invalid (ExampleToken)", func(t *testing.T) {
 		// Fund with Flow for ExampleToken setup fees
-		FundAccountWithFlow(t, se, artistAcct.Address, "10.0")
+		testscripts.FundAccountWithFlow(t, se, artistAcct.Address, "10.0")
 
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(artistAcct.Name).Test(t).AssertSuccess()
@@ -190,7 +191,7 @@ func TestMarketplace_listToken(t *testing.T) {
 
 	t.Run("Happy path (ExampleToken)", func(t *testing.T) {
 		// Fund with Flow for ExampleToken setup fees
-		FundAccountWithFlow(t, se, platformAcct.Address, "10.0")
+		testscripts.FundAccountWithFlow(t, se, platformAcct.Address, "10.0")
 
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(platformAcct.Name).Test(t).AssertSuccess()
@@ -248,10 +249,10 @@ func TestMarketplace_listToken(t *testing.T) {
 }
 
 func TestMarketplace_buyToken(t *testing.T) {
-	client, err := splash.NewInMemoryTestConnector("../../../..", true)
+	client, err := splash.NewInMemoryTestConnector("../..", true)
 	require.NoError(t, err)
 
-	ConfigureInMemoryEmulator(t, client, "1000.0")
+	testscripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
@@ -263,7 +264,7 @@ func TestMarketplace_buyToken(t *testing.T) {
 	sellerAcctName := "emulator-user1"
 	sellerAcct := client.Account(sellerAcctName)
 
-	FundAccountWithFlow(t, se, sellerAcct.Address, "10.0")
+	testscripts.FundAccountWithFlow(t, se, sellerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
@@ -272,15 +273,15 @@ func TestMarketplace_buyToken(t *testing.T) {
 	buyerAcctName := "emulator-user2"
 	buyerAcct := client.Account(buyerAcctName)
 
-	FundAccountWithFlow(t, se, buyerAcct.Address, "10.0")
+	testscripts.FundAccountWithFlow(t, se, buyerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
-	FundAccountWithFlow(t, se, buyerAcct.Address, "1000.0")
+	testscripts.FundAccountWithFlow(t, se, buyerAcct.Address, "1000.0")
 
 	metadata := SampleMetadata(1)
 	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address, platformAcct.Address)
 
-	_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = testscripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -345,10 +346,10 @@ func TestMarketplace_buyToken(t *testing.T) {
 }
 
 func TestMarketplace_payForMintedTokens(t *testing.T) {
-	client, err := splash.NewInMemoryTestConnector("../../../..", true)
+	client, err := splash.NewInMemoryTestConnector("../..", true)
 	require.NoError(t, err)
 
-	ConfigureInMemoryEmulator(t, client, "1000.0")
+	testscripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
@@ -359,7 +360,7 @@ func TestMarketplace_payForMintedTokens(t *testing.T) {
 	artistAcct := client.Account(user3AccountName) // the artist is the seller
 	roleOneAcct := client.Account(user1AccountName)
 
-	FundAccountWithFlow(t, se, buyerAcct.Address, "1000.0")
+	testscripts.FundAccountWithFlow(t, se, buyerAcct.Address, "1000.0")
 
 	happyPathProfile, err := evergreen.ProfileToCadence(&evergreen.Profile{
 		ID: "did:sequel:evergreen3",
@@ -412,7 +413,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 	t.Run("Fail if seller's receiver is invalid", func(t *testing.T) {
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(buyerAcct.Name).Test(t).AssertSuccess()
 
-		FundAccountWithExampleToken(t, se, buyerAcct.Address, "1000.0")
+		testscripts.FundAccountWithExampleToken(t, se, buyerAcct.Address, "1000.0")
 
 		_ = client.Transaction(scriptWithExampleToken).
 			PayloadSigner(buyerAcct.Name).
@@ -427,7 +428,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 	t.Run("If some receivers are invalid, send the remainder to last good receiver", func(t *testing.T) {
 		// RoleOne's ExampleToken receiver is missing. RoleOne's cut will go to the seller (the artist).
 
-		SetUpRoyaltyReceivers(t, se, artistAcct.Name, adminAccountName, "ExampleToken")
+		testscripts.SetUpRoyaltyReceivers(t, se, artistAcct.Name, adminAccountName, "ExampleToken")
 
 		_ = client.Transaction(scriptWithExampleToken).
 			PayloadSigner(buyerAcct.Name).
@@ -461,7 +462,7 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 	})
 
 	t.Run("Happy path (Flow)", func(t *testing.T) {
-		SetUpRoyaltyReceivers(t, se, roleOneAcct.Name, adminAccountName, "ExampleToken")
+		testscripts.SetUpRoyaltyReceivers(t, se, roleOneAcct.Name, adminAccountName, "ExampleToken")
 
 		_ = client.Transaction(`
 import FungibleToken from 0xee82856bf20e2aa6
@@ -549,10 +550,10 @@ transaction(numEditions: UInt64, unitPrice: UFix64, profile: Evergreen.Profile) 
 }
 
 func TestMarketplace_withdrawToken(t *testing.T) {
-	client, err := splash.NewInMemoryTestConnector("../../../..", true)
+	client, err := splash.NewInMemoryTestConnector("../..", true)
 	require.NoError(t, err)
 
-	ConfigureInMemoryEmulator(t, client, "1000.0")
+	testscripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
@@ -564,14 +565,14 @@ func TestMarketplace_withdrawToken(t *testing.T) {
 	sellerAcctName := "emulator-user1"
 	sellerAcct := client.Account(sellerAcctName)
 
-	FundAccountWithFlow(t, se, sellerAcct.Address, "10.0")
+	testscripts.FundAccountWithFlow(t, se, sellerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
 	metadata := SampleMetadata(1)
 	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address, platformAcct.Address)
 
-	_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = testscripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -653,10 +654,10 @@ access(all) fun main(listingID:UInt64, storefrontAddress: Address) {
 }
 
 func TestMarketplace_buildPayments(t *testing.T) {
-	client, err := splash.NewInMemoryTestConnector("../../../..", true)
+	client, err := splash.NewInMemoryTestConnector("../..", true)
 	require.NoError(t, err)
 
-	ConfigureInMemoryEmulator(t, client, "1000.0")
+	testscripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)

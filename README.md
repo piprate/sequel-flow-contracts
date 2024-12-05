@@ -18,9 +18,9 @@ The smart contracts are written in [Cadence](https://docs.onflow.org/cadence).
 ## Contents
 
 - `contracts/`: All Sequel contracts
-- `lib/go/iinft/`: Supporting Go framework
-- `lib/go/iinft/scripts`: Useful scripts and transactions made available as Go templates
-- `lib/go/iinft/test/`: Test suite for Flow contracts
+- `iinft/`: Supporting Go framework
+- `iinft/scripts`: Useful scripts and transactions made available as Go templates
+- `iinft/test/`: Test suite for Flow contracts
 
 ## About Sequel
 

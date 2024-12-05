@@ -1,4 +1,4 @@
-package iinft
+package iinft_test
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	. "github.com/piprate/sequel-flow-contracts/iinft"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
