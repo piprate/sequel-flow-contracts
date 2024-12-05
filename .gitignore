@@ -25,7 +25,7 @@ node_modules
 _references
 
 # Golang bin folder
-lib/go/iinft/bin
+bin
 
 # Flow emulator
 flowdb

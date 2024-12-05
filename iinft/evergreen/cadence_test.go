@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
-	. "github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
+	. "github.com/piprate/sequel-flow-contracts/iinft/evergreen"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

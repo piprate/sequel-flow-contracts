@@ -13,7 +13,7 @@ import (
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flowkit/v2/config"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
+	"github.com/piprate/sequel-flow-contracts/iinft"
 	"github.com/piprate/splash"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

@@ -2,8 +2,8 @@ package test
 
 import (
 	"github.com/onflow/flow-go-sdk"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
+	"github.com/piprate/sequel-flow-contracts/iinft"
+	"github.com/piprate/sequel-flow-contracts/iinft/evergreen"
 )
 
 func SampleMetadata(maxEdition uint64) *iinft.DigitalArtMetadata {

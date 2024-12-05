@@ -6,7 +6,7 @@ import (
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/common"
 	"github.com/onflow/flow-go-sdk"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
+	"github.com/piprate/sequel-flow-contracts/iinft/evergreen"
 )
 
 type (

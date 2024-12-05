@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
+	"github.com/piprate/sequel-flow-contracts/iinft"
+	"github.com/piprate/sequel-flow-contracts/iinft/evergreen"
+	"github.com/piprate/sequel-flow-contracts/iinft/testscripts"
 	"github.com/piprate/splash"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDigitalArt_Integration_MintOnDemand_ExampleToken(t *testing.T) {
-	client, err := splash.NewInMemoryTestConnector("../../../..", true)
+	client, err := splash.NewInMemoryTestConnector("../..", true)
 	require.NoError(t, err)
 
-	ConfigureInMemoryEmulator(t, client, "1000.0")
+	testscripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
@@ -25,32 +26,32 @@ func TestDigitalArt_Integration_MintOnDemand_ExampleToken(t *testing.T) {
 
 	platformAcct := client.Account(platformAccountName)
 
-	SetUpRoyaltyReceivers(t, se, platformAccountName, adminAccountName, "ExampleToken")
+	testscripts.SetUpRoyaltyReceivers(t, se, platformAccountName, adminAccountName, "ExampleToken")
 
 	// set up green account
 
 	greenAcctName := user3AccountName
 	greenAcct := client.Account(greenAcctName)
 
-	SetUpRoyaltyReceivers(t, se, greenAcctName, adminAccountName, "ExampleToken")
+	testscripts.SetUpRoyaltyReceivers(t, se, greenAcctName, adminAccountName, "ExampleToken")
 
 	// set up artist account
 
 	artistAcctName := user1AccountName
 	artistAcct := client.Account(artistAcctName)
 
-	SetUpRoyaltyReceivers(t, se, artistAcctName, adminAccountName, "ExampleToken")
+	testscripts.SetUpRoyaltyReceivers(t, se, artistAcctName, adminAccountName, "ExampleToken")
 
 	// set up buyer account
 
 	buyerAcctName := user2AccountName
 	buyerAcct := client.Account(buyerAcctName)
 
-	FundAccountWithFlow(t, se, buyerAcct.Address, "10.0")
+	testscripts.FundAccountWithFlow(t, se, buyerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 	_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
-	FundAccountWithExampleToken(t, se, buyerAcct.Address, "1000.0")
+	testscripts.FundAccountWithExampleToken(t, se, buyerAcct.Address, "1000.0")
 
 	checkDigitalArtNFTSupply(t, se, 0)
 	checkDigitalArtCollectionLen(t, se, buyerAcct.Address.String(), 0)
@@ -129,10 +130,10 @@ func TestDigitalArt_Integration_MintOnDemand_ExampleToken(t *testing.T) {
 
 		assert.Equal(t, uint64(1), meta.Edition)
 
-		assert.Equal(t, 90.0, GetExampleTokenBalance(t, se, artistAcct.Address))
-		assert.Equal(t, 900.0, GetExampleTokenBalance(t, se, buyerAcct.Address))
-		assert.Equal(t, 5.0, GetExampleTokenBalance(t, se, platformAcct.Address))
-		assert.Equal(t, 5.0, GetExampleTokenBalance(t, se, greenAcct.Address))
+		assert.Equal(t, 90.0, testscripts.GetExampleTokenBalance(t, se, artistAcct.Address))
+		assert.Equal(t, 900.0, testscripts.GetExampleTokenBalance(t, se, buyerAcct.Address))
+		assert.Equal(t, 5.0, testscripts.GetExampleTokenBalance(t, se, platformAcct.Address))
+		assert.Equal(t, 5.0, testscripts.GetExampleTokenBalance(t, se, greenAcct.Address))
 	})
 
 	t.Run("Should be able to mint a token on demand (master sealed, metadata provided)", func(t *testing.T) {
@@ -184,10 +185,10 @@ func TestDigitalArt_Integration_MintOnDemand_ExampleToken(t *testing.T) {
 
 		assert.Equal(t, uint64(1), meta.Edition)
 
-		assert.Equal(t, 180.0, GetExampleTokenBalance(t, se, artistAcct.Address))
-		assert.Equal(t, 800.0, GetExampleTokenBalance(t, se, buyerAcct.Address))
-		assert.Equal(t, 10.0, GetExampleTokenBalance(t, se, platformAcct.Address))
-		assert.Equal(t, 10.0, GetExampleTokenBalance(t, se, greenAcct.Address))
+		assert.Equal(t, 180.0, testscripts.GetExampleTokenBalance(t, se, artistAcct.Address))
+		assert.Equal(t, 800.0, testscripts.GetExampleTokenBalance(t, se, buyerAcct.Address))
+		assert.Equal(t, 10.0, testscripts.GetExampleTokenBalance(t, se, platformAcct.Address))
+		assert.Equal(t, 10.0, testscripts.GetExampleTokenBalance(t, se, greenAcct.Address))
 	})
 
 	t.Run("Should be able to mint a token on demand (master sealed, metadata not provided)", func(t *testing.T) {
@@ -236,18 +237,18 @@ func TestDigitalArt_Integration_MintOnDemand_ExampleToken(t *testing.T) {
 
 		assert.Equal(t, uint64(1), meta.Edition)
 
-		assert.Equal(t, 270.0, GetExampleTokenBalance(t, se, artistAcct.Address))
-		assert.Equal(t, 700.0, GetExampleTokenBalance(t, se, buyerAcct.Address))
-		assert.Equal(t, 15.0, GetExampleTokenBalance(t, se, platformAcct.Address))
-		assert.Equal(t, 15.0, GetExampleTokenBalance(t, se, greenAcct.Address))
+		assert.Equal(t, 270.0, testscripts.GetExampleTokenBalance(t, se, artistAcct.Address))
+		assert.Equal(t, 700.0, testscripts.GetExampleTokenBalance(t, se, buyerAcct.Address))
+		assert.Equal(t, 15.0, testscripts.GetExampleTokenBalance(t, se, platformAcct.Address))
+		assert.Equal(t, 15.0, testscripts.GetExampleTokenBalance(t, se, greenAcct.Address))
 	})
 }
 
 func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
-	client, err := splash.NewInMemoryTestConnector("../../../..", true)
+	client, err := splash.NewInMemoryTestConnector("../..", true)
 	require.NoError(t, err)
 
-	ConfigureInMemoryEmulator(t, client, "1000.0")
+	testscripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
@@ -256,28 +257,28 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 
 	platformAcct := client.Account(platformAccountName)
 
-	SetUpRoyaltyReceivers(t, se, platformAccountName, adminAccountName)
+	testscripts.SetUpRoyaltyReceivers(t, se, platformAccountName, adminAccountName)
 
 	// set up green account
 
 	greenAcctName := user3AccountName
 	greenAcct := client.Account(greenAcctName)
 
-	SetUpRoyaltyReceivers(t, se, greenAcctName, adminAccountName)
+	testscripts.SetUpRoyaltyReceivers(t, se, greenAcctName, adminAccountName)
 
 	// set up artist account
 
 	artistAcctName := user1AccountName
 	artistAcct := client.Account(artistAcctName)
 
-	SetUpRoyaltyReceivers(t, se, artistAcctName, adminAccountName)
+	testscripts.SetUpRoyaltyReceivers(t, se, artistAcctName, adminAccountName)
 
 	// set up buyer account
 
 	buyerAcctName := user2AccountName
 	buyerAcct := client.Account(buyerAcctName)
 
-	FundAccountWithFlow(t, se, buyerAcct.Address, "1000.0")
+	testscripts.FundAccountWithFlow(t, se, buyerAcct.Address, "1000.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 
@@ -358,10 +359,10 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 
 		assert.Equal(t, uint64(1), meta.Edition)
 
-		assert.InDelta(t, initialFlowBalance+1000.0-100.0, GetFlowBalance(t, se, buyerAcct.Address), 0.001)
-		assert.Equal(t, initialFlowBalance+90.0, GetFlowBalance(t, se, artistAcct.Address))
-		assert.Equal(t, initialFlowBalance+5.0, GetFlowBalance(t, se, platformAcct.Address))
-		assert.Equal(t, initialFlowBalance+5.0, GetFlowBalance(t, se, greenAcct.Address))
+		assert.InDelta(t, initialFlowBalance+1000.0-100.0, testscripts.GetFlowBalance(t, se, buyerAcct.Address), 0.001)
+		assert.Equal(t, initialFlowBalance+90.0, testscripts.GetFlowBalance(t, se, artistAcct.Address))
+		assert.Equal(t, initialFlowBalance+5.0, testscripts.GetFlowBalance(t, se, platformAcct.Address))
+		assert.Equal(t, initialFlowBalance+5.0, testscripts.GetFlowBalance(t, se, greenAcct.Address))
 	})
 
 	t.Run("Should be able to mint a token on demand (master sealed)", func(t *testing.T) {
@@ -413,10 +414,10 @@ func TestDigitalArt_Integration_MintOnDemand_Flow(t *testing.T) {
 
 		assert.Equal(t, uint64(1), meta.Edition)
 
-		assert.InDelta(t, initialFlowBalance+1000.0-2*100.0, GetFlowBalance(t, se, buyerAcct.Address), 0.001)
-		assert.Equal(t, initialFlowBalance+2*90.0, GetFlowBalance(t, se, artistAcct.Address))
-		assert.Equal(t, initialFlowBalance+2*5.0, GetFlowBalance(t, se, platformAcct.Address))
-		assert.Equal(t, initialFlowBalance+2*5.0, GetFlowBalance(t, se, greenAcct.Address))
+		assert.InDelta(t, initialFlowBalance+1000.0-2*100.0, testscripts.GetFlowBalance(t, se, buyerAcct.Address), 0.001)
+		assert.Equal(t, initialFlowBalance+2*90.0, testscripts.GetFlowBalance(t, se, artistAcct.Address))
+		assert.Equal(t, initialFlowBalance+2*5.0, testscripts.GetFlowBalance(t, se, platformAcct.Address))
+		assert.Equal(t, initialFlowBalance+2*5.0, testscripts.GetFlowBalance(t, se, greenAcct.Address))
 	})
 }
 
@@ -425,10 +426,10 @@ func TestDigitalArt_Integration_Transfer(t *testing.T) {
 	//   * 'withdraw' and 'deposit' methods of DigitalArt.Collection
 	//   * the script (digitalart_destroy) for destroying a token
 
-	client, err := splash.NewInMemoryTestConnector("../../../..", true)
+	client, err := splash.NewInMemoryTestConnector("../..", true)
 	require.NoError(t, err)
 
-	ConfigureInMemoryEmulator(t, client, "1000.0")
+	testscripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
@@ -436,7 +437,7 @@ func TestDigitalArt_Integration_Transfer(t *testing.T) {
 	senderAcctName := user1AccountName
 	senderAcct := client.Account(senderAcctName)
 
-	FundAccountWithFlow(t, se, senderAcct.Address, "10.0")
+	testscripts.FundAccountWithFlow(t, se, senderAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").
 		SignProposeAndPayAs(senderAcctName).
@@ -446,7 +447,7 @@ func TestDigitalArt_Integration_Transfer(t *testing.T) {
 	receiverAcctName := user2AccountName
 	receiverAcct := client.Account(receiverAcctName)
 
-	FundAccountWithFlow(t, se, receiverAcct.Address, "10.0")
+	testscripts.FundAccountWithFlow(t, se, receiverAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").
 		SignProposeAndPayAs(receiverAcctName).
@@ -456,7 +457,7 @@ func TestDigitalArt_Integration_Transfer(t *testing.T) {
 	metadata := SampleMetadata(4)
 	profile := BasicEvergreenProfile(senderAcct.Address)
 
-	_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = testscripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()

@@ -5,17 +5,18 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
+	"github.com/piprate/sequel-flow-contracts/iinft"
+	"github.com/piprate/sequel-flow-contracts/iinft/testscripts"
 	"github.com/piprate/splash"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
-	client, err := splash.NewInMemoryTestConnector("../../../..", true)
+	client, err := splash.NewInMemoryTestConnector("../..", true)
 	require.NoError(t, err)
 
-	ConfigureInMemoryEmulator(t, client, "1000.0")
+	testscripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
@@ -27,27 +28,27 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 	sellerAcctName := user1AccountName
 	sellerAcct := client.Account(sellerAcctName)
 
-	FundAccountWithFlow(t, se, sellerAcct.Address, "10.0")
+	testscripts.FundAccountWithFlow(t, se, sellerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
-	SetUpRoyaltyReceivers(t, se, sellerAcctName, sellerAcctName)
+	testscripts.SetUpRoyaltyReceivers(t, se, sellerAcctName, sellerAcctName)
 
 	// set up buyer account
 
 	buyerAcctName := user2AccountName
 	buyerAcct := client.Account(buyerAcctName)
 
-	FundAccountWithFlow(t, se, buyerAcct.Address, "10.0")
+	testscripts.FundAccountWithFlow(t, se, buyerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 	_ = se.NewTransaction("account_setup_flow_token").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
-	FundAccountWithFlow(t, se, buyerAcct.Address, "1000.0")
+	testscripts.FundAccountWithFlow(t, se, buyerAcct.Address, "1000.0")
 
 	metadata := SampleMetadata(1)
 	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address, platformAcct.Address)
 
-	_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = testscripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()
@@ -155,10 +156,10 @@ func TestMarketplace_Integration_ListAndBuyWithFlow(t *testing.T) {
 }
 
 func TestMarketplace_Integration_ListAndBuyWithExampleToken(t *testing.T) {
-	client, err := splash.NewInMemoryTestConnector("../../../..", true)
+	client, err := splash.NewInMemoryTestConnector("../..", true)
 	require.NoError(t, err)
 
-	ConfigureInMemoryEmulator(t, client, "1000.0")
+	testscripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
@@ -170,11 +171,11 @@ func TestMarketplace_Integration_ListAndBuyWithExampleToken(t *testing.T) {
 	sellerAcctName := user1AccountName
 	sellerAcct := client.Account(sellerAcctName)
 
-	FundAccountWithFlow(t, se, sellerAcct.Address, "10.0")
+	testscripts.FundAccountWithFlow(t, se, sellerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(sellerAcctName).Test(t).AssertSuccess()
 
-	SetUpRoyaltyReceivers(t, se, sellerAcctName, sellerAcctName, "ExampleToken")
+	testscripts.SetUpRoyaltyReceivers(t, se, sellerAcctName, sellerAcctName, "ExampleToken")
 
 	// set up buyer account
 
@@ -182,16 +183,16 @@ func TestMarketplace_Integration_ListAndBuyWithExampleToken(t *testing.T) {
 	buyerAcct := client.Account(buyerAcctName)
 	require.NoError(t, err)
 
-	FundAccountWithFlow(t, se, buyerAcct.Address, "10.0")
+	testscripts.FundAccountWithFlow(t, se, buyerAcct.Address, "10.0")
 
 	_ = se.NewTransaction("account_setup").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
 	_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(buyerAcctName).Test(t).AssertSuccess()
-	FundAccountWithExampleToken(t, se, buyerAcct.Address, "1000.0")
+	testscripts.FundAccountWithExampleToken(t, se, buyerAcct.Address, "1000.0")
 
 	metadata := SampleMetadata(1)
 	profile := PrimaryOnlyEvergreenProfile(sellerAcct.Address, platformAcct.Address)
 
-	_ = CreateSealDigitalArtTx(t, se, client, metadata, profile).
+	_ = testscripts.CreateSealDigitalArtTx(t, se, client, metadata, profile).
 		SignProposeAndPayAs(adminAccountName).
 		Test(t).
 		AssertSuccess()

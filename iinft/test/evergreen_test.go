@@ -8,8 +8,9 @@ import (
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft"
-	"github.com/piprate/sequel-flow-contracts/lib/go/iinft/evergreen"
+	"github.com/piprate/sequel-flow-contracts/iinft"
+	"github.com/piprate/sequel-flow-contracts/iinft/evergreen"
+	"github.com/piprate/sequel-flow-contracts/iinft/testscripts"
 	"github.com/piprate/splash"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -21,10 +22,10 @@ func init() {
 }
 
 func TestEvergreen_Role_commissionRate(t *testing.T) {
-	client, err := splash.NewInMemoryTestConnector("../../../..", true)
+	client, err := splash.NewInMemoryTestConnector("../..", true)
 	require.NoError(t, err)
 
-	ConfigureInMemoryEmulator(t, client, "1000.0")
+	testscripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	artistAcct := client.Account(user1AccountName)
 
@@ -52,10 +53,10 @@ access(all) fun main(addr: Address) {
 }
 
 func TestEvergreen_Profile_getRole(t *testing.T) {
-	client, err := splash.NewInMemoryTestConnector("../../../..", true)
+	client, err := splash.NewInMemoryTestConnector("../..", true)
 	require.NoError(t, err)
 
-	ConfigureInMemoryEmulator(t, client, "1000.0")
+	testscripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	artistAcct := client.Account(user1AccountName)
 
@@ -97,13 +98,13 @@ access(all) fun main(addr: Address) {
 }
 
 func TestEvergreen_Profile_buildRoyalties(t *testing.T) {
-	client, err := splash.NewInMemoryTestConnector("../../../..", true)
+	client, err := splash.NewInMemoryTestConnector("../..", true)
 	require.NoError(t, err)
 
 	se, err := iinft.NewTemplateEngine(client)
 	require.NoError(t, err)
 
-	ConfigureInMemoryEmulator(t, client, "1000.0")
+	testscripts.ConfigureInMemoryEmulator(t, client, "1000.0")
 
 	user1Acct := client.Account(user1AccountName)
 	user2Acct := client.Account(user2AccountName)
@@ -148,8 +149,8 @@ access(all) fun main(profile: Evergreen.Profile) {
 		require.NoError(t, err)
 	})
 
-	FundAccountWithFlow(t, se, user1Acct.Address, "10.0")
-	FundAccountWithFlow(t, se, user2Acct.Address, "10.0")
+	testscripts.FundAccountWithFlow(t, se, user1Acct.Address, "10.0")
+	testscripts.FundAccountWithFlow(t, se, user2Acct.Address, "10.0")
 
 	t.Run("if defaultReceiverPath is nil, return royalties with a valid receiver", func(t *testing.T) {
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(user1AccountName).
@@ -170,7 +171,7 @@ access(all) fun main(profile: Evergreen.Profile) {
 	})
 
 	t.Run("if defaultReceiverPath is provided, return royalties with a valid receiver", func(t *testing.T) {
-		FundAccountWithFlow(t, se, user1Acct.Address, "10.0")
+		testscripts.FundAccountWithFlow(t, se, user1Acct.Address, "10.0")
 
 		_ = se.NewTransaction("account_setup_example_ft").SignProposeAndPayAs(user1AccountName).
 			Test(t).AssertSuccess()
