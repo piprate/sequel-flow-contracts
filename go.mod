@@ -8,7 +8,7 @@ require (
 	github.com/onflow/cadence v1.2.1
 	github.com/onflow/flow-go-sdk v1.2.2
 	github.com/onflow/flowkit/v2 v2.1.0
-	github.com/piprate/splash v0.0.0-20241205000921-f1fff41b1560
+	github.com/piprate/splash v0.0.0-20250112112525-5f9e7f5f169a
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.63.2
