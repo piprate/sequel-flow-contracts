@@ -20,5 +20,5 @@ var (
 )
 
 func NewTemplateEngine(client *splash.Connector) (*splash.TemplateEngine, error) {
-	return splash.NewTemplateEngine(client, templateFS, []string{"transactions", "scripts"}, requiredWellKnownContracts)
+	return splash.NewTemplateEngine(client, templateFS, []string{}, requiredWellKnownContracts, "templates/transactions/*.cdc", "templates/scripts/*.cdc", "templates/scripts/**/*.cdc")
 }
